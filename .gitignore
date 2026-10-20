@@ -1,0 +1,35 @@
+# Dependencias
+node_modules/
+.pnp
+.pnp.js
+
+# Compilacion
+dist/
+build/
+out-tsc/
+*.tsbuildinfo
+
+# Prisma generado
+apps/api/src/generated/
+apps/api/node_modules/.prisma/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+*.swp

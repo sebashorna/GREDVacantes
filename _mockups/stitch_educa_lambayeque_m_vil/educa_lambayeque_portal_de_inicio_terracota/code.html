@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><title>Educa Lambayeque</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "error-container": "#ffdad6",
+          "inverse-surface": "#352f2e",
+          "surface-container-low": "#fcf1ef",
+          "outline": "#89726c",
+          "tertiary": "#424e36",
+          "tertiary-fixed-dim": "#becbac",
+          "surface-variant": "#eae0de",
+          "error": "#ba1a1a",
+          "primary-fixed-dim": "#ffb5a0",
+          "on-tertiary-fixed": "#141e0a",
+          "tertiary-fixed": "#dae7c6",
+          "surface-bright": "#fff8f6",
+          "inverse-primary": "#ffb5a0",
+          "on-primary-fixed": "#3b0900",
+          "on-secondary-fixed": "#2b1701",
+          "tertiary-container": "#5a664c",
+          "surface-container-highest": "#eae0de",
+          "surface-dim": "#e2d8d6",
+          "inverse-on-surface": "#f9eeec",
+          "on-tertiary-container": "#d6e3c2",
+          "primary-container": "#a0472e",
+          "surface-container-lowest": "#ffffff",
+          "on-error": "#ffffff",
+          "surface-tint": "#9b442b",
+          "primary": "#813019",
+          "on-tertiary": "#ffffff",
+          "on-secondary": "#ffffff",
+          "primary-fixed": "#ffdbd1",
+          "secondary-container": "#fdd6ae",
+          "on-tertiary-fixed-variant": "#3f4a32",
+          "on-surface": "#1f1b1a",
+          "on-error-container": "#93000a",
+          "surface-container-high": "#f0e6e4",
+          "secondary-fixed-dim": "#e5c099",
+          "background": "#fff8f6",
+          "on-primary-container": "#ffd5ca",
+          "secondary-fixed": "#ffddbb",
+          "on-surface-variant": "#55423d",
+          "outline-variant": "#dcc1ba",
+          "on-secondary-fixed-variant": "#5c4224",
+          "on-primary": "#ffffff",
+          "surface-container": "#f6ecea",
+          "on-secondary-container": "#785b3c",
+          "on-background": "#1f1b1a",
+          "on-primary-fixed-variant": "#7c2d16",
+          "secondary": "#75593a",
+          "surface": "#fff8f6"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "gutter-mobile": "0.75rem",
+          "space-xs": "0.25rem",
+          "space-2xs": "0.125rem",
+          "space-xl": "2rem",
+          "gutter": "1rem",
+          "margin": "1rem",
+          "margin-mobile": "1rem",
+          "gutter-desktop": "1.5rem",
+          "space-sm": "0.5rem",
+          "margin-desktop": "2.5rem",
+          "space-md": "1rem",
+          "space-2xl": "3rem",
+          "margin-tablet": "1.5rem",
+          "space-lg": "1.5rem"
+        },
+        "fontFamily": {
+          "headline-xl": ["Plus Jakarta Sans"],
+          "label-sm": ["Plus Jakarta Sans"],
+          "headline-xl-mobile": ["Plus Jakarta Sans"],
+          "label-lg": ["Plus Jakarta Sans"],
+          "body-sm": ["Plus Jakarta Sans"],
+          "body-lg": ["Plus Jakarta Sans"],
+          "title-sm": ["Plus Jakarta Sans"],
+          "headline-sm": ["Plus Jakarta Sans"],
+          "label-md": ["Plus Jakarta Sans"],
+          "headline-md": ["Plus Jakarta Sans"],
+          "body-md": ["Plus Jakarta Sans"],
+          "headline-lg-mobile": ["Plus Jakarta Sans"],
+          "title-md": ["Plus Jakarta Sans"],
+          "headline-lg": ["Plus Jakarta Sans"],
+          "display-lg": ["Plus Jakarta Sans"],
+          "display-lg-mobile": ["Plus Jakarta Sans"]
+        },
+        "fontSize": {
+          "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+          "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+          "headline-xl-mobile": ["30px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+          "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+          "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+          "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+          "title-sm": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+          "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+          "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+          "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+          "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+          "headline-lg-mobile": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+          "title-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+          "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+          "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+          "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "800" }]
+        }
+      }
+    }
+  };
+</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#a0472e;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-primary-container font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-primary-container text-on-primary shadow-[0_4px_16px_rgba(129,48,25,0.22)] pt-safe"><div class="h-16 px-margin-mobile flex items-center justify-between"><button aria-label="Menú" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-primary active:bg-white/10 transition-colors"><span class="material-symbols-outlined text-[26px]">menu</span></button><div class="flex items-center gap-space-sm"><img alt="Educa Lambayeque Logo" class="h-8 w-auto object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/aida/AEtjO1VoJoBPepKklnGzFXmw8CPZgsQVcuvKas-LY50_JYnLxRTr_9qfodsP6UnOqOAgdJFYB_jm1xlZLpby6bRAUUzJ_Ui0P_cNyixecqn5yYyLaASwIh77Chn-3Wihu4uPgCfi39rCiyEudfLqm7gXQT6t2azWlx8Et97czwUoQ5TmkCF0Kb9Y54FuuLyVBVl477b40hA9Zy9q-FoKQqwHdgjnrSaC-6wu45nkie0Y0tqpMK_tOOVcIdOAKkq3"/><span class="font-headline-sm text-headline-sm text-on-primary tracking-tight hidden xs:inline-block">Educa Lambayeque</span></div><div class="flex items-center gap-space-xs"><button aria-label="Búsqueda rápida" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-primary active:bg-white/10 transition-colors"><span class="material-symbols-outlined text-[24px]">search</span></button><button aria-label="Notificaciones" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-primary active:bg-white/10 transition-colors relative"><span class="material-symbols-outlined text-[24px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary-fixed"></span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-inner ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div><div class="hidden">Inicio</div></header><main class="flex-1 w-full bg-surface pt-16 pb-24 rounded-t-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.06)] relative z-10"><div class="flex flex-col w-full">
+<!-- Interactive State / Filter Handling Script -->
+<script>
+    function switchUgel(ugelName, btnElement) {
+      document.querySelectorAll('.ugel-chip').forEach(chip => {
+        chip.classList.remove('bg-primary-container', 'text-on-primary', 'shadow-md');
+        chip.classList.add('bg-surface-container', 'text-on-surface-variant');
+      });
+      btnElement.classList.remove('bg-surface-container', 'text-on-surface-variant');
+      btnElement.classList.add('bg-primary-container', 'text-on-primary', 'shadow-md');
+      
+      const statusNotice = document.getElementById('region-summary-text');
+      if (statusNotice) {
+        statusNotice.textContent = ugelName === 'Toda la Región' 
+          ? 'Datos consolidados para las 3 provincias regionales'
+          : 'Filtrado oficial activo para ' + ugelName;
+      }
+    }
+
+    function toggleBookmark(btn) {
+      const icon = btn.querySelector('.material-symbols-outlined');
+      if (icon.textContent === 'bookmark_border') {
+        icon.textContent = 'bookmark';
+        icon.style.fontVariationSettings = "'FILL' 1";
+        icon.classList.add('text-secondary-fixed');
+      } else {
+        icon.textContent = 'bookmark_border';
+        icon.style.fontVariationSettings = "'FILL' 0";
+        icon.classList.remove('text-secondary-fixed');
+      }
+    }
+  </script>
+<div class="px-margin-mobile pt-space-md space-y-space-md">
+<!-- Header Regional Welcome Section inspired by MAKINFO's friendly illustration style -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 flex flex-col items-center text-center relative overflow-hidden">
+<!-- Ambient decorative gradient backdrop -->
+<div class="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-primary-fixed/40 blur-xl pointer-events-none"></div>
+<div class="absolute -bottom-10 -left-10 w-28 h-28 rounded-full bg-secondary-fixed/40 blur-lg pointer-events-none"></div>
+<!-- Playful Mascot / Regional Symbol Badge -->
+<div class="relative w-20 h-20 mb-space-xs flex items-center justify-center">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center shadow-inner">
+<svg class="w-12 h-12" fill="none" viewbox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+<!-- Backpack playful vector with Peruvian Terracotta tone -->
+<rect fill="#A0472E" height="36" rx="10" width="36" x="14" y="20"></rect>
+<path d="M22 20V14C22 10.6863 24.6863 8 28 8H36C39.3137 8 42 10.6863 42 14V20" stroke="#E5C099" stroke-linecap="round" stroke-width="4"></path>
+<rect fill="#FFF8F6" height="20" rx="6" width="24" x="20" y="28"></rect>
+<circle cx="27" cy="36" fill="#1F1B1A" r="2.5"></circle>
+<circle cx="37" cy="36" fill="#1F1B1A" r="2.5"></circle>
+<path d="M29 41C30.5 43 33.5 43 35 41" stroke="#A0472E" stroke-linecap="round" stroke-width="2.5"></path>
+<circle cx="48" cy="18" fill="#5A664C" r="3"></circle>
+<circle cx="16" cy="18" fill="#E5C099" r="2"></circle>
+</svg>
+</div>
+<span class="absolute -bottom-1 -right-1 bg-tertiary-container text-on-tertiary text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+          2025
+        </span>
+</div>
+<!-- Friendly Typography -->
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+        GRED Lambayeque • Oficial
+      </span>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-extrabold mt-0.5">
+        Portal Educativo Regional
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-xs mt-1">
+        Información en tiempo real de vacantes, plazas docentes e instituciones en Chiclayo, Ferreñafe y Lambayeque.
+      </p>
+<!-- Updated Date Chip as seen in MAKINFO reference -->
+<div class="mt-space-sm inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[15px] text-primary">event_available</span>
+<span>Actualizado hoy • 08:30 a. m.</span>
+</div>
+</div>
+<!-- Search & Advanced Filter Section matching MAKINFO reference -->
+<div class="space-y-space-xs">
+<div class="flex items-center gap-space-xs">
+<div class="relative flex-1 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 flex items-center px-space-md h-12">
+<span class="material-symbols-outlined text-outline text-[22px] mr-space-xs">search</span>
+<input class="w-full bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder="Buscar colegio, código modular o C.P." type="text"/>
+<button aria-label="Limpiar búsqueda" class="text-outline active:text-on-surface transition-colors p-1">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<button aria-label="Filtros de búsqueda" class="h-12 w-12 rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-on-surface flex items-center justify-center shadow-sm active:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[22px] text-primary">tune</span>
+</button>
+</div>
+<!-- Quick UGEL Selector Chips -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1 pt-1 no-scrollbar">
+<button class="ugel-chip shrink-0 px-space-md py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary shadow-md transition-all active:scale-95" onclick="switchUgel('Toda la Región', this)">
+          Toda la Región
+        </button>
+<button class="ugel-chip shrink-0 px-space-md py-1.5 rounded-full font-label-md text-label-md bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95" onclick="switchUgel('UGEL Chiclayo', this)">
+          UGEL Chiclayo
+        </button>
+<button class="ugel-chip shrink-0 px-space-md py-1.5 rounded-full font-label-md text-label-md bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95" onclick="switchUgel('UGEL Lambayeque', this)">
+          UGEL Lambayeque
+        </button>
+<button class="ugel-chip shrink-0 px-space-md py-1.5 rounded-full font-label-md text-label-md bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95" onclick="switchUgel('UGEL Ferreñafe', this)">
+          UGEL Ferreñafe
+        </button>
+</div>
+<p class="text-right font-label-sm text-label-sm text-outline px-1" id="region-summary-text">
+        Datos consolidados para las 3 provincias regionales
+      </p>
+</div>
+<!-- Core Metrics Carousel / Dual Cards inspired by reference numbers -->
+<div class="grid grid-cols-2 gap-space-xs">
+<!-- Metric 1: Vacantes -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 relative flex flex-col justify-between overflow-hidden">
+<div class="flex items-center justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">backpack</span>
+</div>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-tertiary-fixed text-on-tertiary-fixed font-label-sm">
+            En vivo
+          </span>
+</div>
+<div class="mt-space-md">
+<span class="font-display-lg-mobile text-display-lg-mobile font-black text-on-surface tracking-tight">4,820</span>
+<p class="font-label-sm text-label-sm font-semibold text-on-surface-variant uppercase tracking-wider mt-0.5">Vacantes Alumnos</p>
+<span class="font-body-sm text-body-sm text-tertiary font-medium flex items-center gap-0.5 mt-1">
+<span class="material-symbols-outlined text-[14px]">north_east</span> Inicial, Prim., Sec.
+          </span>
+</div>
+</div>
+<!-- Metric 2: Plazas Docentes -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 relative flex flex-col justify-between overflow-hidden">
+<div class="flex items-center justify-between">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">school</span>
+</div>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-secondary-container text-on-secondary-container font-label-sm">
+            Proceso 2025
+          </span>
+</div>
+<div class="mt-space-md">
+<span class="font-display-lg-mobile text-display-lg-mobile font-black text-on-surface tracking-tight">342</span>
+<p class="font-label-sm text-label-sm font-semibold text-on-surface-variant uppercase tracking-wider mt-0.5">Plazas Docentes</p>
+<span class="font-body-sm text-body-sm text-primary font-medium flex items-center gap-0.5 mt-1">
+<span class="material-symbols-outlined text-[14px]">assignment_turned_in</span> Contrato &amp; Nomb.
+          </span>
+</div>
+</div>
+</div>
+<!-- Live Registered Vacancies List (Matching visual style of user prompt reference) -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between px-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">density_small</span>
+          Colegios con vacantes publicadas
+        </h3>
+<a class="font-label-md text-label-md text-primary font-bold hover:underline" href="#">Ver todo</a>
+</div>
+<!-- Card Item 1 (Exact structure of MAKINFO: Left metadata, Right ratio) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 transition-all active:bg-surface-container-low">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-semibold">Cód. Modular Nº 0248278</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary-container/50 text-on-secondary-container">
+            UGEL Chiclayo
+          </span>
+</div>
+<div class="flex items-end justify-between mt-space-xs">
+<div class="space-y-0.5 max-w-[70%]">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">
+              10022 MIGUEL GRAU SEMINARIO
+            </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Nivel: Primaria • Urbana • Mañana
+            </p>
+<p class="font-body-sm text-body-sm text-outline">
+              Distrito: JOSÉ LEONARDO ORTIZ
+            </p>
+</div>
+<!-- Ratio display as seen in reference -->
+<div class="text-right">
+<span class="font-display-lg-mobile text-display-lg-mobile font-black text-on-surface tracking-tighter">
+              13<span class="text-outline font-semibold text-[18px]"> / 15</span>
+</span>
+<p class="font-label-sm text-label-sm text-tertiary font-bold">2 libres</p>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between bg-surface-container-low rounded-lg px-space-sm py-1.5">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+<span class="font-label-sm text-label-sm font-medium">Recepción abierta hasta 28 Feb</span>
+</div>
+<button class="font-label-md text-label-md text-primary font-bold flex items-center gap-0.5 active:opacity-70">
+            Detalles <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card Item 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 transition-all active:bg-surface-container-low">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-semibold">Cód. Modular Nº 0394817</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-tertiary-fixed text-on-tertiary-fixed font-label-sm">
+            UGEL Lambayeque
+          </span>
+</div>
+<div class="flex items-end justify-between mt-space-xs">
+<div class="space-y-0.5 max-w-[70%]">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">
+              I.E. JUAN MANUEL ITURREGUI
+            </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Nivel: Secundaria • Jornada Completa (JEC)
+            </p>
+<p class="font-body-sm text-body-sm text-outline">
+              Distrito: LAMBAYEQUE
+            </p>
+</div>
+<!-- Ratio display -->
+<div class="text-right">
+<span class="font-display-lg-mobile text-display-lg-mobile font-black text-on-surface tracking-tighter">
+              28<span class="text-outline font-semibold text-[18px]"> / 30</span>
+</span>
+<p class="font-label-sm text-label-sm text-tertiary font-bold">2 libres</p>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between bg-surface-container-low rounded-lg px-space-sm py-1.5">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+<span class="font-label-sm text-label-sm font-medium">Recepción digital habilitada</span>
+</div>
+<button class="font-label-md text-label-md text-primary font-bold flex items-center gap-0.5 active:opacity-70">
+            Detalles <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card Item 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 transition-all active:bg-surface-container-low">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-semibold">Cód. Modular Nº 0512948</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-fixed text-on-primary-fixed font-label-sm">
+            UGEL Ferreñafe
+          </span>
+</div>
+<div class="flex items-end justify-between mt-space-xs">
+<div class="space-y-0.5 max-w-[70%]">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">
+              0134 INICIAL SAN FRANCISCO
+            </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Nivel: A2 - Inicial Jardín • Rural 1
+            </p>
+<p class="font-body-sm text-body-sm text-outline">
+              Distrito: PÍTIPO • Batangrande
+            </p>
+</div>
+<div class="text-right">
+<span class="font-display-lg-mobile text-display-lg-mobile font-black text-on-surface tracking-tighter">
+              10<span class="text-outline font-semibold text-[18px]"> / 10</span>
+</span>
+<p class="font-label-sm text-label-sm text-error font-bold">Completo</p>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between bg-surface-container-low rounded-lg px-space-sm py-1.5">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-error">info</span>
+<span class="font-label-sm text-label-sm font-medium">En lista de espera comunitaria</span>
+</div>
+<button class="font-label-md text-label-md text-primary font-bold flex items-center gap-0.5 active:opacity-70">
+            Detalles <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Highlighted Regional Direct Actions (Bento Box style) -->
+<div class="space-y-space-xs pt-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold px-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">bolt</span>
+        Módulos Prioritarios 2025
+      </h3>
+<!-- Featured Action Card: Matrícula Escolar -->
+<div class="rounded-xl bg-gradient-to-br from-primary-container to-primary text-on-primary p-space-md shadow-md relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
+<div class="flex items-start justify-between relative z-10">
+<div class="space-y-1 max-w-[80%]">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
+              Matrícula Regional 2025
+            </span>
+<h4 class="font-headline-md text-headline-md font-bold text-on-primary leading-tight mt-1">
+              ¿Buscas vacante escolar para tus hijos?
+            </h4>
+<p class="font-body-sm text-body-sm text-on-primary/85 leading-snug">
+              Accede a la plataforma oficial de registro y conoce requisitos según tu distrito.
+            </p>
+</div>
+<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">how_to_reg</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center gap-space-xs relative z-10">
+<button class="flex-1 bg-surface-container-lowest text-primary py-2.5 px-space-md rounded-lg font-label-lg text-label-lg font-bold shadow-sm active:scale-98 transition-transform text-center flex items-center justify-center gap-1">
+            Iniciar Registro <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<button class="w-10 h-10 rounded-lg bg-white/15 text-on-primary flex items-center justify-center active:bg-white/25 transition-colors" onclick="toggleBookmark(this)">
+<span class="material-symbols-outlined text-[20px]">bookmark_border</span>
+</button>
+</div>
+</div>
+<!-- Secondary Split Module: Docentes & Infraestructura -->
+<div class="grid grid-cols-2 gap-space-xs">
+<!-- Module A: Convocatoria Docente -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<div class="w-9 h-9 rounded-lg bg-surface-container-high text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-snug">
+              Plazas Docentes
+            </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-2">
+              Cronograma de adjudicación UGEL Chiclayo y Lambayeque.
+            </p>
+</div>
+<a class="mt-space-md inline-flex items-center gap-1 font-label-md text-label-md text-primary font-bold active:opacity-75" href="#">
+            Ver cuadros <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+</div>
+<!-- Module B: Infraestructura Educativa -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<div class="w-9 h-9 rounded-lg bg-surface-container-high text-secondary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[20px]">domain</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-snug">
+              Estado de I.E.
+            </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-2">
+              Reporte de mantenimiento preventivo y mobiliario.
+            </p>
+</div>
+<a class="mt-space-md inline-flex items-center gap-1 font-label-md text-label-md text-secondary font-bold active:opacity-75" href="#">
+            Monitoreo <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Official News / Comunicados GRED Lambayeque -->
+<div class="space-y-space-xs pt-space-xs pb-space-md">
+<div class="flex items-center justify-between px-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">campaign</span>
+          Comunicados Oficiales GRED
+        </h3>
+<span class="font-label-sm text-label-sm text-outline">Lambayeque al día</span>
+</div>
+<!-- News Item 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm border border-outline-variant/30 flex items-center gap-space-md">
+<img class="w-20 h-20 rounded-lg object-cover shrink-0 bg-surface-container" data-alt="A friendly classroom in Lambayeque Peru with smiling students receiving new textbooks, bathed in warm natural coastal sunlight, modern institutional photo style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp2qLnKQfFjGglxlq1ZLm0WI6GhESwrjZ0vkIIsnbD0CyHrcGPE2D2oN_uvj5lVV_dSBy6Y6U9T-WhtD3oNR57GJ89yngNHXIjB-rCLMsJgF2pwdgN9YoHtqXdK7lKWrxiHX0X9ZJA0e3vKL8H-vFHfFkR4ptP0nSeDz9hn20WXxN246Rs8VG_jzZl_sdavxzHK-Lb1Dl5ImK5DAD3ta7SAdlLYiLIhDLpU7JsPHCr_8dWcZE81M76Zw"/>
+<div class="flex-1 min-w-0 pr-1">
+<div class="flex items-center gap-1 text-[11px] text-tertiary font-bold uppercase tracking-wider font-label-sm">
+<span>Materiales 2025</span> • <span>Hace 2h</span>
+</div>
+<h4 class="font-label-lg text-label-lg font-bold text-on-surface truncate mt-0.5">
+            GRED inicia reparto de cuadernos de trabajo
+          </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">
+            Lote destinado para más de 120 escuelas rurales en Ferreñafe e Incahuasi.
+          </p>
+</div>
+</div>
+<!-- News Item 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm border border-outline-variant/30 flex items-center gap-space-md">
+<img class="w-20 h-20 rounded-lg object-cover shrink-0 bg-surface-container" data-alt="Peruvian modern educational auditorium in Chiclayo with teachers attending an official workshop, clean institutional blue tones, warm professional atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAByso9HnnvIuLD00CtmyJ9ZYARYX4doEflcyygdnDke4JRlW6PfYS6ZQYIu8KAqaVDKs2v__xPmpd9VR6LvlZthjo_t21SNAKfHbvxuDDuNjhQH2n6xoLJLcUhyx_4J9Zr6uEL6uyyQFmMbRz0_x28MAdX1HrN4P-dP4l8TsFQl0OFHu6pc32ptYFWbISxqsDbq3iNz8IZX--hsZI4RGxEKY0J4hF2csjkXHnOJ2DyQxyyXrI2-1q4gw"/>
+<div class="flex-1 min-w-0 pr-1">
+<div class="flex items-center gap-1 text-[11px] text-primary font-bold uppercase tracking-wider font-label-sm">
+<span>Capacitación</span> • <span>Ayer</span>
+</div>
+<h4 class="font-label-lg text-label-lg font-bold text-on-surface truncate mt-0.5">
+            Taller regional para directores sobre SIAGIE
+          </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">
+            Orientaciones clave para el registro de matrículas sin cobros indebidos.
+          </p>
+</div>
+</div>
+<!-- Regional Support Box -->
+<div class="rounded-xl bg-surface-container p-space-md flex items-center gap-space-md text-on-surface border border-outline-variant/20">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">support_agent</span>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="font-headline-sm text-headline-sm font-bold">Línea de Orientación Ciudadana</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Atención telefónica gratuita: (074) 231500 • Chiclayo</p>
+</div>
+</div>
+</div>
+</div>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-primary-container shadow-[0_-6px_20px_rgba(129,48,25,0.2)]" data-active-classes="text-secondary-fixed scale-105 font-bold"><div class="h-16 relative flex items-center justify-between px-2"><a class="flex-1 flex flex-col items-center justify-center h-full text-on-primary/75 hover:text-on-primary transition-all duration-200 active:scale-95" data-path="matriculas" href="#"><span class="material-symbols-outlined text-[22px]">backpack</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">Matrículas</span></a><a class="flex-1 flex flex-col items-center justify-center h-full text-on-primary/75 hover:text-on-primary transition-all duration-200 active:scale-95" data-path="plazas" href="#"><span class="material-symbols-outlined text-[22px]">school</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">Plazas</span></a><div class="flex-1 flex items-center justify-center relative"><a aria-current="page" class="absolute -top-7 w-14 h-14 rounded-full bg-primary-container flex items-center justify-center ring-4 ring-surface shadow-[0_8px_24px_-4px_rgba(160,71,46,0.55)] transition-transform duration-200 text-secondary-fixed scale-105 font-bold" data-path="inicio" href="#"><span class="material-symbols-outlined text-[28px]">home</span></a><span class="font-label-sm text-label-sm mt-8 text-on-primary/90 font-semibold tracking-tight">Inicio</span></div><a class="flex-1 flex flex-col items-center justify-center h-full text-on-primary/75 hover:text-on-primary transition-all duration-200 active:scale-95" data-path="materiales" href="#"><span class="material-symbols-outlined text-[22px]">auto_stories</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">Materiales</span></a><a class="flex-1 flex flex-col items-center justify-center h-full text-on-primary/75 hover:text-on-primary transition-all duration-200 active:scale-95" data-path="infraestructura" href="#"><span class="material-symbols-outlined text-[22px]">apartment</span><span class="font-label-sm text-label-sm mt-0.5 tracking-tight">I.E. / Infra</span></a></div></nav></body></html>

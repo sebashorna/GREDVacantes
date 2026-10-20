@@ -1,0 +1,30 @@
+{
+  "name": "educa-lambayeque",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Panel administrativo y API del portal Educa Lambayeque (GRED Lambayeque)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev --workspace @educa/api",
+    "dev:admin": "npm run dev --workspace @educa/admin",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspace @educa/api",
+    "db:seed": "npm run db:seed --workspace @educa/api",
+    "db:studio": "npm run db:studio --workspace @educa/api"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true,
+    "esbuild@0.25.12": true
+  }
+}

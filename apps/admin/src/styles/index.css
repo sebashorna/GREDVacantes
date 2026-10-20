@@ -1,0 +1,173 @@
+@import 'tailwindcss';
+
+/* --------------------------------------------------------------------------
+   Plus Jakarta Sans autoalojada (ver /public/fonts).
+   Se declara aqui, y no en un <link> del index.html, para que el tema
+   quede completo en un unico archivo.
+   -------------------------------------------------------------------------- */
+/* @import '/fonts/plus-jakarta-sans.css'; -- archivo no disponible; se usa fallback del sistema */
+
+/* --------------------------------------------------------------------------
+   Tokens de color oficiales.
+   Los 37 valores provienen del `tailwind.config` de los mockups Stitch
+   ("Tierra Santa" - tema terracota). Se mantienen los nombres originales
+   para no perder trazabilidad con el diseno de referencia.
+   -------------------------------------------------------------------------- */
+@theme {
+  /* --- Superficies --- */
+  --color-background: #fff8f6;
+  --color-surface: #fff8f6;
+  --color-surface-bright: #fff8f6;
+  --color-surface-dim: #e2d8d6;
+  --color-surface-variant: #eae0de;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fcf1ef;
+  --color-surface-container: #f6ecea;
+  --color-surface-container-high: #f0e6e4;
+  --color-surface-container-highest: #eae0de;
+  --color-surface-tint: #9b442b;
+
+  /* --- Primario (terracota) --- */
+  --color-primary: #813019;
+  --color-primary-fixed: #ffdbd1;
+  --color-primary-fixed-dim: #ffb5a0;
+  --color-primary-container: #a0472e;
+  --color-on-primary: #ffffff;
+  --color-on-primary-fixed: #3b0900;
+  --color-on-primary-fixed-variant: #7c2d16;
+  --color-on-primary-container: #ffd5ca;
+  --color-inverse-primary: #ffb5a0;
+
+  /* --- Secundario (ocre) --- */
+  --color-secondary: #75593a;
+  --color-secondary-fixed: #ffddbb;
+  --color-secondary-fixed-dim: #e5c099;
+  --color-secondary-container: #fdd6ae;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed: #2b1701;
+  --color-on-secondary-fixed-variant: #5c4224;
+  --color-on-secondary-container: #785b3c;
+
+  /* --- Terciario (verde oliva) --- */
+  --color-tertiary: #424e36;
+  --color-tertiary-fixed: #dae7c6;
+  --color-tertiary-fixed-dim: #becbac;
+  --color-tertiary-container: #5a664c;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-fixed: #141e0a;
+  --color-on-tertiary-fixed-variant: #3f4a32;
+  --color-on-tertiary-container: #d6e3c2;
+
+  /* --- Errores --- */
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* --- Sobre superficie y contornos --- */
+  --color-on-surface: #1f1b1a;
+  --color-on-surface-variant: #55423d;
+  --color-on-background: #1f1b1a;
+  --color-outline: #89726c;
+  --color-outline-variant: #dcc1ba;
+
+  /* --- Inversas --- */
+  --color-inverse-surface: #352f2e;
+  --color-inverse-on-surface: #f9eeec;
+
+  /* --- Tipografia --- */
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Radios (del mockup) --- */
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* --- Espaciados con nombre (del mockup) --- */
+  --spacing-gutter-mobile: 0.75rem;
+  --spacing-space-2xs: 0.125rem;
+  --spacing-space-xs: 0.25rem;
+  --spacing-gutter: 1rem;
+  --spacing-margin: 1rem;
+  --spacing-margin-mobile: 1rem;
+  --spacing-space-xl: 2rem;
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: var(--color-outline-variant);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Foco visible y coherente en toda la app (accesibilidad). */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Barra de desplazamiento discreta, coherente con el tema. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface-container-low);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-outline-variant);
+    border-radius: 9999px;
+    border: 2px solid var(--color-surface-container-low);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-outline);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Utilidades propias
+   -------------------------------------------------------------------------- */
+@layer utilities {
+  /* Tarjetas: superficie mas clara que el fondo, como en los mockups. */
+  .card {
+    background-color: var(--color-surface-container-lowest);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: var(--radius-xl);
+  }
+
+  /* Texto de apoyo para etiquetas de datos. */
+  .text-label {
+    color: var(--color-on-surface-variant);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* Oculta visualmente pero mantiene para lectores de pantalla. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
