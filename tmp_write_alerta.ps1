@@ -1,0 +1,11 @@
+﻿'import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { api } from '@/lib/api';
+import type { Alerta, Pagina } from '@/lib/tipos';
+import { mensajeDeError, useAuth } from '@/features/auth/auth-context';
+import { usePaginacion } from '@/hooks/usePaginacion';
+import { Badge, type TonoBadge } from '@/components/ui/Badge';
+import { CampoSelect, CampoTexto, CampoArea } from '@/components/ui/Campo';
+import { Modal } from '@/components/ui/Modal';
+import { Tabla, type Columna } from '@/components/ui/Tabla';

@@ -37,13 +37,15 @@ export function DashboardPage() {
     );
   }
 
+  // Tarjetas con acento izquierdo terracota (spec Cards del mockup:
+  // "4px primary terracotta left-border accent") sobre outline sándrail.
   const tarjetas = [
-    { label: 'Instituciones', valor: datos?.instituciones ?? 0, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { label: 'Vacantes', valor: datos?.vacantes ?? 0, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Plazas', valor: datos?.plazas ?? 0, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Locales', valor: datos?.locales ?? 0, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Alertas abiertas', valor: datos?.alertasAbiertas ?? 0, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Comunicados publicados', valor: datos?.comunicadosPublicados ?? 0, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Instituciones', valor: datos?.instituciones ?? 0 },
+    { label: 'Vacantes', valor: datos?.vacantes ?? 0 },
+    { label: 'Plazas', valor: datos?.plazas ?? 0 },
+    { label: 'Locales', valor: datos?.locales ?? 0 },
+    { label: 'Alertas abiertas', valor: datos?.alertasAbiertas ?? 0 },
+    { label: 'Comunicados publicados', valor: datos?.comunicadosPublicados ?? 0 },
   ];
 
   return (
@@ -55,7 +57,7 @@ export function DashboardPage() {
         </div>
         <button
           onClick={() => refetch()}
-          className="flex items-center gap-2 px-3 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-600 font-medium transition"
+          className="flex items-center gap-2 px-3 py-2 border border-outline-variant rounded-lg hover:bg-surface-container-low text-on-surface-variant font-medium transition bg-white"
         >
           Actualizar
         </button>
@@ -63,15 +65,15 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {tarjetas.map((t) => (
-          <div key={t.label} className={`p-5 rounded-xl ${t.bg} border border-slate-200`}>
+          <div key={t.label} className="p-5 rounded-xl bg-white border border-outline-variant border-l-4 border-l-primary-container">
             <p className="text-sm font-medium text-slate-500 mb-1">{t.label}</p>
-            <p className="text-3xl font-bold {t.color}">{t.valor}</p>
+            <p className="text-3xl font-bold text-primary">{t.valor}</p>
           </div>
         ))}
       </div>
 
-      <div className="p-5 rounded-xl bg-white border border-slate-200">
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">Sesion activa</h2>
+      <div className="p-5 rounded-xl bg-white border border-outline-variant">
+        <h2 className="text-sm font-semibold text-on-surface mb-3">Sesion activa</h2>
         <p className="text-sm text-slate-600">
           Usuario: <span className="font-medium">{usuario?.nombre}</span> ({usuario?.email})
         </p>

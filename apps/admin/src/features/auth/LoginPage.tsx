@@ -39,10 +39,10 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-slate-100">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
+    <div className="flex h-screen items-center justify-center bg-background">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-outline-variant p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-indigo-700">Educa Lambayeque</h1>
+          <h1 className="text-2xl font-bold text-primary">Educa Lambayeque</h1>
           <p className="text-sm text-slate-500 mt-1">Panel Administrativo - Inicio de sesión</p>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -53,7 +53,7 @@ export function LoginPage() {
               <input
                 {...form.register('email')}
                 type="email"
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                className="w-full pl-10 pr-4 py-2.5 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition bg-white"
                 placeholder="admin@gredlambayeque.gob.pe"
               />
             </div>
@@ -68,7 +68,7 @@ export function LoginPage() {
               <input
                 {...form.register('password')}
                 type="password"
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                className="w-full pl-10 pr-4 py-2.5 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition bg-white"
                 placeholder="••••••••"
               />
             </div>
@@ -85,7 +85,7 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={cargando}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-200 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+            className="w-full py-3 bg-primary-container hover:bg-primary disabled:bg-primary-fixed-dim text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
           >
             {cargando ? 'Ingresando...' : 'Iniciar sesión'}
           </button>
@@ -98,7 +98,7 @@ export function LoginPage() {
           </p>
         </div>
         <p className="mt-4 text-center">
-          <Link to="/" className="text-sm text-indigo-600 hover:underline">&larr; Volver al inicio</Link>
+          <Link to="/" className="text-sm text-primary hover:underline">&larr; Volver al inicio</Link>
         </p>
       </div>
     </div>

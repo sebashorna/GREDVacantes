@@ -1,8 +1,34 @@
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/features/auth/auth-context';
-import { LogOut, Menu, ShieldAlert, Users } from 'lucide-react';
+import {
+  AlertTriangle,
+  FileUp,
+  LayoutDashboard,
+  LogOut,
+  Megaphone,
+  Menu,
+  School,
+  Users,
+} from 'lucide-react';
 
 interface MainLayoutProps {
   children: React.ReactNode;
+}
+
+const ENLACES = [
+  { ruta: '/dashboard', etiqueta: 'Dashboard', icono: LayoutDashboard },
+  { ruta: '/convocatorias', etiqueta: 'Convocatorias', icono: Megaphone },
+  { ruta: '/plazas', etiqueta: 'Plazas', icono: Users },
+  { ruta: '/vacantes', etiqueta: 'Vacantes', icono: School },
+  { ruta: '/alertas', etiqueta: 'Alertas', icono: AlertTriangle },
+  { ruta: '/importacion', etiqueta: 'Importación', icono: FileUp },
+];
+
+function claseEnlace(activo: boolean): string {
+  const base = 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition font-medium';
+  return activo
+    ? `${base} bg-surface-container-low text-primary`
+    : `${base} hover:bg-slate-100 text-slate-600 hover:text-slate-900`;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
@@ -13,45 +39,20 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 shrink-0">
         <div className="p-6 border-b border-slate-200">
-          <h1 className="text-lg font-bold tracking-tight text-indigo-700">Educa <span className="text-slate-600">Lambayeque</span></h1>
+          <h1 className="text-lg font-bold tracking-tight text-primary">Educa <span className="text-slate-600">Lambayeque</span></h1>
           <p className="text-xs text-slate-500 mt-1">GRE Lambayeque - Panel Administrativo</p>
         </div>
         <nav className="flex-1 px-4 py-4 space-y-1">
-          <a
-            href="/dashboard"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-indigo-50 text-indigo-700 font-medium"
-          >
-            <Users className="w-5 h-5" /> Dashboard
-          </a>
-          <a
-            href="/convocatorias"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-          >
-            <ShieldAlert className="w-5 h-5" /> Convocatorias
-          </a>
-          <a
-            href="/plazas"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-          >
-            <ShieldAlert className="w-5 h-5" /> Plazas
-          </a>
-          <a
-            href="/vacantes"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-          >
-            <ShieldAlert className="w-5 h-5" /> Vacantes
-          </a>
-          <a
-            href="/alertas"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-          >
-            <ShieldAlert className="w-5 h-5" /> Alertas
-          </a>
+          {ENLACES.map(({ ruta, etiqueta, icono: Icono }) => (
+            <NavLink key={ruta} to={ruta} className={({ isActive }) => claseEnlace(isActive)}>
+              <Icono className="w-5 h-5" /> {etiqueta}
+            </NavLink>
+          ))}
         </nav>
         <div className="p-4 border-t border-slate-200">
           <button
             onClick={cerrarSesion}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 text-red-600 hover:text-red-800 transition font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-error-container text-error hover:text-on-error-container transition font-medium"
           >
             <LogOut className="w-5 h-5" /> Cerrar sesi&oacute;n
           </button>
@@ -72,7 +73,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-500 hidden sm:block">GRE Lambayeque</span>
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-xs">
+            <div className="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-semibold text-xs border border-secondary-fixed-dim">
               {usuario?.nombre?.charAt(0) ?? '?'}
             </div>
           </div>
