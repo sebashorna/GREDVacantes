@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/features/auth/auth-context';
 import {
   AlertTriangle,
-  FileUp,
+  Building2,
   LayoutDashboard,
   LogOut,
   Megaphone,
@@ -21,7 +21,7 @@ const ENLACES = [
   { ruta: '/plazas', etiqueta: 'Plazas', icono: Users },
   { ruta: '/vacantes', etiqueta: 'Vacantes', icono: School },
   { ruta: '/alertas', etiqueta: 'Alertas', icono: AlertTriangle },
-  { ruta: '/importacion', etiqueta: 'Importación', icono: FileUp },
+  { ruta: '/infraestructura', etiqueta: 'Infraestructura y aulas', icono: Building2 },
 ];
 
 function claseEnlace(activo: boolean): string {

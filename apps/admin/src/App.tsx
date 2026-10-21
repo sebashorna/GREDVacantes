@@ -8,7 +8,7 @@ import { ConvocatoriasPage } from '@/pages/ConvocatoriasPage';
 import { PlazasPage } from '@/pages/PlazasPage';
 import { VacantesPage } from '@/pages/VacantesPage';
 import { AlertasPage } from '@/pages/AlertasPage';
-import { ImportacionPage } from '@/pages/ImportacionPage';
+import { InfraestructuraPage } from '@/pages/InfraestructuraPage';
 
 export default function App() {
   const { cargando, estaAutenticado } = useAuth();
@@ -45,7 +45,7 @@ export default function App() {
         <Route path="/plazas" element={<PlazasPage />} />
         <Route path="/vacantes" element={<VacantesPage />} />
         <Route path="/alertas" element={<AlertasPage />} />
-        <Route path="/importacion" element={<ImportacionPage />} />
+        <Route path="/infraestructura" element={<InfraestructuraPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>
     </MainLayout>

@@ -6,11 +6,17 @@ import { paginar, ordenSeguro } from '../../common/paginacion.js';
 import {
   localCreateSchema,
   localUpdateSchema,
+  type EstadoLocal,
   type LocalCreateInput,
   type LocalUpdateInput,
 } from '@educa/shared';
 
 const CAMPOS_ORDEN = ['codigoLocal', 'estado', 'createdAt'] as const;
+const ESTADOS_PRIORITARIOS: EstadoLocal[] = [
+  'EN_REFRACCION',
+  'AULAS_TEMPORALES',
+  'ATENCION_PRIORITARIA',
+];
 
 const INCLUYE = {
   ie: {
@@ -19,7 +25,13 @@ const INCLUYE = {
       nombre: true,
       codigoModular: true,
       ugel: { select: { id: true, nombre: true } },
-      distrito: { select: { id: true, nombre: true } },
+      distrito: {
+        select: {
+          id: true,
+          nombre: true,
+          provincia: { select: { id: true, nombre: true } },
+        },
+      },
     },
   },
   _count: { select: { alertas: true } },
@@ -40,13 +52,19 @@ export interface FiltrosLocales {
 
 export async function listar(filtros: FiltrosLocales) {
   const where: Prisma.LocalEscolarWhereInput = {
-    ...(filtros.estado ? { estado: filtros.estado as never } : {}),
+    ...(filtros.estado || filtros.prioritario
+      ? {
+          AND: [
+            ...(filtros.estado ? [{ estado: filtros.estado as never }] : []),
+            ...(filtros.prioritario
+              ? [{ estado: { in: ESTADOS_PRIORITARIOS } }]
+              : []),
+          ],
+        }
+      : {}),
     ...(filtros.ugelId ? { ie: { ugelId: filtros.ugelId } } : {}),
     ...(filtros.provinciaId ? { ie: { provinciaId: filtros.provinciaId } } : {}),
     ...(filtros.ieId ? { ieId: filtros.ieId } : {}),
-    ...(filtros.prioritario
-      ? { estado: { in: ['EN_REFRACCION', 'AULAS_TEMPORALES', 'ATENCION_PRIORITARIA'] } }
-      : {}),
     ...(filtros.search
       ? {
           OR: [

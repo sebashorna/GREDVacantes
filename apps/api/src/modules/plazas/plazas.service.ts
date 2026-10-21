@@ -20,6 +20,7 @@ const INCLUYE = {
       codigoModular: true,
       ugel: { select: { id: true, nombre: true } },
       distrito: { select: { id: true, nombre: true } },
+      provincia: { select: { id: true, nombre: true } },
     },
   },
   convocatoria: { select: { id: true, titulo: true, numeroRD: true, fase: true } },

@@ -71,7 +71,11 @@ export interface Plaza {
   tipo: string;
   cantidad: number;
   estado: string;
-  ie?: InstitucionResumen & { ugel?: UgelResumen | null };
+  ie?: InstitucionResumen & {
+    ugel?: UgelResumen | null;
+    distrito?: { id: number; nombre: string } | null;
+    provincia?: { id: number; nombre: string } | null;
+  };
   convocatoria?: { id: number; titulo: string; numeroRD: string; fase: string } | null;
 }
 
@@ -93,6 +97,32 @@ export interface Alerta {
   localEscolar?: { id: number; codigoLocal: string; estado: string } | null;
 }
 
+export interface LocalEscolar {
+  id: number;
+  ieId: number;
+  codigoLocal: string;
+  estado: string;
+  aulasOperativas: number;
+  aulasTotales: number;
+  agua: string;
+  luz: boolean;
+  fibra: boolean;
+  capacidadAlumnos: number | null;
+  avanceObras: number | string | null;
+  presupuesto: number | string | null;
+  fichaEdanUrl: string | null;
+  ultimaInspeccion: string | null;
+  ie?: InstitucionResumen & {
+    ugel?: UgelResumen | null;
+    distrito?: {
+      id: number;
+      nombre: string;
+      provincia?: { id: number; nombre: string } | null;
+    } | null;
+  };
+  _count?: { alertas: number };
+}
+
 /* ------------------------------------------------------------------ */
 /* Catalogos                                                           */
 /* ------------------------------------------------------------------ */
@@ -102,26 +132,6 @@ export interface OpcionCatalogo {
   codigo: string;
   nombre: string;
   provinciaId?: number;
-}
-
-/* ------------------------------------------------------------------ */
-/* Importacion                                                         */
-/* ------------------------------------------------------------------ */
-
-export interface ResultadoFilaImportacion {
-  fila: number;
-  estado: 'IMPORTADA' | 'ACTUALIZADA' | 'ERROR';
-  mensaje?: string;
-  codigo?: string;
-}
-
-export interface ResumenImportacion {
-  tipo: string;
-  total: number;
-  importadas: number;
-  actualizadas: number;
-  errores: number;
-  detalle: ResultadoFilaImportacion[];
 }
 
 /** Alias del envelope paginado de la API para abreviar los genericos. */

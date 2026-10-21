@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { Check, CircleHelp, MapPin, Search, X } from 'lucide-react';
 import { ESTADOS_VACANTE, ETIQUETAS_ESTADO_VACANTE, ETIQUETAS_NIVEL, ETIQUETAS_TURNO, NIVELES, TURNOS } from '@shared';
 import { api } from '@/lib/api';
 import type { Pagina, ResumenCupos, Vacante } from '@/lib/tipos';
@@ -17,7 +18,6 @@ import { CampoSelect, CampoTexto } from '@/components/ui/Campo';
 import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
-import { Tabla, type Columna } from '@/components/ui/Tabla';
 
 const TONOS_ESTADO: Record<string, TonoBadge> = {
   LIBRE: 'exito', LISTA_ESPERA: 'advertencia', COMPLETO: 'info', CERRADO: 'neutro',
@@ -169,34 +169,6 @@ export function VacantesPage() {
   });
   const totalDisp = resumen.data?.porEstado.reduce((a, e) => a + (e._sum.cupoDisponibles ?? 0), 0) ?? 0;
   const totalCupo = resumen.data?.porEstado.reduce((a, e) => a + (e._sum.cupoTotal ?? 0), 0) ?? 0;
-  const columnas: Columna<Vacante>[] = [
-    {
-      clave: 'ie', encabezado: 'Institucion',
-      celda: (v) => (
-        <div>
-          <p className="font-semibold text-on-surface">{v.ie?.nombre ?? `IE #${v.ieId}`}</p>
-          <p className="text-xs text-on-surface-variant">{v.ie?.codigoModular} {v.ie?.ugel ? `· ${v.ie.ugel.nombre}` : ''}</p>
-        </div>
-      ),
-    },
-    {
-      clave: 'nivel', encabezado: 'Nivel / Turno',
-      celda: (v) => <span className="text-on-surface">{ETIQUETAS_NIVEL[v.nivel as keyof typeof ETIQUETAS_NIVEL] ?? v.nivel} · {ETIQUETAS_TURNO[v.turno as keyof typeof ETIQUETAS_TURNO] ?? v.turno}</span>,
-    },
-    {
-      clave: 'cupos', encabezado: 'Cupos',
-      celda: (v) => <span className="font-semibold">{v.cupoDisponibles} / {v.cupoTotal}</span>,
-      clase: 'text-center',
-    },
-    {
-      clave: 'limite', encabezado: 'Fecha limite',
-      celda: (v) => <span className="text-on-surface-variant">{fechaCorta(v.fechaLimite)}</span>,
-    },
-    {
-      clave: 'estado', encabezado: 'Estado',
-      celda: (v) => <Badge tono={TONOS_ESTADO[v.estado] ?? 'neutro'}>{ETIQUETAS_ESTADO_VACANTE[v.estado as keyof typeof ETIQUETAS_ESTADO_VACANTE] ?? v.estado}</Badge>,
-    },
-  ];
   const sel = 'h-12 px-3.5 rounded-lg border-[1.5px] border-outline-variant bg-white cursor-pointer';
   return (
     <div className="space-y-6">
@@ -219,31 +191,202 @@ export function VacantesPage() {
         </div>
       </div>
       <div className="flex flex-wrap gap-3">
-        <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="Buscar institucion..."
-          className="h-12 px-4 rounded-lg border-[1.5px] border-outline-variant bg-white outline-none w-full sm:w-72 placeholder:text-on-surface-variant/60 focus:border-primary-container" />
-        <select value={fNivel} onChange={(e) => { setFNivel(e.target.value); setPagina(1); }} className={sel}>
-          <option value="">Todos los niveles</option>
-          {NIVELES.map((n) => <option key={n} value={n}>{ETIQUETAS_NIVEL[n]}</option>)}
-        </select>
-        <select value={fEstado} onChange={(e) => { setFEstado(e.target.value); setPagina(1); }} className={sel}>
+        <div className="relative w-full sm:max-w-sm">
+          <Search
+            size={18}
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+          />
+          <input
+            type="search"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar institución educativa..."
+            className="h-12 w-full rounded-lg border-[1.5px] border-outline-variant bg-white pl-10 pr-10 outline-none placeholder:text-on-surface-variant/60 focus:border-primary-container"
+          />
+          {busqueda && (
+            <button
+              type="button"
+              aria-label="Limpiar búsqueda"
+              onClick={() => setBusqueda('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+            >
+              <X size={17} />
+            </button>
+          )}
+        </div>
+        <select
+          aria-label="Filtrar por estado"
+          value={fEstado}
+          onChange={(e) => { setFEstado(e.target.value); setPagina(1); }}
+          className={sel}
+        >
           <option value="">Todos los estados</option>
           {ESTADOS_VACANTE.map((e) => <option key={e} value={e}>{ETIQUETAS_ESTADO_VACANTE[e]}</option>)}
         </select>
       </div>
-      <div className="bg-white rounded-xl border border-outline-variant">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          aria-pressed={!fNivel}
+          onClick={() => { setFNivel(''); setPagina(1); }}
+          className={`shrink-0 rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+            !fNivel
+              ? 'border-primary-container bg-primary-container text-on-primary'
+              : 'border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
+          {!fNivel && <Check size={15} className="mr-1 inline" />}
+          Todos
+        </button>
+        {NIVELES.map((nivel) => {
+          const activo = fNivel === nivel;
+          return (
+            <button
+              key={nivel}
+              type="button"
+              aria-pressed={activo}
+              onClick={() => { setFNivel(activo ? '' : nivel); setPagina(1); }}
+              className={`shrink-0 rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+                activo
+                  ? 'border-primary-container bg-primary-container text-on-primary'
+                  : 'border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low'
+              }`}
+            >
+              {ETIQUETAS_NIVEL[nivel]}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-on-surface-variant">Seleccione una vacante para ver sus datos.</p>
+        <span className="shrink-0 text-sm font-semibold text-primary">
+          {consulta.isLoading ? 'Cargando...' : `${consulta.data?.meta.total ?? 0} vacantes registradas`}
+        </span>
+      </div>
+      <div className="space-y-3">
         {consulta.isError ? (
-          <p className="p-10 text-center text-error">Error al cargar: {mensajeDeError(consulta.error)}</p>
+          <p role="alert" className="rounded-xl border border-error/30 bg-error-container p-5 text-center text-sm text-on-error-container">
+            Error al cargar las vacantes: {mensajeDeError(consulta.error)}
+          </p>
+        ) : consulta.isLoading ? (
+          <p className="rounded-xl border border-outline-variant bg-white p-8 text-center text-sm text-on-surface-variant">
+            Cargando vacantes...
+          </p>
+        ) : (consulta.data?.data.length ?? 0) === 0 ? (
+          <p className="rounded-xl border border-outline-variant bg-white p-8 text-center text-sm text-on-surface-variant">
+            No hay vacantes que coincidan con los filtros.
+          </p>
         ) : (
           <>
-            <Tabla columnas={columnas} filas={consulta.data?.data ?? []} claveFila={(v) => v.id}
-              cargando={consulta.isLoading} vacio="No hay vacantes registradas."
-              acciones={puedeEscribir ? (v) => (
-                <div className="flex justify-end gap-2">
-                  <Boton variante="secundario" tamano="sm" onClick={() => { setEditando(v); setModalAbierto(true); }}>Editar</Boton>
-                  <Boton variante="secundario" tamano="sm" onClick={() => setEliminando(v)}>Eliminar</Boton>
-                </div>
-              ) : undefined} />
+            {consulta.data?.data.map((vacante) => {
+              const tono = TONOS_ESTADO[vacante.estado] ?? 'neutro';
+              const estado = ETIQUETAS_ESTADO_VACANTE[
+                vacante.estado as keyof typeof ETIQUETAS_ESTADO_VACANTE
+              ] ?? vacante.estado;
+              const completo = vacante.cupoDisponibles === 0;
+              const fechaLimite = fechaCorta(vacante.fechaLimite);
+
+              return (
+                <article
+                  key={vacante.id}
+                  className="overflow-hidden rounded-xl border border-outline-variant bg-white shadow-sm"
+                >
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <h2 className="text-base font-semibold leading-snug text-on-surface">
+                        {vacante.ie?.nombre ?? `I.E. #${vacante.ieId}`}
+                      </h2>
+                      <span className="shrink-0 text-right text-xs font-semibold text-primary">
+                        Cód. N.º
+                        <br />
+                        {vacante.ie?.codigoModular ?? '—'}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+                      <dl className="space-y-1 text-sm text-on-surface-variant">
+                        <div>
+                          <dt className="inline font-semibold text-on-surface">Nivel educativo: </dt>
+                          <dd className="inline">
+                            {ETIQUETAS_NIVEL[vacante.nivel as keyof typeof ETIQUETAS_NIVEL] ?? vacante.nivel}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-semibold text-on-surface">Turno: </dt>
+                          <dd className="inline">
+                            {ETIQUETAS_TURNO[vacante.turno as keyof typeof ETIQUETAS_TURNO] ?? vacante.turno}
+                          </dd>
+                        </div>
+                        {vacante.ie?.ugel?.nombre && (
+                          <div>
+                            <dt className="inline font-semibold text-on-surface">UGEL: </dt>
+                            <dd className="inline">{vacante.ie.ugel.nombre}</dd>
+                          </div>
+                        )}
+                        {vacante.ie?.distrito?.nombre && (
+                          <div>
+                            <dt className="inline font-semibold text-on-surface">Distrito: </dt>
+                            <dd className="inline">{vacante.ie.distrito.nombre}</dd>
+                          </div>
+                        )}
+                        {fechaLimite !== '-' && (
+                          <div>
+                            <dt className="inline font-semibold text-on-surface">Fecha límite: </dt>
+                            <dd className="inline">{fechaLimite}</dd>
+                          </div>
+                        )}
+                      </dl>
+
+                      <div className="ml-auto text-right">
+                        <p className={`whitespace-nowrap text-2xl font-bold leading-none tracking-tight ${
+                          completo ? 'text-on-surface' : 'text-primary'
+                        }`}>
+                          {vacante.cupoDisponibles}
+                          <span className="font-medium text-on-surface-variant"> / {vacante.cupoTotal}</span>
+                        </p>
+                        <p className={`mt-1.5 text-xs font-bold uppercase tracking-wide ${
+                          completo ? 'text-error' : 'text-secondary'
+                        }`}>
+                          {completo ? 'Cupo completo' : 'Vacantes libres'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <Badge tono={tono}>{estado}</Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/60 bg-surface-container-low/70 px-4 py-3">
+                    <span className="flex items-center gap-2 text-sm text-on-surface-variant">
+                      {completo
+                        ? <CircleHelp size={17} className="text-error" />
+                        : <Check size={17} className="text-tertiary" />}
+                      {completo ? 'Consulte disponibilidad en la institución' : 'Vacantes disponibles'}
+                    </span>
+                    {puedeEscribir && (
+                      <div className="flex gap-2">
+                        <Boton
+                          variante="secundario"
+                          tamano="sm"
+                          onClick={() => { setEditando(vacante); setModalAbierto(true); }}
+                        >
+                          Editar
+                        </Boton>
+                        <Boton
+                          variante="secundario"
+                          tamano="sm"
+                          onClick={() => setEliminando(vacante)}
+                        >
+                          Eliminar
+                        </Boton>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
             {consulta.data && (
               <Paginacion pagina={consulta.data.meta.page} totalPaginas={consulta.data.meta.totalPages}
                 total={consulta.data.meta.total} onPagina={setPagina} cargando={consulta.isFetching} />
@@ -251,6 +394,21 @@ export function VacantesPage() {
           </>
         )}
       </div>
+      <aside className="flex items-start gap-4 rounded-xl border border-outline-variant bg-white p-4">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary">
+          <MapPin size={20} />
+        </span>
+        <div>
+          <h2 className="font-semibold text-on-surface">Mesa de Ayuda - Matrícula Lambayeque</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            La asignación y reserva de vacantes es gratuita y está normada por la Gerencia Regional
+            de Educación (GRED).
+          </p>
+          <a href="tel:+5174201928" className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+            Llamar a GRED Lambayeque (074) 20-1928
+          </a>
+        </div>
+      </aside>
       <Modal abierto={modalAbierto} onCerrar={() => setModalAbierto(false)} titulo={editando ? 'Editar vacante' : 'Nueva vacante'}>
         <FormularioVacante key={editando?.id ?? 'nueva'} inicial={editando}
           onExito={() => setModalAbierto(false)} onCancelar={() => setModalAbierto(false)} />
