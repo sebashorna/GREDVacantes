@@ -46,7 +46,13 @@ export interface Vacante {
   cupoTotal: number;
   cupoDisponibles: number;
   estado: string;
-  ie?: InstitucionResumen & { ugel?: UgelResumen | null; distrito?: { id: number; nombre: string } | null };
+  ie?: InstitucionResumen & {
+    telefono?: string | null;
+    whatsapp?: string | null;
+    ugel?: UgelResumen | null;
+    distrito?: { id: number; nombre: string } | null;
+    provincia?: { id: number; nombre: string } | null;
+  };
 }
 
 export interface ResumenCupos {
@@ -76,7 +82,16 @@ export interface Plaza {
     distrito?: { id: number; nombre: string } | null;
     provincia?: { id: number; nombre: string } | null;
   };
-  convocatoria?: { id: number; titulo: string; numeroRD: string; fase: string } | null;
+  convocatoria?: {
+    id: number;
+    titulo: string;
+    numeroRD: string;
+    fase: string;
+    descripcion?: string | null;
+    pdfMeritosUrl?: string | null;
+    fechaInicio?: string;
+    fechaFin?: string;
+  } | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -85,16 +100,24 @@ export interface Plaza {
 
 export interface Alerta {
   id: number;
+  localEscolarId: number;
   tipo: string;
   estado: string;
   descripcion: string;
+  fotos: string[];
   reportadoPor: string;
   telefonoReporte: string | null;
   observacion: string | null;
   resueltoEn: string | null;
   createdAt: string;
   ie?: InstitucionResumen | null;
-  localEscolar?: { id: number; codigoLocal: string; estado: string } | null;
+  localEscolar?: {
+    id: number;
+    codigoLocal: string;
+    estado: string;
+    aulasOperativas: number;
+    aulasTotales: number;
+  } | null;
 }
 
 export interface LocalEscolar {

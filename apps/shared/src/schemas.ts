@@ -147,6 +147,14 @@ export const vacanteUpdateSchema = z.object({
 });
 export type VacanteUpdateInput = z.infer<typeof vacanteUpdateSchema>;
 
+export const vacanteFiltrosSchema = paginacionQuerySchema.extend({
+  nivel: z.enum(NIVELES).optional(),
+  turno: z.enum(TURNOS).optional(),
+  estado: z.enum(ESTADOS_VACANTE).optional(),
+  ugelId: z.coerce.number().int().positive().optional(),
+  ieId: z.coerce.number().int().positive().optional(),
+});
+
 
 export type RespuestaPaginada<T> = {
   data: T[];

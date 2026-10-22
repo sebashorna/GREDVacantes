@@ -113,7 +113,7 @@ router.post(
  */
 router.put(
   '/:id',
-  requiereRol('ADMIN_GRED', 'EDITOR_UGEL'),
+  requiereRol('ADMIN_GRED'),
   validar(institucionUpdateSchema),
   auditar({ accion: 'ACTUALIZAR', entidad: 'institucion' }),
   async (req, res, next) => {

@@ -129,7 +129,8 @@ export function ConvocatoriasPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState<Convocatoria | undefined>();
   const [eliminando, setEliminando] = useState<Convocatoria | null>(null);
-  const puedeEscribir = puede('ADMIN_GRED', 'EDITOR_UGEL');
+  const puedeRegistrar = puede('ADMIN_GRED', 'EDITOR_UGEL');
+  const puedeAdministrar = puede('ADMIN_GRED');
   const consulta = useQuery({
     queryKey: ['convocatorias', params, filtroFase],
     queryFn: async () => {
@@ -179,7 +180,7 @@ export function ConvocatoriasPage() {
       <EncabezadoPagina
         titulo="Convocatorias"
         descripcion="Gestion de convocatorias de vacantes y plazas."
-        accion={puedeEscribir ? { etiqueta: 'Nueva convocatoria', onClick: () => { setEditando(undefined); setModalAbierto(true); } } : undefined}
+        accion={puedeRegistrar ? { etiqueta: 'Nueva convocatoria', onClick: () => { setEditando(undefined); setModalAbierto(true); } } : undefined}
       />
       <div className="flex flex-wrap gap-3">
         <input
@@ -206,7 +207,7 @@ export function ConvocatoriasPage() {
             <Tabla
               columnas={columnas} filas={consulta.data?.data ?? []} claveFila={(c) => c.id}
               cargando={consulta.isLoading} vacio="No hay convocatorias registradas."
-              acciones={puedeEscribir ? (c) => (
+              acciones={puedeAdministrar ? (c) => (
                 <div className="flex justify-end gap-2">
                   <Boton variante="secundario" tamano="sm" onClick={() => { setEditando(c); setModalAbierto(true); }}>Editar</Boton>
                   <Boton variante="secundario" tamano="sm" onClick={() => setEliminando(c)}>Eliminar</Boton>

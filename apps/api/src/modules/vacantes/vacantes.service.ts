@@ -18,8 +18,11 @@ const INCLUYE = {
       id: true,
       nombre: true,
       codigoModular: true,
+      telefono: true,
+      whatsapp: true,
       ugel: { select: { id: true, nombre: true } },
       distrito: { select: { id: true, nombre: true } },
+      provincia: { select: { id: true, nombre: true } },
     },
   },
 } as const;
@@ -42,10 +45,16 @@ export async function listar(filtros: FiltrosVacantes) {
     ...(filtros.nivel ? { nivel: filtros.nivel as never } : {}),
     ...(filtros.turno ? { turno: filtros.turno as never } : {}),
     ...(filtros.estado ? { estado: filtros.estado as never } : {}),
-    ...(filtros.ugelId ? { ie: { ugelId: filtros.ugelId } } : {}),
     ...(filtros.ieId ? { ieId: filtros.ieId } : {}),
-    ...(filtros.search
-      ? { ie: { nombre: { contains: filtros.search, mode: 'insensitive' } } }
+    ...(filtros.ugelId || filtros.search
+      ? {
+          ie: {
+            ...(filtros.ugelId ? { ugelId: filtros.ugelId } : {}),
+            ...(filtros.search
+              ? { nombre: { contains: filtros.search, mode: 'insensitive' as const } }
+              : {}),
+          },
+        }
       : {}),
   };
 

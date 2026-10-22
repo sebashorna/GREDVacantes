@@ -13,7 +13,15 @@ import {
 const CAMPOS_ORDEN = ['createdAt', 'tipo', 'estado'] as const;
 
 const INCLUYE = {
-  localEscolar: { select: { id: true, codigoLocal: true, estado: true } },
+  localEscolar: {
+    select: {
+      id: true,
+      codigoLocal: true,
+      estado: true,
+      aulasOperativas: true,
+      aulasTotales: true,
+    },
+  },
   ie: { select: { id: true, nombre: true, codigoModular: true } },
 } as const;
 
@@ -41,6 +49,7 @@ export async function listar(filtros: FiltrosAlertas) {
             { descripcion: { contains: filtros.search, mode: 'insensitive' } },
             { reportadoPor: { contains: filtros.search, mode: 'insensitive' } },
             { ie: { nombre: { contains: filtros.search, mode: 'insensitive' } } },
+            { localEscolar: { codigoLocal: { contains: filtros.search } } },
           ],
         }
       : {}),
@@ -65,6 +74,14 @@ export async function obtenerPorId(id: number) {
 
 export async function crear(datos: AlertaCreateInput) {
   const data = alertaCreateSchema.parse(datos);
+  const local = await prisma.localEscolar.findUnique({
+    where: { id: data.localEscolarId },
+    select: { ieId: true },
+  });
+  if (!local) throw AppError.noEncontrado('Local escolar');
+  if (local.ieId !== data.ieId) {
+    throw AppError.badRequest('La institución educativa no corresponde al local escolar seleccionado');
+  }
   return prisma.alertaCiudadana.create({
     data: { ...data, telefonoReporte: data.telefonoReporte || null },
     include: INCLUYE,
@@ -72,9 +89,7 @@ export async function crear(datos: AlertaCreateInput) {
 }
 
 /**
- * Cambia el estado de una alerta.
- *
- * Al pasar a RESUELTA se registra la fecha de resolucion.
+ * Actualiza estado, observacion y fecha de resolucion de una alerta.
  */
 export async function cambiarEstado(id: number, datos: AlertaEstadoInput) {
   const data = alertaEstadoSchema.parse(datos);
@@ -85,20 +100,27 @@ export async function cambiarEstado(id: number, datos: AlertaEstadoInput) {
     data: {
       estado: data.estado,
       observacion: data.observacion ?? null,
-      ...(data.estado === 'RESUELTA' ? { resueltoEn: new Date() } : {}),
+      resueltoEn: data.estado === 'RESUELTA' ? new Date() : null,
     },
     include: INCLUYE,
   });
 }
 
 /**
- * Actualiza una alerta. Usa el mismo schema de alta porque una alerta solo
- * se modifica para corregir o ampliar su descripcion.
+ * Actualiza los datos del reporte manteniendo el estado de seguimiento actual.
  */
 export async function actualizar(id: number, datos: AlertaCreateInput) {
   const data = alertaCreateSchema.parse(datos);
   const existe = await prisma.alertaCiudadana.findUnique({ where: { id } });
   if (!existe) throw AppError.noEncontrado('Alerta');
+  const local = await prisma.localEscolar.findUnique({
+    where: { id: data.localEscolarId },
+    select: { ieId: true },
+  });
+  if (!local) throw AppError.noEncontrado('Local escolar');
+  if (local.ieId !== data.ieId) {
+    throw AppError.badRequest('La institución educativa no corresponde al local escolar seleccionado');
+  }
   return prisma.alertaCiudadana.update({
     where: { id },
     data: { ...data, telefonoReporte: data.telefonoReporte || null },

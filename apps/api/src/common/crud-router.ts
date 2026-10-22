@@ -43,6 +43,10 @@ export interface CrudOpciones<TBody, TUpdate, TFiltros, TId = number> {
   };
   /** Roles autorizados a escribir. Por defecto, solo ADMIN_GRED. */
   rolesEscritura?: Rol[];
+  /** Permisos por operación; si se omiten, se usa rolesEscritura. */
+  rolesCrear?: Rol[];
+  rolesActualizar?: Rol[];
+  rolesEliminar?: Rol[];
   /** Construye los filtros de listado a partir de la query cruda. */
   filtrosListado: (req: Request) => TFiltros;
   /**
@@ -64,6 +68,9 @@ export function crudRouter<TBody, TUpdate, TFiltros, TId = number>(
 ): Router {
   const router = Router();
   const roles = opciones.rolesEscritura ?? ['ADMIN_GRED'];
+  const rolesCrear = opciones.rolesCrear ?? roles;
+  const rolesActualizar = opciones.rolesActualizar ?? roles;
+  const rolesEliminar = opciones.rolesEliminar ?? roles;
   const parsearId = opciones.parsearId ?? ((crudo: string) => Number(crudo) as unknown as TId);
 
   router.use(requiereAuth);
@@ -89,7 +96,7 @@ export function crudRouter<TBody, TUpdate, TFiltros, TId = number>(
 
   router.post(
     '/',
-    requiereRol(...roles),
+    requiereRol(...rolesCrear),
     validar(opciones.schemaCrear),
     auditar({ accion: 'CREAR', entidad: opciones.entidad }),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -104,7 +111,7 @@ export function crudRouter<TBody, TUpdate, TFiltros, TId = number>(
 
   router.put(
     '/:id',
-    requiereRol(...roles),
+    requiereRol(...rolesActualizar),
     validar(opciones.schemaActualizar),
     auditar({ accion: 'ACTUALIZAR', entidad: opciones.entidad }),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -122,7 +129,7 @@ export function crudRouter<TBody, TUpdate, TFiltros, TId = number>(
 
   router.delete(
     '/:id',
-    requiereRol(...roles),
+    requiereRol(...rolesEliminar),
     auditar({ accion: 'ELIMINAR', entidad: opciones.entidad }),
     async (req: Request, res: Response, next: NextFunction) => {
       try {

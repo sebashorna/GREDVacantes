@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { Check, CircleHelp, MapPin, Search, X } from 'lucide-react';
+import { Check, CircleHelp, MapPin, Pencil, Phone, Search, Trash2, X } from 'lucide-react';
 import { ESTADOS_VACANTE, ETIQUETAS_ESTADO_VACANTE, ETIQUETAS_NIVEL, ETIQUETAS_TURNO, NIVELES, TURNOS } from '@shared';
 import { api } from '@/lib/api';
 import type { Pagina, ResumenCupos, Vacante } from '@/lib/tipos';
@@ -15,9 +15,9 @@ import { EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { Badge, type TonoBadge } from '@/components/ui/Badge';
 import { Boton } from '@/components/ui/Boton';
 import { CampoSelect, CampoTexto } from '@/components/ui/Campo';
-import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
+import { Confirmacion } from '@/components/ui/Confirmacion';
 
 const TONOS_ESTADO: Record<string, TonoBadge> = {
   LIBRE: 'exito', LISTA_ESPERA: 'advertencia', COMPLETO: 'info', CERRADO: 'neutro',
@@ -25,6 +25,26 @@ const TONOS_ESTADO: Record<string, TonoBadge> = {
 function fechaCorta(v: string | null): string {
   if (!v) return '-';
   return new Date(v).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+function urlMapaVacante(vacante: Vacante): string {
+  const ubicacion = [
+    vacante.ie?.nombre,
+    vacante.ie?.distrito?.nombre,
+    vacante.ie?.provincia?.nombre,
+    vacante.ie?.ugel?.nombre,
+    'Lambayeque, Perú',
+  ].filter(Boolean).join(', ');
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ubicacion)}`;
+}
+function telefonoVacante(vacante: Vacante): string {
+  return vacante.ie?.telefono?.replace(/[^\d+]/g, '') ?? '';
+}
+function urlWhatsappVacante(vacante: Vacante): string {
+  const digitos = vacante.ie?.whatsapp?.replace(/\D/g, '');
+  if (!digitos || digitos.length < 9 || digitos.length > 15) return '';
+  const internacional = digitos.length === 9 ? `51${digitos}` : digitos;
+  const mensaje = `Hola, quisiera consultar sobre la matrícula de ${vacante.ie?.nombre ?? 'la institución'} para ${ETIQUETAS_NIVEL[vacante.nivel as keyof typeof ETIQUETAS_NIVEL] ?? vacante.nivel}.`;
+  return `https://wa.me/${internacional}?text=${encodeURIComponent(mensaje)}`;
 }
 const formSchema = z.object({
   ieId: z.string().min(1, 'Seleccione una institucion'),
@@ -43,15 +63,28 @@ interface FormularioProps {
   onExito: () => void;
   onCancelar: () => void;
 }
-function SelectorIE({ valor, onChange, error }: { valor: string; onChange: (v: string) => void; error?: string }) {
+function SelectorIE({
+  valor,
+  onChange,
+  error,
+  deshabilitado = false,
+  busquedaInicial = '',
+}: {
+  valor: string;
+  onChange: (v: string) => void;
+  error?: string;
+  deshabilitado?: boolean;
+  busquedaInicial?: string;
+}) {
   const [q, setQ] = useState('');
-  const { data, isLoading } = useInstitucionesOpciones(q);
+  const { data, isLoading } = useInstitucionesOpciones(q || busquedaInicial);
   return (
     <div className="space-y-2">
       <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filtrar institucion por nombre o codigo..."
         className="h-10 w-full px-3 rounded-lg border-[1.5px] border-outline-variant bg-white text-sm outline-none placeholder:text-on-surface-variant/60 focus:border-primary-container" />
       <CampoSelect etiqueta="Institucion educativa" valor={valor} onChange={onChange} error={error}
         ayuda={isLoading ? 'Buscando...' : `${data?.meta.total ?? 0} instituciones`}
+        deshabilitado={deshabilitado}
         opciones={(data?.data ?? []).map((i) => ({ valor: String(i.id), etiqueta: `${i.nombre} (${i.codigoModular})` }))} />
     </div>
   );
@@ -62,11 +95,13 @@ function FormularioVacante({ inicial, onExito, onCancelar }: FormularioProps) {
     resolver: zodResolver(formSchema),
     defaultValues: inicial
       ? {
-          ieId: String(inicial.ieId), nivel: inicial.nivel as FormDatos['nivel'],
-          turno: inicial.turno as FormDatos['turno'],
-          cupoTotal: inicial.cupoTotal, cupoDisponibles: inicial.cupoDisponibles,
-          estado: inicial.estado as FormDatos['estado'],
-          fechaLimite: inicial.fechaLimite ? inicial.fechaLimite.slice(0, 10) : '',
+          ieId: String(inicial.ieId),
+          nivel: inicial.nivel as (typeof NIVELES)[number],
+          turno: inicial.turno as (typeof TURNOS)[number],
+          cupoTotal: inicial.cupoTotal,
+          cupoDisponibles: inicial.cupoDisponibles,
+          estado: inicial.estado as (typeof ESTADOS_VACANTE)[number],
+          fechaLimite: inicial.fechaLimite?.slice(0, 10) ?? '',
         }
       : {
           ieId: '', nivel: 'PRIMARIA', turno: 'MANANA',
@@ -81,7 +116,14 @@ function FormularioVacante({ inicial, onExito, onCancelar }: FormularioProps) {
         fechaLimite: d.fechaLimite?.trim() ? new Date(`${d.fechaLimite}T23:59:59`).toISOString() : null,
       };
       const { data } = inicial
-        ? await api.put(`/vacantes/${inicial.id}`, cuerpo)
+        ? await api.put(`/vacantes/${inicial.id}`, {
+            nivel: cuerpo.nivel,
+            turno: cuerpo.turno,
+            cupoTotal: cuerpo.cupoTotal,
+            cupoDisponibles: cuerpo.cupoDisponibles,
+            estado: cuerpo.estado,
+            fechaLimite: cuerpo.fechaLimite,
+          })
         : await api.post('/vacantes', cuerpo);
       return data;
     },
@@ -97,11 +139,15 @@ function FormularioVacante({ inicial, onExito, onCancelar }: FormularioProps) {
   return (
     <form onSubmit={enviar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="md:col-span-2">
-        {inicial
-          ? <CampoTexto etiqueta="Institucion educativa" tipo="text" valor={inicial.ie ? `${inicial.ie.nombre} (${inicial.ie.codigoModular})` : `IE #${inicial.ieId}`} onChange={() => undefined} deshabilitado />
-          : <Controller name="ieId" control={c} render={({ field, fieldState }) => (
-              <SelectorIE valor={field.value} onChange={field.onChange} error={fieldState.error?.message} />
-            )} />}
+        <Controller name="ieId" control={c} render={({ field, fieldState }) => (
+          <SelectorIE
+            valor={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            deshabilitado={Boolean(inicial)}
+            busquedaInicial={inicial?.ie?.codigoModular ?? ''}
+          />
+        )} />
       </div>
       <Controller name="nivel" control={c} render={({ field, fieldState }) => (
         <CampoSelect etiqueta="Nivel" valor={field.value} onChange={field.onChange} error={fieldState.error?.message}
@@ -138,9 +184,20 @@ export function VacantesPage() {
   const [fNivel, setFNivel] = useState('');
   const [fEstado, setFEstado] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [editando, setEditando] = useState<Vacante | undefined>();
-  const [eliminando, setEliminando] = useState<Vacante | null>(null);
-  const puedeEscribir = puede('ADMIN_GRED', 'EDITOR_UGEL');
+  const [vacanteEditando, setVacanteEditando] = useState<Vacante | null>(null);
+  const [vacanteEliminando, setVacanteEliminando] = useState<Vacante | null>(null);
+  const [contactoSeleccionado, setContactoSeleccionado] = useState<Vacante | null>(null);
+  const puedeRegistrar = puede('ADMIN_GRED', 'EDITOR_UGEL');
+  const puedeAdministrar = puede('ADMIN_GRED');
+  const eliminar = useMutation({
+    mutationFn: (id: number) => api.delete(`/vacantes/${id}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['vacantes'] });
+      toast.success('Vacante eliminada');
+      setVacanteEliminando(null);
+    },
+    onError: (error) => toast.error(mensajeDeError(error)),
+  });
   const consulta = useQuery({
     queryKey: ['vacantes', params, fNivel, fEstado],
     queryFn: async () => {
@@ -158,23 +215,16 @@ export function VacantesPage() {
     queryKey: ['vacantes', 'resumen'],
     queryFn: async () => (await api.get<ResumenCupos>('/vacantes/resumen')).data,
   });
-  const eliminar = useMutation({
-    mutationFn: (id: number) => api.delete(`/vacantes/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vacantes'] });
-      toast.success('Vacante eliminada');
-      setEliminando(null);
-    },
-    onError: (e) => toast.error(mensajeDeError(e)),
-  });
   const totalDisp = resumen.data?.porEstado.reduce((a, e) => a + (e._sum.cupoDisponibles ?? 0), 0) ?? 0;
   const totalCupo = resumen.data?.porEstado.reduce((a, e) => a + (e._sum.cupoTotal ?? 0), 0) ?? 0;
   const sel = 'h-12 px-3.5 rounded-lg border-[1.5px] border-outline-variant bg-white cursor-pointer';
+  const contactoTelefono = contactoSeleccionado ? telefonoVacante(contactoSeleccionado) : '';
+  const contactoWhatsapp = contactoSeleccionado ? urlWhatsappVacante(contactoSeleccionado) : '';
   return (
     <div className="space-y-6">
       <EncabezadoPagina
         titulo="Vacantes" descripcion="Vacantes de matricula por institucion educativa."
-        accion={puedeEscribir ? { etiqueta: 'Nueva vacante', onClick: () => { setEditando(undefined); setModalAbierto(true); } } : undefined}
+        accion={puedeRegistrar ? { etiqueta: 'Nueva vacante', onClick: () => { setVacanteEditando(null); setModalAbierto(true); } } : undefined}
       />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-xl bg-white border border-outline-variant border-l-4 border-l-primary-container">
@@ -284,8 +334,13 @@ export function VacantesPage() {
               const estado = ETIQUETAS_ESTADO_VACANTE[
                 vacante.estado as keyof typeof ETIQUETAS_ESTADO_VACANTE
               ] ?? vacante.estado;
-              const completo = vacante.cupoDisponibles === 0;
+              const completo = vacante.cupoDisponibles === 0
+                || vacante.estado === 'COMPLETO'
+                || vacante.estado === 'LISTA_ESPERA';
+              const cerrado = vacante.estado === 'CERRADO';
+              const sinDisponibilidad = completo || cerrado;
               const fechaLimite = fechaCorta(vacante.fechaLimite);
+              const urlMapa = urlMapaVacante(vacante);
 
               return (
                 <article
@@ -318,10 +373,10 @@ export function VacantesPage() {
                             {ETIQUETAS_TURNO[vacante.turno as keyof typeof ETIQUETAS_TURNO] ?? vacante.turno}
                           </dd>
                         </div>
-                        {vacante.ie?.ugel?.nombre && (
+                        {vacante.ie?.provincia?.nombre && (
                           <div>
-                            <dt className="inline font-semibold text-on-surface">UGEL: </dt>
-                            <dd className="inline">{vacante.ie.ugel.nombre}</dd>
+                            <dt className="inline font-semibold text-on-surface">Provincia: </dt>
+                            <dd className="inline">{vacante.ie.provincia.nombre}</dd>
                           </div>
                         )}
                         {vacante.ie?.distrito?.nombre && (
@@ -348,7 +403,7 @@ export function VacantesPage() {
                         <p className={`mt-1.5 text-xs font-bold uppercase tracking-wide ${
                           completo ? 'text-error' : 'text-secondary'
                         }`}>
-                          {completo ? 'Cupo completo' : 'Vacantes libres'}
+                          {cerrado ? 'Matrícula cerrada' : completo ? 'Cupo completo' : 'Vacantes libres'}
                         </p>
                       </div>
                     </div>
@@ -358,32 +413,70 @@ export function VacantesPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/60 bg-surface-container-low/70 px-4 py-3">
-                    <span className="flex items-center gap-2 text-sm text-on-surface-variant">
-                      {completo
-                        ? <CircleHelp size={17} className="text-error" />
-                        : <Check size={17} className="text-tertiary" />}
-                      {completo ? 'Consulte disponibilidad en la institución' : 'Vacantes disponibles'}
-                    </span>
-                    {puedeEscribir && (
-                      <div className="flex gap-2">
-                        <Boton
-                          variante="secundario"
-                          tamano="sm"
-                          onClick={() => { setEditando(vacante); setModalAbierto(true); }}
-                        >
-                          Editar
-                        </Boton>
-                        <Boton
-                          variante="secundario"
-                          tamano="sm"
-                          onClick={() => setEliminando(vacante)}
-                        >
-                          Eliminar
-                        </Boton>
-                      </div>
+                  <div className="flex flex-col gap-2 border-t border-outline-variant/60 bg-surface-container-low/70 px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {sinDisponibilidad ? (
+                        <>
+                          <Boton
+                            variante="secundario"
+                            className="min-w-0 flex-1"
+                            disabled
+                            aria-disabled="true"
+                          >
+                            <CircleHelp size={16} />
+                            {cerrado ? 'Matrícula cerrada' : 'Lista de Espera / Consultar'}
+                          </Boton>
+                          <a
+                            href={urlMapa}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`Ver ubicación de ${vacante.ie?.nombre ?? 'la institución'} en Google Maps`}
+                            title="Ver ubicación en Google Maps"
+                            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white text-primary shadow-sm transition hover:bg-surface-container-high"
+                          >
+                            <MapPin size={19} />
+                          </a>
+                        </>
+                      ) : (
+                        <>
+                          <Boton
+                            className="min-w-0 flex-1"
+                            onClick={() => setContactoSeleccionado(vacante)}
+                          >
+                            <Phone size={16} />
+                            Contactar I.E. / Matrícula
+                          </Boton>
+                          <a
+                            href={urlMapa}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`Ver ubicación de ${vacante.ie?.nombre ?? 'la institución'} en Google Maps`}
+                            title="Ver ubicación en Google Maps"
+                            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white text-primary shadow-sm transition hover:bg-surface-container-high"
+                          >
+                            <MapPin size={19} />
+                          </a>
+                        </>
+                      )}
+                    </div>
+                    {sinDisponibilidad && (
+                      <p className="text-xs text-on-surface-variant">
+                        {cerrado
+                          ? 'El periodo de matrícula de esta vacante figura como cerrado.'
+                          : 'No quedan cupos disponibles. Consulta con la institución o la UGEL; la lista de espera no garantiza una vacante.'}
+                      </p>
                     )}
                   </div>
+                  {puedeAdministrar && (
+                    <div className="flex justify-end gap-2 border-t border-outline-variant/60 px-4 py-3">
+                      <Boton variante="secundario" tamano="sm" onClick={() => { setVacanteEditando(vacante); setModalAbierto(true); }}>
+                        <Pencil size={14} /> Editar
+                      </Boton>
+                      <Boton variante="secundario" tamano="sm" onClick={() => setVacanteEliminando(vacante)}>
+                        <Trash2 size={14} /> Eliminar
+                      </Boton>
+                    </div>
+                  )}
                 </article>
               );
             })}
@@ -409,14 +502,94 @@ export function VacantesPage() {
           </a>
         </div>
       </aside>
-      <Modal abierto={modalAbierto} onCerrar={() => setModalAbierto(false)} titulo={editando ? 'Editar vacante' : 'Nueva vacante'}>
-        <FormularioVacante key={editando?.id ?? 'nueva'} inicial={editando}
+      <Modal
+        abierto={modalAbierto}
+        onCerrar={() => setModalAbierto(false)}
+        titulo={vacanteEditando ? 'Editar vacante' : 'Nueva vacante'}
+      >
+        <FormularioVacante
+          key={vacanteEditando?.id ?? 'nueva'}
+          inicial={vacanteEditando ?? undefined}
           onExito={() => setModalAbierto(false)} onCancelar={() => setModalAbierto(false)} />
       </Modal>
-      <Confirmacion abierto={eliminando !== null} onCancelar={() => setEliminando(null)}
-        onConfirmar={() => eliminando && eliminar.mutate(eliminando.id)} cargando={eliminar.isPending}
+      <Confirmacion
+        abierto={vacanteEliminando !== null}
+        onCancelar={() => setVacanteEliminando(null)}
+        onConfirmar={() => { if (vacanteEliminando) eliminar.mutate(vacanteEliminando.id); }}
+        cargando={eliminar.isPending}
         titulo="Eliminar vacante"
-        mensaje={eliminando ? `Eliminar la vacante de ${eliminando.ie?.nombre ?? `IE #${eliminando.ieId}`}?` : ''} />
+        mensaje={vacanteEliminando ? `¿Eliminar el registro de ${vacanteEliminando.ie?.nombre ?? 'esta institución'}? Esta acción no se puede deshacer.` : ''}
+      />
+      <Modal
+        abierto={contactoSeleccionado !== null}
+        onCerrar={() => setContactoSeleccionado(null)}
+        titulo="Contactar para matrícula"
+        ancho="md"
+      >
+        {contactoSeleccionado && (
+          <div className="space-y-4">
+            <div>
+              <h2 className="font-semibold text-on-surface">
+                {contactoSeleccionado.ie?.nombre ?? `I.E. #${contactoSeleccionado.ieId}`}
+              </h2>
+              <p className="mt-1 text-sm text-on-surface-variant">
+                {ETIQUETAS_NIVEL[contactoSeleccionado.nivel as keyof typeof ETIQUETAS_NIVEL] ?? contactoSeleccionado.nivel}
+                {' · '}
+                {ETIQUETAS_TURNO[contactoSeleccionado.turno as keyof typeof ETIQUETAS_TURNO] ?? contactoSeleccionado.turno}
+              </p>
+            </div>
+            <div className="rounded-lg border border-outline-variant bg-surface-container-low p-4 text-sm text-on-surface-variant">
+              <p className="font-semibold text-on-surface">Pasos sugeridos</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>Comunícate con la institución para confirmar requisitos y disponibilidad.</li>
+                <li>Ten a mano el DNI del estudiante y la Ficha Única de Matrícula (FUM), si corresponde.</li>
+                <li>La matrícula es gratuita; realiza el trámite directamente con la institución.</li>
+              </ol>
+            </div>
+            <div className="space-y-2">
+              {contactoWhatsapp && (
+                <a
+                  href={contactoWhatsapp}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary-container px-4 text-sm font-semibold text-white hover:bg-primary"
+                >
+                  <Phone size={16} /> Escribir por WhatsApp
+                </a>
+              )}
+              {contactoTelefono && (
+                <a
+                  href={`tel:${contactoTelefono}`}
+                  className="flex h-12 items-center justify-center gap-2 rounded-lg border border-outline-variant px-4 text-sm font-semibold text-primary hover:bg-surface-container-low"
+                >
+                  <Phone size={16} /> Llamar a la institución · {contactoSeleccionado.ie?.telefono}
+                </a>
+              )}
+              {!contactoWhatsapp && !contactoTelefono && (
+                <p className="rounded-lg border border-outline-variant p-3 text-sm text-on-surface-variant">
+                  La institución no tiene un teléfono de contacto registrado. Comunícate con la UGEL correspondiente o con la Mesa de Ayuda de Matrícula Lambayeque.
+                </p>
+              )}
+              <a
+                href={urlMapaVacante(contactoSeleccionado)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-semibold text-primary hover:bg-surface-container-low"
+              >
+                <MapPin size={16} /> Ver ubicación en Google Maps
+              </a>
+            </div>
+            <p className="border-t border-outline-variant pt-3 text-xs text-on-surface-variant">
+              Mesa de Ayuda GRED Lambayeque: <a href="tel:+5174201928" className="font-semibold text-primary hover:underline">(074) 20-1928</a>
+            </p>
+            <div className="flex justify-end">
+              <Boton variante="secundario" onClick={() => setContactoSeleccionado(null)}>
+                Cerrar
+              </Boton>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

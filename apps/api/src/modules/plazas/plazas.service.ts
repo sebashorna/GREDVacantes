@@ -23,7 +23,18 @@ const INCLUYE = {
       provincia: { select: { id: true, nombre: true } },
     },
   },
-  convocatoria: { select: { id: true, titulo: true, numeroRD: true, fase: true } },
+  convocatoria: {
+    select: {
+      id: true,
+      titulo: true,
+      numeroRD: true,
+      fase: true,
+      descripcion: true,
+      pdfMeritosUrl: true,
+      fechaInicio: true,
+      fechaFin: true,
+    },
+  },
 } as const;
 
 export interface FiltrosPlazas {

@@ -18,7 +18,9 @@ const router = crudRouter<
   schemaCrear: alertaCreateSchema,
   schemaActualizar: alertaCreateSchema,
   servicio: service,
-  rolesEscritura: ['ADMIN_GRED', 'EDITOR_UGEL'],
+  rolesCrear: ['ADMIN_GRED', 'EDITOR_UGEL'],
+  rolesActualizar: ['ADMIN_GRED'],
+  rolesEliminar: ['ADMIN_GRED'],
   filtrosListado: (req) => {
     const q = req.query as Record<string, string | undefined>;
     return {
@@ -51,7 +53,7 @@ const router = crudRouter<
  */
 router.patch(
   '/:id/estado',
-  requiereRol('ADMIN_GRED', 'EDITOR_UGEL'),
+  requiereRol('ADMIN_GRED'),
   validar(alertaEstadoSchema),
   auditar({ accion: 'CAMBIAR_ESTADO', entidad: 'alerta' }),
   async (req, res, next) => {

@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { requiereAuth, requiereRol } from '../../common/auth.js';
 import { auditar } from '../../common/auditoria.js';
 import { validar, queryValidada } from '../../common/validar.js';
-import { paginacionQuerySchema, vacanteCreateSchema, vacanteUpdateSchema } from '@educa/shared';
+import { vacanteCreateSchema, vacanteFiltrosSchema, vacanteUpdateSchema } from '@educa/shared';
 
 import * as service from './vacantes.service.js';
 
@@ -23,17 +23,10 @@ router.use(requiereAuth);
  *       200:
  *         description: Vacantes paginadas
  */
-router.get('/', validar(paginacionQuerySchema, 'query'), async (req, res, next) => {
+router.get('/', validar(vacanteFiltrosSchema, 'query'), async (req, res, next) => {
   try {
-    const query = queryValidada(req, paginacionQuerySchema);
-    const resultado = await service.listar({
-      ...query,
-      nivel: req.query.nivel as never,
-      turno: req.query.turno as never,
-      estado: req.query.estado as never,
-      ugelId: req.query.ugelId ? Number(req.query.ugelId) : undefined,
-      ieId: req.query.ieId ? Number(req.query.ieId) : undefined,
-    });
+    const query = queryValidada(req, vacanteFiltrosSchema);
+    const resultado = await service.listar(query);
     res.json(resultado);
   } catch (error) {
     next(error);
@@ -123,7 +116,7 @@ router.post(
  */
 router.put(
   '/:id',
-  requiereRol('ADMIN_GRED', 'EDITOR_UGEL'),
+  requiereRol('ADMIN_GRED'),
   validar(vacanteUpdateSchema),
   auditar({ accion: 'ACTUALIZAR', entidad: 'vacante' }),
   async (req, res, next) => {
@@ -150,7 +143,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  requiereRol('ADMIN_GRED', 'EDITOR_UGEL'),
+  requiereRol('ADMIN_GRED'),
   auditar({ accion: 'ELIMINAR', entidad: 'vacante' }),
   async (req, res, next) => {
     try {

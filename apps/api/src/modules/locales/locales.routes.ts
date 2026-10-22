@@ -15,7 +15,9 @@ const router = crudRouter<
   schemaCrear: localCreateSchema,
   schemaActualizar: localUpdateSchema,
   servicio: service,
-  rolesEscritura: ['ADMIN_GRED', 'EDITOR_UGEL'],
+  rolesCrear: ['ADMIN_GRED', 'EDITOR_UGEL'],
+  rolesActualizar: ['ADMIN_GRED'],
+  rolesEliminar: ['ADMIN_GRED'],
   filtrosListado: (req) => {
     const q = req.query as Record<string, string | undefined>;
     return {

@@ -25,6 +25,7 @@ import { EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { useAuth } from '@/features/auth/auth-context';
 import { api } from '@/lib/api';
 import type { Pagina } from '@/lib/tipos';
+import { useUgeles } from '@/hooks/useCatalogos';
 
 interface DatosDashboard {
   totales: {
@@ -46,6 +47,7 @@ interface VacantePortal {
   id: number;
   nivel: string;
   turno: string;
+  estado: 'LIBRE' | 'COMPLETO' | 'LISTA_ESPERA' | 'CERRADO';
   cupoTotal: number;
   cupoDisponibles: number;
   fechaLimite: string | null;
@@ -54,6 +56,7 @@ interface VacantePortal {
     codigoModular: string;
     ugel?: { nombre: string } | null;
     distrito?: { nombre: string } | null;
+    provincia?: { nombre: string } | null;
   };
 }
 
@@ -66,12 +69,6 @@ interface ComunicadoPortal {
 }
 
 const REGION_TODAS = 'Toda la Región';
-const UGEL_FILTROS = [
-  REGION_TODAS,
-  'UGEL Chiclayo',
-  'UGEL Lambayeque',
-  'UGEL Ferreñafe',
-];
 
 function normalizar(valor: string): string {
   return valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -94,6 +91,7 @@ function etiqueta(valor: string): string {
 
 export function DashboardPage() {
   const { usuario } = useAuth();
+  const ugeles = useUgeles();
   const [busqueda, setBusqueda] = useState('');
   const [ugelSeleccionada, setUgelSeleccionada] = useState(REGION_TODAS);
 
@@ -109,7 +107,7 @@ export function DashboardPage() {
   const vacantes = useQuery({
     queryKey: ['dashboard', 'vacantes'],
     queryFn: async () => {
-      const { data } = await api.get<Pagina<VacantePortal>>('/vacantes?page=1&limit=20');
+      const { data } = await api.get<Pagina<VacantePortal>>('/vacantes?page=1&limit=100');
       return data;
     },
     enabled: !!usuario,
@@ -134,6 +132,7 @@ export function DashboardPage() {
           vacante.ie?.nombre,
           vacante.ie?.codigoModular,
           vacante.ie?.distrito?.nombre,
+          vacante.ie?.provincia?.nombre,
           vacante.ie?.ugel?.nombre,
         ].filter(Boolean).join(' '));
         const coincideBusqueda = !consulta || texto.includes(consulta);
@@ -144,19 +143,20 @@ export function DashboardPage() {
       })
       .slice(0, 3);
   }, [busqueda, ugelSeleccionada, vacantes.data]);
+  const ugelFiltros = [REGION_TODAS, ...(ugeles.data ?? []).map((ugel) => ugel.nombre)];
 
-  const cuposDisponibles = resumen.data?.cuposPorNivel.length
+  const cuposDisponibles = resumen.data
     ? resumen.data.cuposPorNivel.reduce(
         (total, nivel) => total + (nivel._sum.cupoDisponibles ?? 0),
         0,
       )
-    : resumen.data?.totales.vacantes ?? 0;
-  const plazasDisponibles = resumen.data?.plazasPorTipo.length
+    : 0;
+  const plazasDisponibles = resumen.data
     ? resumen.data.plazasPorTipo.reduce(
         (total, plaza) => total + (plaza._sum.cantidad ?? 0),
         0,
       )
-    : resumen.data?.totales.plazas ?? 0;
+    : 0;
 
   const tarjetas = [
     {
@@ -185,7 +185,7 @@ export function DashboardPage() {
         extra={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm font-medium text-on-surface-variant">
             <BadgeCheck size={16} className="text-primary" />
-            GRED Lambayeque · Oficial
+            Datos demostrativos
           </span>
         }
       />
@@ -224,7 +224,7 @@ export function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {UGEL_FILTROS.map((ugel) => {
+          {ugelFiltros.map((ugel) => {
             const activa = ugelSeleccionada === ugel;
             return (
               <button
@@ -248,6 +248,14 @@ export function DashboardPage() {
               : `Filtrado activo para ${ugelSeleccionada}`}
           </p>
         </div>
+        {ugeles.isError && (
+          <p role="alert" className="text-sm text-error">
+            No se pudieron cargar las UGEL para el filtro.{' '}
+            <button type="button" onClick={() => void ugeles.refetch()} className="font-semibold underline">
+              Reintentar
+            </button>
+          </p>
+        )}
       </section>
 
       {resumen.isError && (
@@ -293,9 +301,9 @@ export function DashboardPage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-on-surface">Colegios con vacantes publicadas</h2>
+            <h2 className="text-lg font-semibold text-on-surface">Vacantes registradas</h2>
             <p className="mt-1 text-sm text-on-surface-variant">
-              Instituciones con cupos disponibles en la región.
+              Consulta el estado y la disponibilidad de cada institución.
             </p>
           </div>
           <Link to="/vacantes">
@@ -360,7 +368,13 @@ export function DashboardPage() {
                         {ocupados} <span className="font-normal text-on-surface-variant">/ {vacante.cupoTotal}</span>
                       </p>
                       <p className={`text-xs font-semibold ${vacante.cupoDisponibles ? 'text-tertiary' : 'text-error'}`}>
-                        {vacante.cupoDisponibles ? `${vacante.cupoDisponibles} cupos libres` : 'Completo'}
+                        {vacante.estado === 'LISTA_ESPERA'
+                          ? 'Lista de espera'
+                          : vacante.estado === 'CERRADO'
+                            ? 'Inscripción cerrada'
+                            : vacante.cupoDisponibles
+                              ? `${vacante.cupoDisponibles} cupos libres`
+                              : 'Completo'}
                       </p>
                     </div>
                     <Link
@@ -381,23 +395,23 @@ export function DashboardPage() {
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-on-surface">
           <Zap size={19} className="text-primary" />
-          Módulos prioritarios 2025
+          Módulos prioritarios
         </h2>
-        <article className="flex flex-col justify-between gap-4 rounded-xl border border-outline-variant bg-white p-5 sm:flex-row sm:items-center">
+        <article className="flex flex-col justify-between gap-4 rounded-xl border border-[#9f462d] bg-[#9f462d] p-5 text-white sm:flex-row sm:items-center">
           <div className="max-w-2xl">
-            <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-              Matrícula regional 2025
+            <span className="text-xs font-semibold uppercase tracking-wide text-white/80">
+              Matrícula regional 2026 · Demostración
             </span>
-            <h3 className="mt-1 text-lg font-semibold text-on-surface">
+            <h3 className="mt-1 text-lg font-semibold text-white">
               ¿Buscas vacante escolar para tus hijos?
             </h3>
-            <p className="mt-1 text-sm text-on-surface-variant">
+            <p className="mt-1 text-sm text-white/90">
               Consulta las vacantes disponibles en las instituciones de tu distrito.
             </p>
           </div>
           <Link
             to="/vacantes"
-            className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg bg-primary-container px-5 text-sm font-semibold text-white transition hover:bg-primary active:bg-primary"
+            className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-white/70 bg-[#9f462d] px-5 text-sm font-semibold text-white transition hover:bg-[#8c3d27] active:bg-[#8c3d27]"
           >
             Consultar vacantes <ArrowRight size={16} />
           </Link>
@@ -464,16 +478,16 @@ export function DashboardPage() {
         )}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {comunicados.data?.data.map((comunicado) => (
-            <article key={comunicado.id} className="flex items-start gap-3 rounded-xl border border-outline-variant bg-white p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container-high text-primary">
+            <article key={comunicado.id} className="flex items-start gap-3 rounded-xl border border-[#9f462d] bg-[#9f462d] p-4 text-white">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white">
                 <FileText size={20} />
               </span>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
                   {etiqueta(comunicado.categoria)} · {fechaCorta(comunicado.fecha)}
                 </p>
-                <h3 className="mt-1 font-semibold text-on-surface">{comunicado.titulo}</h3>
-                <p className="mt-1 text-sm text-on-surface-variant">{comunicado.resumen}</p>
+                <h3 className="mt-1 font-semibold text-white">{comunicado.titulo}</h3>
+                <p className="mt-1 text-sm text-white/90">{comunicado.resumen}</p>
               </div>
             </article>
           ))}
