@@ -9,6 +9,7 @@ import { PlazasPage } from '@/pages/PlazasPage';
 import { VacantesPage } from '@/pages/VacantesPage';
 import { AlertasPage } from '@/pages/AlertasPage';
 import { InfraestructuraPage } from '@/pages/InfraestructuraPage';
+import { PortalCiudadanoPage } from '@/pages/PortalCiudadanoPage';
 
 export default function App() {
   const { cargando, estaAutenticado } = useAuth();
@@ -29,7 +30,14 @@ export default function App() {
     if (rutasPublicas.includes(location.pathname)) {
       return <LoginPage />;
     }
+    if (location.pathname === '/') {
+      return <PortalCiudadanoPage />;
+    }
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (location.pathname === '/') {
+    return <PortalCiudadanoPage />;
   }
 
   if (location.pathname === '/login') {

@@ -172,12 +172,28 @@ export const convocatoriaCreateSchema = z.object({
     .trim()
     .min(1, 'El numero de resolucion es obligatorio')
     .max(50)
-    .regex(/^R\.?\s*D\.?\s*N?[Â°Âº]?\s*[\d\-/]+$/i, 'Formato de resolucion invalido (ej: R.D. NÂº 00412-2025)'),
+    .regex(
+      /^(?:R\.?\s*D\.?\s*N?[°º]?\s*[\d\-/]+|R\.?\s*D\.?\s+DEMO-\d{4}-\d+)$/i,
+      'Formato de resolución inválido (ej: R.D. Nº 00412-2025)',
+    ),
   descripcion: z.string().trim().max(2000).optional().nullable(),
   fechaInicio: z.coerce.date(),
   fechaFin: z.coerce.date(),
   fase: z.enum(FASES_CONVOCATORIA).default('INSCRIPCION'),
-  pdfMeritosUrl: z.string().trim().url('URL de PDF invalida').optional().nullable(),
+  pdfMeritosUrl: z
+    .string()
+    .trim()
+    .refine((valor) => {
+      if (valor.startsWith('/') && !valor.startsWith('//')) return true;
+      try {
+        const url = new URL(valor);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }, 'Ingresa una URL web o una ruta publica valida')
+    .optional()
+    .nullable(),
   activo: z.boolean().default(true),
 });
 export type ConvocatoriaCreateInput = z.infer<typeof convocatoriaCreateSchema>;

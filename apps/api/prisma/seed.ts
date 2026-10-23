@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
 const UGELES = [
   { codigo: 'UGEL-LAM-01', nombre: 'UGEL Lambayeque' },
   { codigo: 'UGEL-LAM-02', nombre: 'UGEL Chiclayo' },
-  { codigo: 'UGEL-LAM-03', nombre: 'UGEL FerreÃ±afe' },
+  { codigo: 'UGEL-LAM-03', nombre: 'UGEL Ferreñafe' },
   { codigo: 'UGEL-LAM-04', nombre: 'UGEL Lambayeque Rural 1' },
   { codigo: 'UGEL-LAM-05', nombre: 'UGEL Lambayeque Rural 2' },
   { codigo: 'UGEL-LAM-06', nombre: 'UGEL Lambayeque Rural 3 EIB' },
@@ -31,19 +31,19 @@ const UGELES = [
 const PROVINCIAS = [
   { codigo: 'LAM-01', nombre: 'Lambayeque' },
   { codigo: 'LAM-02', nombre: 'Chiclayo' },
-  { codigo: 'LAM-03', nombre: 'FerreÃ±afe' },
+  { codigo: 'LAM-03', nombre: 'Ferreñafe' },
 ];
 
 const DISTRITOS = [
   { codigo: 'LAM-01-01', nombre: 'Lambayeque', provincia: 'LAM-01' },
-  { codigo: 'LAM-01-02', nombre: 'San JosÃ©', provincia: 'LAM-01' },
+  { codigo: 'LAM-01-02', nombre: 'San José', provincia: 'LAM-01' },
   { codigo: 'LAM-01-03', nombre: 'Pimentel', provincia: 'LAM-01' },
   { codigo: 'LAM-01-04', nombre: 'SUCESOS', provincia: 'LAM-01' },
   { codigo: 'LAM-02-01', nombre: 'Chiclayo', provincia: 'LAM-02' },
-  { codigo: 'LAM-02-02', nombre: 'MonsefÃº', provincia: 'LAM-02' },
+  { codigo: 'LAM-02-02', nombre: 'Monsefú', provincia: 'LAM-02' },
   { codigo: 'LAM-02-03', nombre: 'La Pradera', provincia: 'LAM-02' },
-  { codigo: 'LAM-03-01', nombre: 'FerreÃ±afe', provincia: 'LAM-03' },
-  { codigo: 'LAM-03-02', nombre: 'PÃ­tipo', provincia: 'LAM-03' },
+  { codigo: 'LAM-03-01', nombre: 'Ferreñafe', provincia: 'LAM-03' },
+  { codigo: 'LAM-03-02', nombre: 'Pítipo', provincia: 'LAM-03' },
   { codigo: 'LAM-03-03', nombre: 'Moyapampa', provincia: 'LAM-03' },
 ];
 
@@ -88,7 +88,7 @@ const INSTITUCIONES: IeSemilla[] = [
   },
   {
     codigoModular: '1580003',
-    nombre: 'I.E. San JosÃ©',
+    nombre: 'I.E. San José',
     nivel: 'PRIMARIA',
     turno: 'MANANA',
     zona: 'URBANA',
@@ -99,7 +99,7 @@ const INSTITUCIONES: IeSemilla[] = [
   },
   {
     codigoModular: '1580004',
-    nombre: 'I.E. AndrÃ©s Avelino CÃ¡ceres',
+    nombre: 'I.E. Andrés Avelino Cáceres',
     nivel: 'SECUNDARIA',
     turno: 'COMPLETO',
     zona: 'RURAL_1',
@@ -154,7 +154,7 @@ const INSTITUCIONES: IeSemilla[] = [
   },
   {
     codigoModular: '1580009',
-    nombre: 'I.E. IlÃ­mico',
+    nombre: 'I.E. Ilímico',
     nivel: 'EBE',
     turno: 'MANANA',
     zona: 'RURAL_1',
@@ -177,7 +177,8 @@ const INSTITUCIONES: IeSemilla[] = [
 ];
 
 const NUMERO_RD_DEMO = 'RD DEMO-2026-0412';
-const NUMERO_RD_ANTERIOR = 'R.D. NÂº 00412-2025';
+const NUMERO_RD_ANTERIOR = 'R.D. Nº 00412-2025';
+const NUMERO_RD_ANTERIOR_LEGACY = `R.D. N${String.fromCharCode(194)}º 00412-2025`;
 const FECHA_LIMITE_MATRICULA = new Date('2026-11-30T23:59:59');
 
 /* ------------------------------------------------------------------ */
@@ -530,8 +531,8 @@ async function main(): Promise<void> {
   };
   const convocatoriaExistente = await prisma.convocatoria.findUnique({
     where: { numeroRD: NUMERO_RD_DEMO },
-  }) ?? await prisma.convocatoria.findUnique({
-    where: { numeroRD: NUMERO_RD_ANTERIOR },
+  }) ?? await prisma.convocatoria.findFirst({
+    where: { numeroRD: { in: [NUMERO_RD_ANTERIOR, NUMERO_RD_ANTERIOR_LEGACY] } },
   });
   const convocatoria = convocatoriaExistente
     ? await prisma.convocatoria.update({

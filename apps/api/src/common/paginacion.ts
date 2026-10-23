@@ -49,9 +49,21 @@ export function ordenSeguro(
   sortBy: string | undefined,
   permitido: readonly string[],
   porDefecto: string,
+  direccion: 'asc' | 'desc' = 'asc',
 ): Record<string, 'asc' | 'desc'> {
   const campo = sortBy && permitido.includes(sortBy) ? sortBy : porDefecto;
-  return { [campo]: 'asc' };
+  return { [campo]: direccion };
+}
+
+export function ordenPorActualizacion(
+  sortBy: string | undefined,
+  permitido: readonly string[],
+): Record<string, 'asc' | 'desc'>[] {
+  if (sortBy && permitido.includes(sortBy)) {
+    return [{ [sortBy]: 'desc' }];
+  }
+
+  return [{ updatedAt: 'desc' }, { createdAt: 'desc' }];
 }
 
 /**
@@ -65,5 +77,5 @@ export function ordenSeguroConDireccion(
 ): Record<string, 'asc' | 'desc'> {
   const base = ordenSeguro(sortBy, permitido, porDefecto);
   const campo = Object.keys(base)[0] ?? porDefecto;
-  return { [campo]: direccion ?? 'asc' };
+  return { [campo]: direccion ?? 'desc' };
 }

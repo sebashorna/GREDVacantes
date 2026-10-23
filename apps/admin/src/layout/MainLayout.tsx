@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/features/auth/auth-context';
 import {
@@ -9,6 +10,7 @@ import {
   Menu,
   School,
   Users,
+  X,
 } from 'lucide-react';
 
 interface MainLayoutProps {
@@ -33,6 +35,7 @@ function claseEnlace(activo: boolean): string {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { usuario, cerrarSesion } = useAuth();
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900">
@@ -62,12 +65,77 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
       </aside>
 
+      {menuMovilAbierto && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setMenuMovilAbierto(false)}
+          role="presentation"
+        >
+          <aside
+            className="flex h-full w-72 max-w-[85vw] flex-col bg-[#9f462d] text-white shadow-xl"
+            onClick={(evento) => evento.stopPropagation()}
+            aria-label="Menú de navegación"
+          >
+            <div className="flex items-start justify-between border-b border-white/20 p-5">
+              <div>
+                <h1 className="text-lg font-bold tracking-tight">Educa Lambayeque</h1>
+                <p className="mt-1 text-xs text-white/75">Panel Administrativo</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMenuMovilAbierto(false)}
+                aria-label="Cerrar menú"
+                className="rounded p-2 text-white hover:bg-white/10"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav id="menu-navegacion-movil" className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
+              {ENLACES.map(({ ruta, etiqueta, icono: Icono }) => (
+                <NavLink
+                  key={ruta}
+                  to={ruta}
+                  onClick={() => setMenuMovilAbierto(false)}
+                  className={({ isActive }) => claseEnlace(isActive)}
+                >
+                  <Icono className="h-5 w-5" /> {etiqueta}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="border-t border-white/20 p-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuMovilAbierto(false);
+                  void cerrarSesion();
+                }}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 font-medium text-white/90 transition hover:bg-white/10 hover:text-white"
+              >
+                <LogOut className="h-5 w-5" /> Cerrar sesión
+              </button>
+              {usuario && (
+                <p className="mt-2 text-xs text-white/75">
+                  {usuario.nombre} <span className="font-semibold text-white">({usuario.rol})</span>
+                </p>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 border-b border-[#8c3d27] bg-[#9f462d] text-white flex items-center justify-between px-6 shrink-0">
+        <header className="h-16 border-b border-[#8c3d27] bg-[#9f462d] text-white flex items-center justify-between px-3 sm:px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <button className="md:hidden p-2 rounded text-white hover:bg-white/10">
-              <Menu className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => setMenuMovilAbierto(true)}
+              aria-label="Abrir menú"
+              aria-expanded={menuMovilAbierto}
+              aria-controls="menu-navegacion-movil"
+              className="md:hidden rounded p-2 text-white hover:bg-white/10"
+            >
+              <Menu className="h-5 w-5" />
             </button>
             <h2 className="text-lg font-semibold">{typeof children === 'string' ? children : ''}</h2>
           </div>
@@ -78,7 +146,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
         </main>
       </div>

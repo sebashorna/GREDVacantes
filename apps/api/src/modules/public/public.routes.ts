@@ -71,6 +71,108 @@ router.get('/vacantes', async (_req, res, next) => {
   }
 });
 
+router.get('/vacantes/listado', async (req, res, next) => {
+  try {
+    const limite = Math.min(Math.max(Number(req.query.limite ?? 50) || 50, 1), 100);
+    const data = await prisma.vacanteMatricula.findMany({
+      where: {
+        estado: { in: ['LIBRE', 'LISTA_ESPERA'] },
+        cupoDisponibles: { gt: 0 },
+      },
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+      take: limite,
+      select: {
+        id: true,
+        nivel: true,
+        turno: true,
+        cupoDisponibles: true,
+        fechaLimite: true,
+        ie: {
+          select: {
+            nombre: true,
+            telefono: true,
+            whatsapp: true,
+            distrito: { select: { nombre: true } },
+            provincia: { select: { nombre: true } },
+            ugel: { select: { nombre: true } },
+          },
+        },
+      },
+    });
+    res.json(data.map(({ ie, ...vacante }) => ({
+      ...vacante,
+      ie: {
+        nombre: ie.nombre,
+        telefono: ie.telefono,
+        whatsapp: ie.whatsapp,
+        distrito: ie.distrito.nombre,
+        provincia: ie.provincia.nombre,
+        ugel: ie.ugel.nombre,
+      },
+    })));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/plazas', async (req, res, next) => {
+  try {
+    const limite = Math.min(Math.max(Number(req.query.limite ?? 50) || 50, 1), 100);
+    const data = await prisma.plazaDocente.findMany({
+      where: {
+        estado: { in: ['ACTIVA', 'CONVOCADA'] },
+        convocatoria: {
+          activo: true,
+          fase: { not: 'FINALIZADA' },
+          fechaFin: { gte: new Date() },
+        },
+      },
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+      take: limite,
+      select: {
+        id: true,
+        cargo: true,
+        area: true,
+        nivel: true,
+        jornada: true,
+        zona: true,
+        turno: true,
+        tipo: true,
+        cantidad: true,
+        estado: true,
+        ie: {
+          select: {
+            nombre: true,
+            distrito: { select: { nombre: true } },
+            provincia: { select: { nombre: true } },
+            ugel: { select: { nombre: true } },
+          },
+        },
+        convocatoria: {
+          select: {
+            titulo: true,
+            numeroRD: true,
+            fechaInicio: true,
+            fechaFin: true,
+            pdfMeritosUrl: true,
+          },
+        },
+      },
+    });
+    res.json(data.map(({ ie, ...plaza }) => ({
+      ...plaza,
+      ie: {
+        nombre: ie.nombre,
+        distrito: ie.distrito.nombre,
+        provincia: ie.provincia.nombre,
+        ugel: ie.ugel.nombre,
+      },
+    })));
+  } catch (error) {
+    next(error);
+  }
+});
+
 /**
  * @openapi
  * /api/public/convocatorias:
@@ -84,7 +186,11 @@ router.get('/vacantes', async (_req, res, next) => {
 router.get('/convocatorias', async (_req, res, next) => {
   try {
     const data = await prisma.convocatoria.findMany({
-      where: { activo: true, fase: { not: 'FINALIZADA' } },
+      where: {
+        activo: true,
+        fase: { not: 'FINALIZADA' },
+        fechaFin: { gte: new Date() },
+      },
       orderBy: { fechaInicio: 'desc' },
       select: {
         id: true,

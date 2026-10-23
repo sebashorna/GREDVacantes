@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../common/errors.js';
-import { paginar, ordenSeguro } from '../../common/paginacion.js';
+import { paginar, ordenPorActualizacion } from '../../common/paginacion.js';
 import {
   localCreateSchema,
   localUpdateSchema,
@@ -11,7 +11,7 @@ import {
   type LocalUpdateInput,
 } from '@educa/shared';
 
-const CAMPOS_ORDEN = ['codigoLocal', 'estado', 'createdAt'] as const;
+const CAMPOS_ORDEN = ['codigoLocal', 'estado', 'createdAt', 'updatedAt'] as const;
 const ESTADOS_PRIORITARIOS: EstadoLocal[] = [
   'EN_REFRACCION',
   'AULAS_TEMPORALES',
@@ -32,6 +32,17 @@ const INCLUYE = {
           provincia: { select: { id: true, nombre: true } },
         },
       },
+    },
+  },
+  alertas: {
+    take: 3,
+    orderBy: { updatedAt: 'desc' },
+    select: {
+      id: true,
+      tipo: true,
+      estado: true,
+      descripcion: true,
+      createdAt: true,
     },
   },
   _count: { select: { alertas: true } },
@@ -77,7 +88,7 @@ export async function listar(filtros: FiltrosLocales) {
 
   return paginar(
     prisma.localEscolar,
-    { where, include: INCLUYE, orderBy: ordenSeguro(filtros.sortBy, CAMPOS_ORDEN, 'createdAt') },
+    { where, include: INCLUYE, orderBy: ordenPorActualizacion(filtros.sortBy, CAMPOS_ORDEN) },
     { page: filtros.page, limit: filtros.limit },
   );
 }
@@ -85,7 +96,10 @@ export async function listar(filtros: FiltrosLocales) {
 export async function obtenerPorId(id: number) {
   const local = await prisma.localEscolar.findUnique({
     where: { id },
-    include: { ...INCLUYE, alertas: { orderBy: { createdAt: 'desc' } } },
+    include: {
+      ...INCLUYE,
+      alertas: { orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }] },
+    },
   });
   if (!local) throw AppError.noEncontrado('Local escolar');
   return local;

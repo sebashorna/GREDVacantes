@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../common/errors.js';
-import { paginar, ordenSeguro } from '../../common/paginacion.js';
+import { paginar, ordenPorActualizacion } from '../../common/paginacion.js';
 import {
   convocatoriaCreateSchema,
   convocatoriaUpdateSchema,
@@ -10,7 +10,7 @@ import {
   type ConvocatoriaUpdateInput,
 } from '@educa/shared';
 
-const CAMPOS_ORDEN = ['fechaInicio', 'fechaFin', 'titulo', 'createdAt'] as const;
+const CAMPOS_ORDEN = ['fechaInicio', 'fechaFin', 'titulo', 'createdAt', 'updatedAt'] as const;
 
 const INCLUYE = {
   _count: { select: { plazas: true } },
@@ -42,7 +42,7 @@ export async function listar(filtros: FiltrosConvocatorias) {
 
   return paginar(
     prisma.convocatoria,
-    { where, include: INCLUYE, orderBy: ordenSeguro(filtros.sortBy, CAMPOS_ORDEN, 'fechaInicio') },
+    { where, include: INCLUYE, orderBy: ordenPorActualizacion(filtros.sortBy, CAMPOS_ORDEN) },
     { page: filtros.page, limit: filtros.limit },
   );
 }
@@ -53,7 +53,7 @@ export async function obtenerPorId(id: number) {
     include: {
       ...INCLUYE,
       plazas: {
-        orderBy: { id: 'asc' },
+        orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
         include: { ie: { select: { id: true, nombre: true, codigoModular: true } } },
       },
     },

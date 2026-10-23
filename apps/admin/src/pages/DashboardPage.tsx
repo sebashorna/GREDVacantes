@@ -22,6 +22,7 @@ import {
 import { Link } from 'react-router-dom';
 
 import { EncabezadoPagina } from '@/components/EncabezadoPagina';
+import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
 import { useAuth } from '@/features/auth/auth-context';
 import { api } from '@/lib/api';
 import type { Pagina } from '@/lib/tipos';
@@ -66,6 +67,7 @@ interface ComunicadoPortal {
   categoria: string;
   resumen: string;
   fecha: string;
+  imagenUrl: string | null;
 }
 
 const REGION_TODAS = 'Toda la Región';
@@ -87,6 +89,15 @@ function etiqueta(valor: string): string {
     .replaceAll('_', ' ')
     .toLowerCase()
     .replace(/(^|\s)\S/g, (letra) => letra.toUpperCase());
+}
+
+function esUrlSegura(valor: string): boolean {
+  try {
+    const url = new URL(valor);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
 }
 
 export function DashboardPage() {
@@ -479,9 +490,26 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {comunicados.data?.data.map((comunicado) => (
             <article key={comunicado.id} className="flex items-start gap-3 rounded-xl border border-[#9f462d] bg-[#9f462d] p-4 text-white">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white">
-                <FileText size={20} />
-              </span>
+              {comunicado.imagenUrl && esUrlSegura(comunicado.imagenUrl) ? (
+                <VistaPreviaArchivo
+                  url={comunicado.imagenUrl}
+                  titulo={comunicado.titulo}
+                  tipo="imagen"
+                >
+                  <span className="block h-24 w-28 shrink-0 overflow-hidden rounded-lg bg-white/15 transition hover:ring-2 hover:ring-white">
+                    <img
+                      src={comunicado.imagenUrl}
+                      alt={`Imagen del comunicado: ${comunicado.titulo}`}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </span>
+                </VistaPreviaArchivo>
+              ) : (
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white">
+                  <FileText size={20} />
+                </span>
+              )}
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
                   {etiqueta(comunicado.categoria)} · {fechaCorta(comunicado.fecha)}

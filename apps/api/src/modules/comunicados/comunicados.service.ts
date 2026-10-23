@@ -10,7 +10,7 @@ import {
   type ComunicadoUpdateInput,
 } from '@educa/shared';
 
-const CAMPOS_ORDEN = ['fecha', 'titulo', 'createdAt'] as const;
+const CAMPOS_ORDEN = ['fecha', 'titulo', 'createdAt', 'updatedAt'] as const;
 
 export interface FiltrosComunicados {
   page: number;
@@ -43,7 +43,7 @@ export async function listar(filtros: FiltrosComunicados) {
       orderBy: ordenSeguroConDireccion(
         filtros.sortBy,
         CAMPOS_ORDEN,
-        'fecha',
+        'updatedAt',
         filtros.sortDir,
       ),
     },

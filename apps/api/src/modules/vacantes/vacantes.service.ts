@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../common/errors.js';
-import { paginar, ordenSeguro } from '../../common/paginacion.js';
+import { paginar, ordenPorActualizacion } from '../../common/paginacion.js';
 import {
   vacanteCreateSchema,
   vacanteUpdateSchema,
@@ -10,7 +10,7 @@ import {
   type VacanteUpdateInput,
 } from '@educa/shared';
 
-const CAMPOS_ORDEN = ['cupoTotal', 'cupoDisponibles', 'nivel', 'createdAt'] as const;
+const CAMPOS_ORDEN = ['cupoTotal', 'cupoDisponibles', 'nivel', 'createdAt', 'updatedAt'] as const;
 
 const INCLUYE = {
   ie: {
@@ -60,7 +60,7 @@ export async function listar(filtros: FiltrosVacantes) {
 
   return paginar(
     prisma.vacanteMatricula,
-    { where, include: INCLUYE, orderBy: ordenSeguro(filtros.sortBy, CAMPOS_ORDEN, 'createdAt') },
+    { where, include: INCLUYE, orderBy: ordenPorActualizacion(filtros.sortBy, CAMPOS_ORDEN) },
     { page: filtros.page, limit: filtros.limit },
   );
 }

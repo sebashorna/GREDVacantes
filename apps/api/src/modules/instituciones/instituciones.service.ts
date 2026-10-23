@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../common/errors.js';
-import { paginar, ordenSeguro } from '../../common/paginacion.js';
+import { paginar, ordenPorActualizacion } from '../../common/paginacion.js';
 import {
   institucionCreateSchema,
   institucionFiltrosSchema,
@@ -12,7 +12,7 @@ import {
   type InstitucionUpdateInput,
 } from '@educa/shared';
 
-const CAMPOS_ORDEN = ['nombre', 'codigoModular', 'nivel', 'createdAt'] as const;
+const CAMPOS_ORDEN = ['nombre', 'codigoModular', 'nivel', 'createdAt', 'updatedAt'] as const;
 
 const INCLUYE = {
   ugel: { select: { id: true, nombre: true, codigo: true } },
@@ -48,7 +48,7 @@ export async function listar(filtros: InstitucionFiltros) {
 
   return paginar(
     prisma.institucionEducativa,
-    { where, include: INCLUYE, orderBy: ordenSeguro(parsed.sortBy, CAMPOS_ORDEN, 'nombre') },
+    { where, include: INCLUYE, orderBy: ordenPorActualizacion(parsed.sortBy, CAMPOS_ORDEN) },
     { page: parsed.page, limit: parsed.limit },
   );
 }
@@ -58,12 +58,12 @@ export async function obtenerPorId(id: number) {
     where: { id },
     include: {
       ...INCLUYE,
-      vacantes: { orderBy: { id: 'asc' } },
+      vacantes: { orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }] },
       plazas: {
-        orderBy: { id: 'asc' },
+        orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
         include: { ie: { select: { nombre: true, codigoModular: true } } },
       },
-      locales: { orderBy: { id: 'asc' } },
+      locales: { orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }] },
     },
   });
   if (!institucion) throw AppError.noEncontrado('Institucion educativa');

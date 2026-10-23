@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { FileText } from 'lucide-react';
 import { FASES_CONVOCATORIA } from '@shared';
 import { api } from '@/lib/api';
 import type { Convocatoria, Pagina } from '@/lib/tipos';
@@ -17,6 +18,7 @@ import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
 import { Tabla, type Columna } from '@/components/ui/Tabla';
+import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
 
 const ETIQUETAS_FASE: Record<string, string> = {
   INSCRIPCION: 'Inscripcion', ADJUDICACION: 'Adjudicacion',
@@ -31,11 +33,20 @@ function fechaCorta(v: string): string {
 }
 const formSchema = z.object({
   titulo: z.string().trim().min(5, 'El titulo es obligatorio').max(200),
-  numeroRD: z.string().trim().min(1, 'El numero de R.D. es obligatorio').max(50),
+  numeroRD: z
+    .string()
+    .trim()
+    .min(1, 'El numero de R.D. es obligatorio')
+    .max(50)
+    .regex(
+      /^(?:R\.?\s*D\.?\s*N?[°º]?\s*[\d\-/]+|R\.?\s*D\.?\s+DEMO-\d{4}-\d+)$/i,
+      'Formato de resolución inválido (ej: R.D. Nº 00412-2025)',
+    ),
   descripcion: z.string().trim().max(2000).optional().or(z.literal('')),
   fase: z.enum(FASES_CONVOCATORIA),
   fechaInicio: z.string().min(1, 'La fecha de inicio es obligatoria'),
   fechaFin: z.string().min(1, 'La fecha de fin es obligatoria'),
+  pdfMeritosUrl: z.string().trim().optional(),
   activo: z.enum(['true', 'false']),
 });
 type FormDatos = z.infer<typeof formSchema>;
@@ -55,11 +66,12 @@ function FormularioConvocatoria({ inicial, onExito, onCancelar }: FormularioProp
           fase: inicial.fase as FormDatos['fase'],
           fechaInicio: inicial.fechaInicio.slice(0, 10),
           fechaFin: inicial.fechaFin.slice(0, 10),
+          pdfMeritosUrl: inicial.pdfMeritosUrl ?? '',
           activo: inicial.activo ? 'true' : 'false',
         }
       : {
           titulo: '', numeroRD: '', descripcion: '',
-          fase: 'INSCRIPCION', fechaInicio: '', fechaFin: '', activo: 'true',
+          fase: 'INSCRIPCION', fechaInicio: '', fechaFin: '', pdfMeritosUrl: '', activo: 'true',
         },
   });
   const guardar = useMutation({
@@ -69,6 +81,7 @@ function FormularioConvocatoria({ inicial, onExito, onCancelar }: FormularioProp
         descripcion: d.descripcion?.trim() ? d.descripcion.trim() : null,
         fechaInicio: new Date(`${d.fechaInicio}T00:00:00`).toISOString(),
         fechaFin: new Date(`${d.fechaFin}T23:59:59`).toISOString(),
+        pdfMeritosUrl: d.pdfMeritosUrl?.trim() || null,
         activo: d.activo === 'true',
       };
       const { data } = inicial
@@ -77,7 +90,9 @@ function FormularioConvocatoria({ inicial, onExito, onCancelar }: FormularioProp
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['convocatorias'] });
+      void queryClient.invalidateQueries({ queryKey: ['convocatorias'] });
+      void queryClient.invalidateQueries({ queryKey: ['plazas'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success(inicial ? 'Convocatoria actualizada' : 'Convocatoria creada');
       onExito();
     },
@@ -114,6 +129,19 @@ function FormularioConvocatoria({ inicial, onExito, onCancelar }: FormularioProp
           <CampoArea etiqueta="Descripcion (opcional)" valor={field.value ?? ''} onChange={field.onChange} error={fieldState.error?.message} filas={3} />
         )} />
       </div>
+      <div className="md:col-span-2">
+        <Controller name="pdfMeritosUrl" control={c} render={({ field, fieldState }) => (
+          <CampoTexto
+            etiqueta="PDF o enlace de la convocatoria (opcional)"
+            tipo="text"
+            valor={field.value ?? ''}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            ayuda="Pega una URL web o una ruta pública como /documentos/convocatoria.pdf."
+            placeholder="/documentos/convocatoria.pdf"
+          />
+        )} />
+      </div>
       <div className="md:col-span-2 flex justify-end gap-3 pt-2">
         <Boton variante="secundario" onClick={onCancelar} disabled={guardar.isPending}>Cancelar</Boton>
         <Boton type="submit" disabled={guardar.isPending}>{guardar.isPending ? 'Guardando...' : inicial ? 'Guardar cambios' : 'Crear convocatoria'}</Boton>
@@ -129,6 +157,7 @@ export function ConvocatoriasPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState<Convocatoria | undefined>();
   const [eliminando, setEliminando] = useState<Convocatoria | null>(null);
+  const [seleccionada, setSeleccionada] = useState<Convocatoria | null>(null);
   const puedeRegistrar = puede('ADMIN_GRED', 'EDITOR_UGEL');
   const puedeAdministrar = puede('ADMIN_GRED');
   const consulta = useQuery({
@@ -146,7 +175,9 @@ export function ConvocatoriasPage() {
   const eliminar = useMutation({
     mutationFn: (id: number) => api.delete(`/convocatorias/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['convocatorias'] });
+      void queryClient.invalidateQueries({ queryKey: ['convocatorias'] });
+      void queryClient.invalidateQueries({ queryKey: ['plazas'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success('Convocatoria eliminada');
       setEliminando(null);
     },
@@ -157,10 +188,26 @@ export function ConvocatoriasPage() {
       clave: 'titulo', encabezado: 'Convocatoria',
       celda: (c) => (
         <div>
-          <p className="font-semibold text-on-surface">{c.titulo}</p>
+          <button
+            type="button"
+            onClick={() => setSeleccionada(c)}
+            className="text-left font-semibold text-primary hover:underline"
+          >
+            {c.titulo}
+          </button>
           <p className="text-xs text-on-surface-variant">{c.numeroRD}</p>
         </div>
       ),
+    },
+    {
+      clave: 'documento', encabezado: 'Documento',
+      celda: (c) => c.pdfMeritosUrl ? (
+        <VistaPreviaArchivo url={c.pdfMeritosUrl} titulo={`Convocatoria: ${c.titulo}`} tipo="documento">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
+            <FileText size={15} /> Ver PDF
+          </span>
+        </VistaPreviaArchivo>
+      ) : <span className="text-xs text-on-surface-variant">Sin documento</span>,
     },
     {
       clave: 'fase', encabezado: 'Fase',
@@ -224,6 +271,48 @@ export function ConvocatoriasPage() {
       <Modal abierto={modalAbierto} onCerrar={() => setModalAbierto(false)} titulo={editando ? 'Editar convocatoria' : 'Nueva convocatoria'}>
         <FormularioConvocatoria key={editando?.id ?? 'nueva'} inicial={editando}
           onExito={() => setModalAbierto(false)} onCancelar={() => setModalAbierto(false)} />
+      </Modal>
+      <Modal
+        abierto={seleccionada !== null}
+        onCerrar={() => setSeleccionada(null)}
+        titulo="Detalle de convocatoria"
+      >
+        {seleccionada && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-semibold text-on-surface">{seleccionada.titulo}</h3>
+              <p className="mt-1 text-sm text-on-surface-variant">
+                Resolución: {seleccionada.numeroRD}
+              </p>
+            </div>
+            <div className="grid gap-3 rounded-lg bg-surface-container-low p-4 text-sm sm:grid-cols-2">
+              <p><span className="font-semibold">Fase:</span> {ETIQUETAS_FASE[seleccionada.fase] ?? seleccionada.fase}</p>
+              <p><span className="font-semibold">Estado:</span> {seleccionada.activo ? 'Activa' : 'Inactiva'}</p>
+              <p><span className="font-semibold">Inicio:</span> {fechaCorta(seleccionada.fechaInicio)}</p>
+              <p><span className="font-semibold">Fin:</span> {fechaCorta(seleccionada.fechaFin)}</p>
+            </div>
+            {seleccionada.descripcion && (
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-on-surface-variant">
+                {seleccionada.descripcion}
+              </p>
+            )}
+            {seleccionada.pdfMeritosUrl ? (
+              <VistaPreviaArchivo
+                url={seleccionada.pdfMeritosUrl}
+                titulo={`Convocatoria: ${seleccionada.titulo}`}
+                tipo="documento"
+              >
+                <span className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary-container px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary">
+                  <FileText size={17} /> Ver documento de la convocatoria
+                </span>
+              </VistaPreviaArchivo>
+            ) : (
+              <p className="rounded-lg border border-outline-variant p-3 text-sm text-on-surface-variant">
+                Esta convocatoria aún no tiene un PDF o enlace asociado.
+              </p>
+            )}
+          </div>
+        )}
       </Modal>
       <Confirmacion abierto={eliminando !== null} onCancelar={() => setEliminando(null)}
         onConfirmar={() => eliminando && eliminar.mutate(eliminando.id)} cargando={eliminar.isPending}

@@ -30,6 +30,7 @@ export interface Convocatoria {
   fase: string;
   activo: boolean;
   descripcion: string | null;
+  pdfMeritosUrl?: string | null;
   _count?: { plazas: number };
 }
 
@@ -143,6 +144,13 @@ export interface LocalEscolar {
       provincia?: { id: number; nombre: string } | null;
     } | null;
   };
+  alertas?: {
+    id: number;
+    tipo: string;
+    estado: string;
+    descripcion: string;
+    createdAt: string;
+  }[];
   _count?: { alertas: number };
 }
 

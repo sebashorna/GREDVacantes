@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, ChevronRight, ExternalLink, FileText, GraduationCap, MapPin, Pencil, Search, Trash2, X } from "lucide-react";
+import { Check, ChevronRight, FileText, GraduationCap, MapPin, Pencil, Search, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import {
@@ -32,6 +32,7 @@ import { EncabezadoPagina } from "@/components/EncabezadoPagina";
 import { Badge, type TonoBadge } from "@/components/ui/Badge";
 import { Boton } from "@/components/ui/Boton";
 import { Modal } from "@/components/ui/Modal";
+import { VistaPreviaArchivo } from "@/components/ui/VistaPreviaArchivo";
 import { Paginacion } from "@/components/ui/Paginacion";
 import { Confirmacion } from "@/components/ui/Confirmacion";
 const TONOS_ESTADO: Record<string, TonoBadge> = {
@@ -113,6 +114,9 @@ function FormularioPlaza({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["plazas"] });
+      void queryClient.invalidateQueries({ queryKey: ["convocatorias"] });
+      void queryClient.invalidateQueries({ queryKey: ["instituciones"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(inicial ? "Plaza actualizada" : "Plaza creada");
       onExito();
     },
@@ -241,6 +245,9 @@ export function PlazasPage() {
     mutationFn: (id: number) => api.delete(`/plazas/${id}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["plazas"] });
+      void queryClient.invalidateQueries({ queryKey: ["convocatorias"] });
+      void queryClient.invalidateQueries({ queryKey: ["instituciones"] });
+      void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Plaza eliminada");
       setPlazaEliminando(null);
     },
@@ -555,14 +562,15 @@ export function PlazasPage() {
                   )}
                 </div>
                 {plazaRequisitos.convocatoria.pdfMeritosUrl ? (
-                  <a
-                    href={plazaRequisitos.convocatoria.pdfMeritosUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary-container px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary"
+                  <VistaPreviaArchivo
+                    url={plazaRequisitos.convocatoria.pdfMeritosUrl}
+                    titulo="Bases y requisitos oficiales"
+                    tipo="documento"
                   >
-                    <FileText size={17} /> Ver bases y requisitos oficiales <ExternalLink size={15} />
-                  </a>
+                    <span className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary-container px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary">
+                      <FileText size={17} /> Ver bases y requisitos oficiales
+                    </span>
+                  </VistaPreviaArchivo>
                 ) : (
                   <p className="rounded-lg border border-secondary-fixed bg-secondary-fixed/40 p-3 text-sm text-on-surface-variant">
                     Esta convocatoria todavía no tiene un documento oficial de bases registrado. Consulta los requisitos en la convocatoria o en la resolución indicada.

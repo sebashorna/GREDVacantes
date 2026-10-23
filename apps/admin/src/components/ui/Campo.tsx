@@ -20,7 +20,7 @@ interface CampoTextoProps {
   onChange: (valor: string) => void;
   error?: string;
   ayuda?: string;
-  tipo?: 'text' | 'number' | 'date' | 'email' | 'password' | 'search' | 'tel';
+  tipo?: 'text' | 'number' | 'date' | 'email' | 'password' | 'search' | 'tel' | 'url';
   placeholder?: string;
   deshabilitado?: boolean;
   min?: number;

@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   Building2,
   CalendarClock,
-  ExternalLink,
   FileImage,
   MapPin,
   Pencil,
@@ -31,6 +30,7 @@ import { CampoArea, CampoSelect, CampoTexto } from '@/components/ui/Campo';
 import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
+import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
 import { useAuth, mensajeDeError } from '@/features/auth/auth-context';
 import { usePaginacion } from '@/hooks/usePaginacion';
 import { api } from '@/lib/api';
@@ -174,6 +174,8 @@ export function AlertasPage() {
     },
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['alertas'] });
+      void queryClient.invalidateQueries({ queryKey: ['locales'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success(variables.id ? 'Alerta actualizada' : 'Alerta creada');
       cerrarFormulario();
     },
@@ -184,6 +186,8 @@ export function AlertasPage() {
     mutationFn: (id: number) => api.delete(`/alertas/${id}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['alertas'] });
+      void queryClient.invalidateQueries({ queryKey: ['locales'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success('Alerta eliminada');
       setAlertaEliminando(null);
     },
@@ -197,6 +201,8 @@ export function AlertasPage() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['alertas'] });
+      void queryClient.invalidateQueries({ queryKey: ['locales'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success('Seguimiento de alerta actualizado');
       setAlertaGestionando(null);
     },
@@ -473,16 +479,21 @@ export function AlertasPage() {
                     <div className="flex flex-wrap gap-2">
                       {alerta.fotos.map((foto, indice) =>
                         esUrlSegura(foto) ? (
-                          <a
+                          <VistaPreviaArchivo
                             key={`${foto}-${indice}`}
-                            href={foto}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex max-w-full items-center gap-1 rounded-lg border border-outline-variant px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-surface-container-low"
+                            url={foto}
+                            titulo={`Evidencia ${indice + 1} de la alerta`}
+                            tipo="imagen"
                           >
-                            <ExternalLink size={13} />
-                            <span className="truncate">Evidencia {indice + 1}</span>
-                          </a>
+                            <span className="block h-20 w-24 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low transition hover:ring-2 hover:ring-primary">
+                              <img
+                                src={foto}
+                                alt={`Miniatura de evidencia ${indice + 1}`}
+                                loading="lazy"
+                                className="h-full w-full object-cover"
+                              />
+                            </span>
+                          </VistaPreviaArchivo>
                         ) : (
                           <span key={`${foto}-${indice}`} className="text-xs text-on-surface-variant">
                             {foto}

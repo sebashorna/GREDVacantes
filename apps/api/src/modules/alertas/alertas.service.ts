@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../common/errors.js';
-import { paginar, ordenSeguro } from '../../common/paginacion.js';
+import { paginar, ordenPorActualizacion } from '../../common/paginacion.js';
 import {
   alertaCreateSchema,
   alertaEstadoSchema,
@@ -10,7 +10,7 @@ import {
   type AlertaEstadoInput,
 } from '@educa/shared';
 
-const CAMPOS_ORDEN = ['createdAt', 'tipo', 'estado'] as const;
+const CAMPOS_ORDEN = ['createdAt', 'updatedAt', 'tipo', 'estado'] as const;
 
 const INCLUYE = {
   localEscolar: {
@@ -60,7 +60,7 @@ export async function listar(filtros: FiltrosAlertas) {
     {
       where,
       include: INCLUYE,
-      orderBy: ordenSeguro(filtros.sortBy, CAMPOS_ORDEN, 'createdAt'),
+      orderBy: ordenPorActualizacion(filtros.sortBy, CAMPOS_ORDEN),
     },
     { page: filtros.page, limit: filtros.limit },
   );

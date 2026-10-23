@@ -128,7 +128,9 @@ function FormularioVacante({ inicial, onExito, onCancelar }: FormularioProps) {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vacantes'] });
+      void queryClient.invalidateQueries({ queryKey: ['vacantes'] });
+      void queryClient.invalidateQueries({ queryKey: ['instituciones'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success(inicial ? 'Vacante actualizada' : 'Vacante creada');
       onExito();
     },
@@ -193,6 +195,8 @@ export function VacantesPage() {
     mutationFn: (id: number) => api.delete(`/vacantes/${id}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['vacantes'] });
+      void queryClient.invalidateQueries({ queryKey: ['instituciones'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success('Vacante eliminada');
       setVacanteEliminando(null);
     },

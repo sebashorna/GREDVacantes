@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, type FormEvent } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   Building2,
@@ -8,19 +10,31 @@ import {
   Droplet,
   FileCheck2,
   MapPin,
+  Pencil,
   Search,
+  Trash2,
   Wifi,
   X,
   Zap,
 } from 'lucide-react';
 
-import { ESTADOS_LOCAL, ETIQUETAS_ESTADO_LOCAL } from '@shared';
+import {
+  ESTADOS_LOCAL,
+  ESTADOS_SERVICIO,
+  ETIQUETAS_ESTADO_ALERTA,
+  ETIQUETAS_ESTADO_LOCAL,
+} from '@shared';
 import { EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { Badge, type TonoBadge } from '@/components/ui/Badge';
+import { Boton } from '@/components/ui/Boton';
+import { CampoSelect, CampoTexto } from '@/components/ui/Campo';
+import { Confirmacion } from '@/components/ui/Confirmacion';
+import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
+import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
 import { useAuth, mensajeDeError } from '@/features/auth/auth-context';
 import { usePaginacion } from '@/hooks/usePaginacion';
-import { useUgeles } from '@/hooks/useCatalogos';
+import { useInstitucionesOpciones, useUgeles } from '@/hooks/useCatalogos';
 import { api } from '@/lib/api';
 import type { LocalEscolar, Pagina } from '@/lib/tipos';
 
@@ -42,6 +56,218 @@ const ETIQUETAS_AGUA: Record<string, string> = {
   NO_DISPONIBLE: 'Sin agua',
 };
 
+const TONOS_ALERTA: Record<string, TonoBadge> = {
+  ABIERTA: 'error',
+  EN_ATENCION: 'advertencia',
+  RESUELTA: 'exito',
+  DESCARTADA: 'neutro',
+};
+
+interface DatosLocal {
+  ieId: string;
+  codigoLocal: string;
+  estado: (typeof ESTADOS_LOCAL)[number];
+  aulasOperativas: string;
+  aulasTotales: string;
+  agua: (typeof ESTADOS_SERVICIO)[number];
+  luz: boolean;
+  fibra: boolean;
+  capacidadAlumnos: string;
+  avanceObras: string;
+  presupuesto: string;
+  fichaEdanUrl: string;
+  ultimaInspeccion: string;
+}
+
+function formularioInicial(local?: LocalEscolar): DatosLocal {
+  return {
+    ieId: String(local?.ieId ?? ''),
+    codigoLocal: local?.codigoLocal ?? '',
+    estado: (local?.estado as DatosLocal['estado']) ?? 'OPERATIVO_REGULAR',
+    aulasOperativas: String(local?.aulasOperativas ?? 0),
+    aulasTotales: String(local?.aulasTotales ?? 0),
+    agua: (local?.agua as DatosLocal['agua']) ?? 'NO_DISPONIBLE',
+    luz: local?.luz ?? false,
+    fibra: local?.fibra ?? false,
+    capacidadAlumnos: local?.capacidadAlumnos == null ? '' : String(local.capacidadAlumnos),
+    avanceObras: local?.avanceObras == null ? '' : String(local.avanceObras),
+    presupuesto: local?.presupuesto == null ? '' : String(local.presupuesto),
+    fichaEdanUrl: local?.fichaEdanUrl ?? '',
+    ultimaInspeccion: local?.ultimaInspeccion?.slice(0, 10) ?? '',
+  };
+}
+
+function FormularioLocal({
+  inicial,
+  onExito,
+  onCancelar,
+}: {
+  inicial?: LocalEscolar;
+  onExito: () => void;
+  onCancelar: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const instituciones = useInstitucionesOpciones(inicial?.ie?.codigoModular ?? '');
+  const [datos, setDatos] = useState(() => formularioInicial(inicial));
+  const guardar = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        ieId: Number(datos.ieId),
+        codigoLocal: datos.codigoLocal.trim(),
+        estado: datos.estado,
+        aulasOperativas: Number(datos.aulasOperativas),
+        aulasTotales: Number(datos.aulasTotales),
+        agua: datos.agua,
+        luz: datos.luz,
+        fibra: datos.fibra,
+        capacidadAlumnos: datos.capacidadAlumnos ? Number(datos.capacidadAlumnos) : null,
+        avanceObras: datos.avanceObras ? Number(datos.avanceObras) : null,
+        presupuesto: datos.presupuesto ? Number(datos.presupuesto) : null,
+        fichaEdanUrl: datos.fichaEdanUrl.trim() || null,
+        ultimaInspeccion: datos.ultimaInspeccion
+          ? new Date(`${datos.ultimaInspeccion}T00:00:00`).toISOString()
+          : null,
+      };
+      return inicial
+        ? api.put(`/locales/${inicial.id}`, payload)
+        : api.post('/locales', payload);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['locales'] });
+      void queryClient.invalidateQueries({ queryKey: ['alertas'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(inicial ? 'Local actualizado' : 'Local registrado');
+      onExito();
+    },
+    onError: (error) => toast.error(mensajeDeError(error)),
+  });
+  const actualizar = <K extends keyof DatosLocal>(campo: K, valor: DatosLocal[K]) => {
+    setDatos((actual) => ({ ...actual, [campo]: valor }));
+  };
+  const enviar = (evento: FormEvent<HTMLFormElement>) => {
+    evento.preventDefault();
+    guardar.mutate();
+  };
+
+  return (
+    <form onSubmit={enviar} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="md:col-span-2">
+        <CampoSelect
+          etiqueta="Institución educativa"
+          valor={datos.ieId}
+          onChange={(valor) => actualizar('ieId', valor)}
+          deshabilitado={Boolean(inicial)}
+          opciones={(instituciones.data?.data ?? []).map((ie) => ({
+            valor: String(ie.id),
+            etiqueta: `${ie.nombre} (${ie.codigoModular})`,
+          }))}
+        />
+        {instituciones.isLoading && <p className="mt-1 text-xs text-on-surface-variant">Cargando instituciones...</p>}
+        {instituciones.isError && (
+          <p role="alert" className="mt-1 text-xs text-error">
+            No se pudieron cargar las instituciones.{' '}
+            <button type="button" onClick={() => void instituciones.refetch()} className="font-semibold underline">Reintentar</button>
+          </p>
+        )}
+      </div>
+      <CampoTexto
+        etiqueta="Código local"
+        valor={datos.codigoLocal}
+        onChange={(valor) => actualizar('codigoLocal', valor)}
+        deshabilitado={Boolean(inicial)}
+      />
+      <CampoSelect
+        etiqueta="Estado del local"
+        valor={datos.estado}
+        onChange={(valor) => actualizar('estado', valor as DatosLocal['estado'])}
+        opciones={ESTADOS_LOCAL.map((estado) => ({
+          valor: estado,
+          etiqueta: ETIQUETAS_ESTADO_LOCAL[estado],
+        }))}
+      />
+      <CampoTexto
+        etiqueta="Aulas operativas"
+        tipo="number"
+        min={0}
+        max={500}
+        valor={datos.aulasOperativas}
+        onChange={(valor) => actualizar('aulasOperativas', valor)}
+      />
+      <CampoTexto
+        etiqueta="Aulas totales"
+        tipo="number"
+        min={0}
+        max={500}
+        valor={datos.aulasTotales}
+        onChange={(valor) => actualizar('aulasTotales', valor)}
+      />
+      <CampoSelect
+        etiqueta="Servicio de agua"
+        valor={datos.agua}
+        onChange={(valor) => actualizar('agua', valor as DatosLocal['agua'])}
+        opciones={ESTADOS_SERVICIO.map((estado) => ({
+          valor: estado,
+          etiqueta: ETIQUETAS_AGUA[estado] ?? estado,
+        }))}
+      />
+      <CampoTexto
+        etiqueta="Capacidad de alumnos (opcional)"
+        tipo="number"
+        min={0}
+        max={10000}
+        valor={datos.capacidadAlumnos}
+        onChange={(valor) => actualizar('capacidadAlumnos', valor)}
+      />
+      <CampoTexto
+        etiqueta="Avance de obras % (opcional)"
+        tipo="number"
+        min={0}
+        max={100}
+        paso={0.01}
+        valor={datos.avanceObras}
+        onChange={(valor) => actualizar('avanceObras', valor)}
+      />
+      <CampoTexto
+        etiqueta="Presupuesto (opcional)"
+        tipo="number"
+        min={0}
+        paso={0.01}
+        valor={datos.presupuesto}
+        onChange={(valor) => actualizar('presupuesto', valor)}
+      />
+      <CampoTexto
+        etiqueta="Última inspección (opcional)"
+        tipo="date"
+        valor={datos.ultimaInspeccion}
+        onChange={(valor) => actualizar('ultimaInspeccion', valor)}
+      />
+      <CampoTexto
+        etiqueta="URL de ficha EDAN (opcional)"
+        tipo="url"
+        valor={datos.fichaEdanUrl}
+        onChange={(valor) => actualizar('fichaEdanUrl', valor)}
+      />
+      <label className="flex items-center gap-2 text-sm font-medium text-on-surface">
+        <input type="checkbox" checked={datos.luz} onChange={(evento) => actualizar('luz', evento.target.checked)} />
+        Cuenta con energía eléctrica
+      </label>
+      <label className="flex items-center gap-2 text-sm font-medium text-on-surface">
+        <input type="checkbox" checked={datos.fibra} onChange={(evento) => actualizar('fibra', evento.target.checked)} />
+        Cuenta con conectividad de fibra
+      </label>
+      <div className="md:col-span-2 flex justify-end gap-2">
+        <Boton variante="secundario" onClick={onCancelar} disabled={guardar.isPending}>Cancelar</Boton>
+        <Boton
+          type="submit"
+          disabled={guardar.isPending || instituciones.isLoading || instituciones.isError || !datos.ieId || !datos.codigoLocal.trim()}
+        >
+          {guardar.isPending ? 'Guardando...' : inicial ? 'Guardar cambios' : 'Registrar local'}
+        </Boton>
+      </div>
+    </form>
+  );
+}
+
 function fechaCorta(valor: string | null): string {
   if (!valor) return 'Sin registro';
   const fecha = new Date(valor);
@@ -50,13 +276,31 @@ function fechaCorta(valor: string | null): string {
 }
 
 export function InfraestructuraPage() {
-  const { usuario } = useAuth();
+  const { usuario, puede } = useAuth();
+  const queryClient = useQueryClient();
   const { busqueda, setBusqueda, setPagina, params } = usePaginacion();
   const [fUgel, setFUgel] = useState('');
   const [fEstado, setFEstado] = useState('');
   const [prioritario, setPrioritario] = useState(false);
   const [detalleAbierto, setDetalleAbierto] = useState<number | null>(null);
+  const [formularioAbierto, setFormularioAbierto] = useState(false);
+  const [localEditando, setLocalEditando] = useState<LocalEscolar | null>(null);
+  const [localEliminando, setLocalEliminando] = useState<LocalEscolar | null>(null);
+  const puedeRegistrar = puede('ADMIN_GRED', 'EDITOR_UGEL');
+  const puedeAdministrar = puede('ADMIN_GRED');
   const ugeles = useUgeles();
+  const eliminar = useMutation({
+    mutationFn: (id: number) => api.delete(`/locales/${id}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['locales'] });
+      void queryClient.invalidateQueries({ queryKey: ['alertas'] });
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['instituciones'] });
+      toast.success('Local escolar eliminado');
+      setLocalEliminando(null);
+    },
+    onError: (error) => toast.error(mensajeDeError(error)),
+  });
 
   const locales = useQuery({
     queryKey: ['locales', params, fUgel, fEstado, prioritario],
@@ -86,6 +330,10 @@ export function InfraestructuraPage() {
       <EncabezadoPagina
         titulo="Infraestructura y aulas"
         descripcion="Diagnóstico regional de locales escolares y sus servicios."
+        accion={puedeRegistrar ? {
+          etiqueta: 'Registrar local',
+          onClick: () => { setLocalEditando(null); setFormularioAbierto(true); },
+        } : undefined}
         extra={
           <span className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm font-medium text-on-surface-variant">
             <Building2 size={17} className="text-primary" />
@@ -299,7 +547,8 @@ export function InfraestructuraPage() {
                     </div>
 
                     {abierto && (
-                      <dl className="mt-3 grid gap-2 rounded-lg border border-outline-variant/70 p-3 text-sm sm:grid-cols-2">
+                      <div className="mt-3 space-y-3">
+                      <dl className="grid gap-2 rounded-lg border border-outline-variant/70 p-3 text-sm sm:grid-cols-2">
                         <div>
                           <dt className="text-xs text-on-surface-variant">Capacidad de alumnos</dt>
                           <dd className="font-medium text-on-surface">{local.capacidadAlumnos ?? 'Sin registro'}</dd>
@@ -320,17 +569,54 @@ export function InfraestructuraPage() {
                         </div>
                         {local.fichaEdanUrl && (
                           <div className="sm:col-span-2">
-                            <a
-                              href={local.fichaEdanUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline"
+                            <VistaPreviaArchivo
+                              url={local.fichaEdanUrl}
+                              titulo="Ficha EDAN"
+                              tipo="documento"
                             >
-                              <FileCheck2 size={16} /> Abrir ficha EDAN
-                            </a>
+                              <span className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
+                                <FileCheck2 size={16} /> Ver ficha EDAN
+                              </span>
+                            </VistaPreviaArchivo>
                           </div>
                         )}
                       </dl>
+                      <section aria-label={`Alertas recientes de ${local.ie?.nombre ?? 'la institución'}`} className="rounded-lg border border-outline-variant/70 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h4 className="text-sm font-semibold text-on-surface">Alertas recientes</h4>
+                          <Link
+                            to="/alertas"
+                            className="text-xs font-semibold text-primary hover:underline"
+                          >
+                            Ver todas las alertas
+                          </Link>
+                        </div>
+                        {local.alertas?.length ? (
+                          <ul className="mt-2 space-y-2">
+                            {local.alertas.map((alerta) => (
+                              <li key={alerta.id} className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-surface-container-low p-2.5">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-semibold text-on-surface">{alerta.descripcion}</p>
+                                  <p className="mt-1 text-[11px] text-on-surface-variant">
+                                    {alerta.tipo.replaceAll('_', ' ')} · {new Date(alerta.createdAt).toLocaleDateString('es-PE')}
+                                  </p>
+                                </div>
+                                <Badge tono={TONOS_ALERTA[alerta.estado] ?? 'neutro'}>
+                                  {ETIQUETAS_ESTADO_ALERTA[alerta.estado as keyof typeof ETIQUETAS_ESTADO_ALERTA] ?? alerta.estado}
+                                </Badge>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="mt-2 text-xs text-on-surface-variant">Este local no tiene alertas registradas.</p>
+                        )}
+                        {(local._count?.alertas ?? 0) > (local.alertas?.length ?? 0) && (
+                          <p className="mt-2 text-xs text-on-surface-variant">
+                            Se muestran las 3 alertas más recientes de {local._count?.alertas} registradas.
+                          </p>
+                        )}
+                      </section>
+                      </div>
                     )}
 
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/60 pt-3">
@@ -348,6 +634,16 @@ export function InfraestructuraPage() {
                       </button>
                     </div>
                   </div>
+                  {puedeAdministrar && (
+                    <div className="flex justify-end gap-2 border-t border-outline-variant/60 px-4 py-3">
+                      <Boton variante="secundario" tamano="sm" onClick={() => { setLocalEditando(local); setFormularioAbierto(true); }}>
+                        <Pencil size={14} /> Editar
+                      </Boton>
+                      <Boton variante="secundario" tamano="sm" onClick={() => setLocalEliminando(local)}>
+                        <Trash2 size={14} /> Eliminar
+                      </Boton>
+                    </div>
+                  )}
                 </article>
               );
             })}
@@ -377,6 +673,29 @@ export function InfraestructuraPage() {
           </div>
         </div>
       </aside>
+      <Modal
+        abierto={formularioAbierto}
+        onCerrar={() => setFormularioAbierto(false)}
+        titulo={localEditando ? 'Editar local escolar' : 'Registrar local escolar'}
+        ancho="xl"
+      >
+        <FormularioLocal
+          key={localEditando?.id ?? 'nuevo'}
+          inicial={localEditando ?? undefined}
+          onExito={() => setFormularioAbierto(false)}
+          onCancelar={() => setFormularioAbierto(false)}
+        />
+      </Modal>
+      <Confirmacion
+        abierto={localEliminando !== null}
+        onCancelar={() => setLocalEliminando(null)}
+        onConfirmar={() => { if (localEliminando) eliminar.mutate(localEliminando.id); }}
+        cargando={eliminar.isPending}
+        titulo="Eliminar local escolar"
+        mensaje={localEliminando
+          ? `¿Eliminar el local ${localEliminando.codigoLocal} de ${localEliminando.ie?.nombre ?? 'esta institución'}? Esta acción también eliminará las alertas asociadas y no se puede deshacer.`
+          : ''}
+      />
     </div>
   );
 }

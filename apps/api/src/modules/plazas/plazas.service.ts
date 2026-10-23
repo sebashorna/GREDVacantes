@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { prisma } from '../../config/prisma.js';
 import { AppError } from '../../common/errors.js';
-import { paginar, ordenSeguro } from '../../common/paginacion.js';
+import { paginar, ordenPorActualizacion } from '../../common/paginacion.js';
 import {
   plazaCreateSchema,
   plazaUpdateSchema,
@@ -10,7 +10,7 @@ import {
   type PlazaUpdateInput,
 } from '@educa/shared';
 
-const CAMPOS_ORDEN = ['cantidad', 'createdAt', 'nivel', 'tipo'] as const;
+const CAMPOS_ORDEN = ['cantidad', 'createdAt', 'updatedAt', 'nivel', 'tipo'] as const;
 
 const INCLUYE = {
   ie: {
@@ -72,7 +72,7 @@ export async function listar(filtros: FiltrosPlazas) {
 
   return paginar(
     prisma.plazaDocente,
-    { where, include: INCLUYE, orderBy: ordenSeguro(filtros.sortBy, CAMPOS_ORDEN, 'createdAt') },
+    { where, include: INCLUYE, orderBy: ordenPorActualizacion(filtros.sortBy, CAMPOS_ORDEN) },
     { page: filtros.page, limit: filtros.limit },
   );
 }
