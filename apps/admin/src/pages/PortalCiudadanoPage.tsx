@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BookOpen,
   BriefcaseBusiness,
+  Download,
   FileText,
   GraduationCap,
   Menu,
@@ -117,6 +118,66 @@ function normalizarBusqueda(valor: string): string {
   return valor.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es-PE');
 }
 
+const IMAGENES_COMUNICADOS = [
+  {
+    url: '/Imagenes/comunicado-aula-laptop.jpg',
+    alt: 'Aula con una computadora portátil',
+    fuente: 'https://www.pexels.com/photo/laptop-in-a-classroom-20432916/',
+  },
+  {
+    url: '/Imagenes/comunicado-libros.jpg',
+    alt: 'Libros organizados en estantes',
+    fuente: 'https://www.pexels.com/photo/books-on-brown-wooden-shelves-8364640/',
+  },
+  {
+    url: '/Imagenes/comunicado-escritorio-estudio.jpg',
+    alt: 'Cuadernos y lápices sobre un escritorio de estudio',
+    fuente: 'https://www.pexels.com/photo/cozy-study-desk-with-notebooks-and-pens-36048039/',
+  },
+] as const;
+
+const FOTOS_INSTITUCIONES = [
+  {
+    termino: 'san jose',
+    url: '/Imagenes/Sanjose.png',
+    alt: 'Fachada del Colegio Nacional San José de Chiclayo',
+  },
+  {
+    termino: 'pedro ruiz gallo',
+    url: '/Imagenes/Pedro-ruiz-gallo-eten.jpg',
+    alt: 'Fachada de la I.E. Pedro Ruiz Gallo de Ciudad Eten',
+  },
+  {
+    termino: 'andres avelino',
+    url: '/Imagenes/andres-avelino.jpg',
+    alt: 'Fachada de la I.E. Andrés Avelino Cáceres',
+  },
+  {
+    termino: 'santa rosa',
+    url: '/Imagenes/ieSantaRosa.jpeg',
+    alt: 'Fachada de la I.E. Santa Rosa',
+  },
+] as const;
+
+function fotoInstitucion(nombre: string) {
+  const nombreNormalizado = normalizarBusqueda(nombre);
+  return FOTOS_INSTITUCIONES.find((foto) => nombreNormalizado.includes(foto.termino)) ?? null;
+}
+
+function imagenIlustrativaComunicado(categoria: string, titulo: string, indice: number) {
+  const texto = normalizarBusqueda(`${categoria} ${titulo}`);
+  if (/capacit|taller|docente|aula|digital|virtual|tecnolog/.test(texto)) {
+    return IMAGENES_COMUNICADOS[0];
+  }
+  if (/material|libro|lectura|bibliotec/.test(texto)) {
+    return IMAGENES_COMUNICADOS[1];
+  }
+  if (/convocatoria|norma|resolucion|inscripcion|proceso/.test(texto)) {
+    return IMAGENES_COMUNICADOS[2];
+  }
+  return IMAGENES_COMUNICADOS[indice % IMAGENES_COMUNICADOS.length] ?? IMAGENES_COMUNICADOS[0];
+}
+
 function fecha(valor: string): string {
   const parsed = new Date(valor);
   return Number.isNaN(parsed.getTime())
@@ -135,7 +196,13 @@ function ErrorConsulta({ reintentar }: { reintentar: () => void }) {
   );
 }
 
-export function PortalCiudadanoPage() {
+export function PortalCiudadanoPage({
+  modoAplicacion = false,
+  modoPresentacion = false,
+}: {
+  modoAplicacion?: boolean;
+  modoPresentacion?: boolean;
+}) {
   const [busqueda, setBusqueda] = useState('');
   const [busquedaPlazas, setBusquedaPlazas] = useState('');
   const [nivelPlaza, setNivelPlaza] = useState('');
@@ -232,10 +299,19 @@ export function PortalCiudadanoPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-outline-variant bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <a href="#" className="font-bold leading-tight text-primary">
-            Educa Lambayeque
-            <span className="block text-xs font-medium text-on-surface-variant">Portal ciudadano</span>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-4 sm:gap-4 sm:px-6 lg:px-8">
+          <a href="#" className="flex min-w-0 items-center gap-2 font-bold leading-tight text-primary">
+            <img
+              src="/Imagenes/GORE.png"
+              alt="Logotipo del Gobierno Regional de Lambayeque"
+              className="h-9 w-9 shrink-0 object-contain sm:h-11 sm:w-11"
+            />
+            <span className="min-w-0 text-sm sm:text-base">
+              Educa Lambayeque
+              <span className="block text-xs font-medium text-on-surface-variant">
+                {modoPresentacion ? 'Simulación de app móvil' : modoAplicacion ? 'Aplicación ciudadana' : 'Portal ciudadano'}
+              </span>
+            </span>
           </a>
           <nav aria-label="Navegación principal" className="hidden items-center gap-5 text-sm font-semibold text-on-surface-variant lg:flex">
             <a href="#vacantes" className="hover:text-primary">Vacantes</a>
@@ -243,9 +319,17 @@ export function PortalCiudadanoPage() {
             <a href="#convocatorias" className="hover:text-primary">Convocatorias</a>
             <a href="#comunicados" className="hover:text-primary">Comunicados</a>
           </nav>
-          <Link to="/login" className="rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-primary hover:bg-surface-container-low">
-            Acceso institucional
-          </Link>
+          {modoPresentacion ? (
+            <Link to="/" className="rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-primary hover:bg-surface-container-low">
+              Volver a la web
+            </Link>
+          ) : modoAplicacion ? null : (
+            <Link to="/descargar" className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-2.5 py-2 text-xs font-semibold text-white hover:bg-primary-container sm:gap-2 sm:px-3 sm:text-sm">
+              <Download size={16} />
+              <span className="sm:hidden">Descargar app</span>
+              <span className="hidden sm:inline">Descargar aplicación</span>
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setMenuMovilAbierto((abierto) => !abierto)}
@@ -278,7 +362,13 @@ export function PortalCiudadanoPage() {
       </header>
 
       <main>
-        <section className="bg-[#813019] text-white">
+        <section
+          className="bg-[#813019] bg-cover bg-center text-white"
+          style={{
+            backgroundImage:
+              'linear-gradient(90deg, rgba(75, 24, 15, 0.96) 0%, rgba(92, 33, 19, 0.88) 55%, rgba(74, 26, 16, 0.76) 100%), url("/Imagenes/GoreUbigeo.jpg")',
+          }}
+        >
           <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.4fr_0.6fr] lg:px-8">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/75">Gerencia Regional de Educación</p>
@@ -367,38 +457,42 @@ export function PortalCiudadanoPage() {
               </p>
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {vacantesFiltradas.map((vacante) => (
-                  <article key={vacante.id} className="rounded-xl border border-outline-variant p-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(vacante.nivel)} · {etiqueta(vacante.turno)}</p>
-                    <h3 className="mt-2 font-semibold">{vacante.ie.nombre}</h3>
-                    <p className="mt-1 text-sm text-on-surface-variant">{vacante.ie.distrito}, {vacante.ie.provincia}</p>
-                    <p className="mt-3 text-sm text-on-surface-variant">{vacante.ie.ugel}</p>
-                    {(vacante.ie.telefono || vacante.ie.whatsapp) && (
-                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-outline-variant pt-3">
-                        {vacante.ie.telefono && (
-                          <a
-                            href={`tel:${vacante.ie.telefono}`}
-                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-                          >
-                            <Phone size={15} /> {vacante.ie.telefono}
-                          </a>
-                        )}
-                        {vacante.ie.whatsapp && (
-                          <a
-                            href={`https://wa.me/${vacante.ie.whatsapp.replace(/\D/g, '')}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-sm font-semibold text-primary hover:underline"
-                          >
-                            WhatsApp
-                          </a>
-                        )}
-                      </div>
-                    )}
-                    <p className="mt-4 text-2xl font-bold text-primary">{vacante.cupoDisponibles} <span className="text-sm font-medium">cupos</span></p>
-                    {vacante.fechaLimite && <p className="mt-1 text-xs text-on-surface-variant">Hasta {fecha(vacante.fechaLimite)}</p>}
-                  </article>
-                ))}
+                {vacantesFiltradas.map((vacante) => {
+                  const foto = fotoInstitucion(vacante.ie.nombre);
+                  return (
+                    <article key={vacante.id} className="rounded-xl border border-outline-variant p-5">
+                      {foto && <img src={foto.url} alt={foto.alt} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover" />}
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(vacante.nivel)} · {etiqueta(vacante.turno)}</p>
+                      <h3 className="mt-2 font-semibold">{vacante.ie.nombre}</h3>
+                      <p className="mt-1 text-sm text-on-surface-variant">{vacante.ie.distrito}, {vacante.ie.provincia}</p>
+                      <p className="mt-3 text-sm text-on-surface-variant">{vacante.ie.ugel}</p>
+                      {(vacante.ie.telefono || vacante.ie.whatsapp) && (
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-outline-variant pt-3">
+                          {vacante.ie.telefono && (
+                            <a
+                              href={`tel:${vacante.ie.telefono}`}
+                              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+                            >
+                              <Phone size={15} /> {vacante.ie.telefono}
+                            </a>
+                          )}
+                          {vacante.ie.whatsapp && (
+                            <a
+                              href={`https://wa.me/${vacante.ie.whatsapp.replace(/\D/g, '')}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-sm font-semibold text-primary hover:underline"
+                            >
+                              WhatsApp
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      <p className="mt-4 text-2xl font-bold text-primary">{vacante.cupoDisponibles} <span className="text-sm font-medium">cupos</span></p>
+                      {vacante.fechaLimite && <p className="mt-1 text-xs text-on-surface-variant">Hasta {fecha(vacante.fechaLimite)}</p>}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -457,41 +551,45 @@ export function PortalCiudadanoPage() {
               </p>
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {plazasFiltradas.map((plaza) => (
-                  <article key={plaza.id} className="rounded-xl border border-outline-variant p-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                      {etiqueta(plaza.tipo)} · {etiqueta(plaza.nivel)}
-                    </p>
-                    <h3 className="mt-2 font-semibold">{plaza.cargo} · {plaza.area}</h3>
-                    <p className="mt-1 text-sm text-on-surface-variant">{plaza.ie.nombre}</p>
-                    <p className="mt-1 text-sm text-on-surface-variant">
-                      {plaza.ie.distrito}, {plaza.ie.provincia} · {plaza.ie.ugel}
-                    </p>
-                    <dl className="mt-4 grid grid-cols-2 gap-2 text-xs text-on-surface-variant">
-                      <div><dt className="font-semibold text-on-surface">Cantidad</dt><dd>{plaza.cantidad}</dd></div>
-                      <div><dt className="font-semibold text-on-surface">Jornada</dt><dd>{etiqueta(plaza.jornada)}</dd></div>
-                      <div><dt className="font-semibold text-on-surface">Turno</dt><dd>{etiqueta(plaza.turno)}</dd></div>
-                      <div><dt className="font-semibold text-on-surface">Zona</dt><dd>{etiqueta(plaza.zona)}</dd></div>
-                    </dl>
-                    <div className="mt-4 border-t border-outline-variant pt-3">
-                      <p className="text-xs font-semibold text-primary">{plaza.convocatoria.titulo}</p>
-                      <p className="mt-1 text-xs text-on-surface-variant">
-                        {plaza.convocatoria.numeroRD} · Hasta {fecha(plaza.convocatoria.fechaFin)}
+                {plazasFiltradas.map((plaza) => {
+                  const foto = fotoInstitucion(plaza.ie.nombre);
+                  return (
+                    <article key={plaza.id} className="rounded-xl border border-outline-variant p-5">
+                      {foto && <img src={foto.url} alt={foto.alt} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover" />}
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                        {etiqueta(plaza.tipo)} · {etiqueta(plaza.nivel)}
                       </p>
-                      {plaza.convocatoria.pdfMeritosUrl && (
-                        <VistaPreviaArchivo
-                          url={plaza.convocatoria.pdfMeritosUrl}
-                          titulo={`Bases: ${plaza.convocatoria.titulo}`}
-                          tipo="documento"
-                        >
-                          <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-                            <FileText size={15} /> Ver bases
-                          </span>
-                        </VistaPreviaArchivo>
-                      )}
-                    </div>
-                  </article>
-                ))}
+                      <h3 className="mt-2 font-semibold">{plaza.cargo} · {plaza.area}</h3>
+                      <p className="mt-1 text-sm text-on-surface-variant">{plaza.ie.nombre}</p>
+                      <p className="mt-1 text-sm text-on-surface-variant">
+                        {plaza.ie.distrito}, {plaza.ie.provincia} · {plaza.ie.ugel}
+                      </p>
+                      <dl className="mt-4 grid grid-cols-2 gap-2 text-xs text-on-surface-variant">
+                        <div><dt className="font-semibold text-on-surface">Cantidad</dt><dd>{plaza.cantidad}</dd></div>
+                        <div><dt className="font-semibold text-on-surface">Jornada</dt><dd>{etiqueta(plaza.jornada)}</dd></div>
+                        <div><dt className="font-semibold text-on-surface">Turno</dt><dd>{etiqueta(plaza.turno)}</dd></div>
+                        <div><dt className="font-semibold text-on-surface">Zona</dt><dd>{etiqueta(plaza.zona)}</dd></div>
+                      </dl>
+                      <div className="mt-4 border-t border-outline-variant pt-3">
+                        <p className="text-xs font-semibold text-primary">{plaza.convocatoria.titulo}</p>
+                        <p className="mt-1 text-xs text-on-surface-variant">
+                          {plaza.convocatoria.numeroRD} · Hasta {fecha(plaza.convocatoria.fechaFin)}
+                        </p>
+                        {plaza.convocatoria.pdfMeritosUrl && (
+                          <VistaPreviaArchivo
+                            url={plaza.convocatoria.pdfMeritosUrl}
+                            titulo={`Bases: ${plaza.convocatoria.titulo}`}
+                            tipo="documento"
+                          >
+                            <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+                              <FileText size={15} /> Ver bases
+                            </span>
+                          </VistaPreviaArchivo>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -584,18 +682,36 @@ export function PortalCiudadanoPage() {
               </p>
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {comunicados.data?.map((comunicado) => (
-                  <article key={comunicado.id} className="overflow-hidden rounded-xl border border-outline-variant bg-white">
-                    {comunicado.imagenUrl && (
-                      <img src={comunicado.imagenUrl} alt="" loading="lazy" className="h-44 w-full object-cover" />
-                    )}
-                    <div className="p-5">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(comunicado.categoria)} · {fecha(comunicado.fecha)}</p>
-                      <h3 className="mt-2 font-semibold">{comunicado.titulo}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{comunicado.resumen}</p>
-                    </div>
-                  </article>
-                ))}
+                {comunicados.data?.map((comunicado, indice) => {
+                  const imagen = comunicado.imagenUrl
+                    ? {
+                        url: comunicado.imagenUrl,
+                        alt: `Imagen del comunicado: ${comunicado.titulo}`,
+                        fuente: null,
+                      }
+                    : imagenIlustrativaComunicado(comunicado.categoria, comunicado.titulo, indice);
+
+                  return (
+                    <article key={comunicado.id} className="overflow-hidden rounded-xl border border-outline-variant bg-white">
+                      <figure>
+                        <img src={imagen.url} alt={imagen.alt} loading="lazy" className="h-44 w-full object-cover" />
+                        {imagen.fuente && (
+                          <figcaption className="px-4 pt-2 text-right text-xs text-on-surface-variant">
+                            Imagen ilustrativa ·{' '}
+                            <a href={imagen.fuente} target="_blank" rel="noreferrer" className="underline">
+                              Fuente: Pexels
+                            </a>
+                          </figcaption>
+                        )}
+                      </figure>
+                      <div className="p-5">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(comunicado.categoria)} · {fecha(comunicado.fecha)}</p>
+                        <h3 className="mt-2 font-semibold">{comunicado.titulo}</h3>
+                        <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{comunicado.resumen}</p>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>

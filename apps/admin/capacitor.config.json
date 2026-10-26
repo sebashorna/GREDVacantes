@@ -1,0 +1,8 @@
+{
+  "appId": "pe.gob.regionlambayeque.educa",
+  "appName": "Educa Lambayeque",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

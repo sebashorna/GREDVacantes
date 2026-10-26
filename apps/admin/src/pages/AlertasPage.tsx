@@ -13,7 +13,6 @@ import {
   Search,
   Trash2,
   UserRound,
-  X,
 } from 'lucide-react';
 import {
   ESTADOS_ALERTA,
@@ -31,6 +30,7 @@ import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
+import { PanelFiltros } from '@/components/ui/PanelFiltros';
 import { useAuth, mensajeDeError } from '@/features/auth/auth-context';
 import { usePaginacion } from '@/hooks/usePaginacion';
 import { api } from '@/lib/api';
@@ -120,8 +120,11 @@ export function AlertasPage() {
   const { usuario, puede } = useAuth();
   const queryClient = useQueryClient();
   const { busqueda, setBusqueda, setPagina, params } = usePaginacion();
+  const [busquedaBorrador, setBusquedaBorrador] = useState('');
   const [fEstado, setFEstado] = useState('');
+  const [fEstadoBorrador, setFEstadoBorrador] = useState('');
   const [fTipo, setFTipo] = useState('');
+  const [fTipoBorrador, setFTipoBorrador] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [alertaEditando, setAlertaEditando] = useState<Alerta | null>(null);
   const [formulario, setFormulario] = useState<FormularioAlerta>(FORMULARIO_VACIO);
@@ -135,6 +138,11 @@ export function AlertasPage() {
   });
   const puedeRegistrar = puede('ADMIN_GRED', 'EDITOR_UGEL');
   const puedeAdministrar = puede('ADMIN_GRED');
+  const filtrosActivos = [
+    ...(busqueda ? [`Búsqueda: ${busqueda}`] : []),
+    ...(fEstado ? [`Estado: ${ETIQUETAS_ESTADO_ALERTA[fEstado as EstadoAlerta] ?? fEstado}`] : []),
+    ...(fTipo ? [`Tipo: ${TIPO_ETIQUETAS[fTipo as TipoAlerta] ?? fTipo}`] : []),
+  ];
 
   const alertas = useQuery({
     queryKey: ['alertas', params, fEstado, fTipo],
@@ -301,77 +309,68 @@ export function AlertasPage() {
         }
       />
 
-      <section className="space-y-3 rounded-xl border border-outline-variant bg-white p-4">
-        <div className="flex flex-col gap-3 lg:flex-row">
-          <div className="relative min-w-0 flex-1">
-            <Search
-              size={18}
-              aria-hidden="true"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
-            />
+      <PanelFiltros
+        filtrosActivos={filtrosActivos}
+        onAplicar={() => {
+          setBusqueda(busquedaBorrador);
+          setFEstado(fEstadoBorrador);
+          setFTipo(fTipoBorrador);
+          setPagina(1);
+        }}
+        onLimpiar={() => {
+          setBusquedaBorrador('');
+          setBusqueda('');
+          setFEstadoBorrador('');
+          setFEstado('');
+          setFTipoBorrador('');
+          setFTipo('');
+          setPagina(1);
+        }}
+      >
+        <div className="grid gap-3 lg:grid-cols-2">
+          <div className="relative lg:col-span-2">
+            <Search size={18} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
             <input
               type="search"
-              value={busqueda}
-              onChange={(evento) => setBusqueda(evento.target.value)}
+              value={busquedaBorrador}
+              onChange={(evento) => setBusquedaBorrador(evento.target.value)}
               placeholder="Buscar por institución, local, reportante o descripción..."
               aria-label="Buscar alertas"
               className="h-12 w-full rounded-lg border-[1.5px] border-outline-variant bg-white pl-10 pr-10 text-sm outline-none placeholder:text-on-surface-variant/70 focus:border-primary-container"
             />
-            {busqueda && (
-              <button
-                type="button"
-                onClick={() => setBusqueda('')}
-                aria-label="Limpiar búsqueda"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
-              >
-                <X size={17} />
-              </button>
-            )}
           </div>
           <select
             aria-label="Filtrar alertas por estado"
-            value={fEstado}
-            onChange={(evento) => {
-              setFEstado(evento.target.value);
-              setPagina(1);
-            }}
-            className={`${selectClase} lg:max-w-xs`}
+            value={fEstadoBorrador}
+            onChange={(evento) => setFEstadoBorrador(evento.target.value)}
+            className={selectClase}
           >
             <option value="">Todos los estados</option>
             {ESTADOS_ALERTA.map((estado) => (
-              <option key={estado} value={estado}>
-                {ETIQUETAS_ESTADO_ALERTA[estado]}
-              </option>
+              <option key={estado} value={estado}>{ETIQUETAS_ESTADO_ALERTA[estado]}</option>
             ))}
           </select>
           <select
             aria-label="Filtrar alertas por tipo"
-            value={fTipo}
-            onChange={(evento) => {
-              setFTipo(evento.target.value);
-              setPagina(1);
-            }}
-            className={`${selectClase} lg:max-w-xs`}
+            value={fTipoBorrador}
+            onChange={(evento) => setFTipoBorrador(evento.target.value)}
+            className={selectClase}
           >
             <option value="">Todos los tipos</option>
             {TIPOS_ALERTA.map((tipo) => (
-              <option key={tipo} value={tipo}>
-                {TIPO_ETIQUETAS[tipo]}
-              </option>
+              <option key={tipo} value={tipo}>{TIPO_ETIQUETAS[tipo]}</option>
             ))}
           </select>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/60 pt-3">
-          <p className="text-sm text-on-surface-variant">
-            Revisa el tipo de incidencia, el local afectado, su estado y la información de contacto del reportante.
-          </p>
-          <p className="text-sm font-semibold text-primary">
-            {alertas.isLoading
-              ? 'Cargando alertas...'
-              : `${alertas.data?.meta.total ?? 0} alertas encontradas`}
-          </p>
-        </div>
-      </section>
+      </PanelFiltros>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-on-surface-variant">
+          Revisa el tipo de incidencia, el local afectado, su estado y la información de contacto del reportante.
+        </p>
+        <p className="text-sm font-semibold text-primary">
+          {alertas.isLoading ? 'Cargando alertas...' : `${alertas.data?.meta.total ?? 0} alertas encontradas`}
+        </p>
+      </div>
 
       <section className="space-y-3" aria-label="Listado de alertas">
         {alertas.isError ? (

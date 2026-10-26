@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { FileText } from 'lucide-react';
+import { FileText, Search } from 'lucide-react';
 import { FASES_CONVOCATORIA } from '@shared';
 import { api } from '@/lib/api';
 import type { Convocatoria, Pagina } from '@/lib/tipos';
@@ -19,6 +19,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
 import { Tabla, type Columna } from '@/components/ui/Tabla';
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
+import { PanelFiltros } from '@/components/ui/PanelFiltros';
 
 const ETIQUETAS_FASE: Record<string, string> = {
   INSCRIPCION: 'Inscripcion', ADJUDICACION: 'Adjudicacion',
@@ -153,13 +154,19 @@ export function ConvocatoriasPage() {
   const { puede } = useAuth();
   const queryClient = useQueryClient();
   const { busqueda, setBusqueda, setPagina, params } = usePaginacion();
+  const [busquedaBorrador, setBusquedaBorrador] = useState('');
   const [filtroFase, setFiltroFase] = useState('');
+  const [filtroFaseBorrador, setFiltroFaseBorrador] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState<Convocatoria | undefined>();
   const [eliminando, setEliminando] = useState<Convocatoria | null>(null);
   const [seleccionada, setSeleccionada] = useState<Convocatoria | null>(null);
   const puedeRegistrar = puede('ADMIN_GRED', 'EDITOR_UGEL');
   const puedeAdministrar = puede('ADMIN_GRED');
+  const filtrosActivos = [
+    ...(busqueda ? [`Búsqueda: ${busqueda}`] : []),
+    ...(filtroFase ? [`Fase: ${ETIQUETAS_FASE[filtroFase] ?? filtroFase}`] : []),
+  ];
   const consulta = useQuery({
     queryKey: ['convocatorias', params, filtroFase],
     queryFn: async () => {
@@ -229,23 +236,45 @@ export function ConvocatoriasPage() {
         descripcion="Gestion de convocatorias de vacantes y plazas."
         accion={puedeRegistrar ? { etiqueta: 'Nueva convocatoria', onClick: () => { setEditando(undefined); setModalAbierto(true); } } : undefined}
       />
-      <div className="flex flex-wrap gap-3">
-        <input
-          type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="Buscar por titulo o R.D...."
-          className="h-12 px-4 rounded-lg border-[1.5px] border-outline-variant bg-white outline-none w-full sm:w-80 placeholder:text-on-surface-variant/60 focus:border-primary-container"
-        />
-        <select
-          value={filtroFase}
-          onChange={(e) => { setFiltroFase(e.target.value); setPagina(1); }}
-          className="h-12 px-3.5 rounded-lg border-[1.5px] border-outline-variant bg-white cursor-pointer"
-        >
-          <option value="">Todas las fases</option>
-          {FASES_CONVOCATORIA.map((f) => (
-            <option key={f} value={f}>{ETIQUETAS_FASE[f] ?? f}</option>
-          ))}
-        </select>
-      </div>
+      <PanelFiltros
+        filtrosActivos={filtrosActivos}
+        onAplicar={() => {
+          setBusqueda(busquedaBorrador);
+          setFiltroFase(filtroFaseBorrador);
+          setPagina(1);
+        }}
+        onLimpiar={() => {
+          setBusquedaBorrador('');
+          setBusqueda('');
+          setFiltroFaseBorrador('');
+          setFiltroFase('');
+          setPagina(1);
+        }}
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="relative sm:col-span-2">
+            <Search size={18} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            <input
+              type="search"
+              value={busquedaBorrador}
+              onChange={(e) => setBusquedaBorrador(e.target.value)}
+              placeholder="Buscar por título o R.D...."
+              className="h-12 w-full rounded-lg border-[1.5px] border-outline-variant bg-white pl-10 pr-4 outline-none placeholder:text-on-surface-variant/60 focus:border-primary-container"
+            />
+          </div>
+          <select
+            aria-label="Filtrar por fase"
+            value={filtroFaseBorrador}
+            onChange={(e) => setFiltroFaseBorrador(e.target.value)}
+            className="h-12 rounded-lg border-[1.5px] border-outline-variant bg-white px-3.5"
+          >
+            <option value="">Todas las fases</option>
+            {FASES_CONVOCATORIA.map((f) => (
+              <option key={f} value={f}>{ETIQUETAS_FASE[f] ?? f}</option>
+            ))}
+          </select>
+        </div>
+      </PanelFiltros>
       <div className="bg-white rounded-xl border border-outline-variant">
         {consulta.isError ? (
           <p className="p-10 text-center text-error">Error al cargar: {mensajeDeError(consulta.error)}</p>

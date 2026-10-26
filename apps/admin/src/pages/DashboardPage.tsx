@@ -14,15 +14,14 @@ import {
   Megaphone,
   PhoneCall,
   Search,
-  SlidersHorizontal,
   Users,
-  X,
   Zap,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
+import { PanelFiltros } from '@/components/ui/PanelFiltros';
 import { useAuth } from '@/features/auth/auth-context';
 import { api } from '@/lib/api';
 import type { Pagina } from '@/lib/tipos';
@@ -104,7 +103,9 @@ export function DashboardPage() {
   const { usuario } = useAuth();
   const ugeles = useUgeles();
   const [busqueda, setBusqueda] = useState('');
+  const [busquedaBorrador, setBusquedaBorrador] = useState('');
   const [ugelSeleccionada, setUgelSeleccionada] = useState(REGION_TODAS);
+  const [ugelBorrador, setUgelBorrador] = useState(REGION_TODAS);
 
   const resumen = useQuery({
     queryKey: ['dashboard'],
@@ -155,6 +156,10 @@ export function DashboardPage() {
       .slice(0, 3);
   }, [busqueda, ugelSeleccionada, vacantes.data]);
   const ugelFiltros = [REGION_TODAS, ...(ugeles.data ?? []).map((ugel) => ugel.nombre)];
+  const filtrosActivos = [
+    ...(busqueda ? [`Búsqueda: ${busqueda}`] : []),
+    ...(ugelSeleccionada !== REGION_TODAS ? [`UGEL: ${ugelSeleccionada}`] : []),
+  ];
 
   const cuposDisponibles = resumen.data
     ? resumen.data.cuposPorNivel.reduce(
@@ -201,73 +206,66 @@ export function DashboardPage() {
         }
       />
 
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-full sm:max-w-sm">
-            <Search
-              size={18}
-              aria-hidden="true"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
-            />
+      <PanelFiltros
+        filtrosActivos={filtrosActivos}
+        onAplicar={() => {
+          setBusqueda(busquedaBorrador);
+          setUgelSeleccionada(ugelBorrador);
+        }}
+        onLimpiar={() => {
+          setBusquedaBorrador('');
+          setBusqueda('');
+          setUgelBorrador(REGION_TODAS);
+          setUgelSeleccionada(REGION_TODAS);
+        }}
+      >
+        <div className="space-y-3">
+          <div className="relative">
+            <Search size={18} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
             <input
               id="buscar-vacantes"
               type="search"
-              value={busqueda}
-              onChange={(evento) => setBusqueda(evento.target.value)}
+              value={busquedaBorrador}
+              onChange={(evento) => setBusquedaBorrador(evento.target.value)}
               placeholder="Buscar colegio, código modular o distrito..."
-              className="h-12 w-full rounded-lg border-[1.5px] border-outline-variant bg-white pl-10 pr-10 text-on-surface outline-none placeholder:text-on-surface-variant/60 focus:border-primary-container"
+              className="h-12 w-full rounded-lg border-[1.5px] border-outline-variant bg-white pl-10 pr-4 text-on-surface outline-none placeholder:text-on-surface-variant/60 focus:border-primary-container"
             />
-            {busqueda && (
-              <button
-                type="button"
-                aria-label="Limpiar búsqueda"
-                onClick={() => setBusqueda('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
-              >
-                <X size={17} />
-              </button>
-            )}
           </div>
-          <div className="flex items-center gap-2 text-sm text-on-surface-variant">
-            <SlidersHorizontal size={17} className="text-primary" />
-            <span>Filtrar por UGEL</span>
+          <div className="flex flex-wrap gap-2">
+            {ugelFiltros.map((ugel) => {
+              const activa = ugelBorrador === ugel;
+              return (
+                <button
+                  key={ugel}
+                  type="button"
+                  aria-pressed={activa}
+                  onClick={() => setUgelBorrador(ugel)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                    activa
+                      ? 'border-primary-container bg-primary-container text-on-primary'
+                      : 'border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low'
+                  }`}
+                >
+                  {ugel}
+                </button>
+              );
+            })}
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {ugelFiltros.map((ugel) => {
-            const activa = ugelSeleccionada === ugel;
-            return (
-              <button
-                key={ugel}
-                type="button"
-                aria-pressed={activa}
-                onClick={() => setUgelSeleccionada(ugel)}
-                className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
-                  activa
-                    ? 'border-primary-container bg-primary-container text-on-primary'
-                    : 'border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low'
-                }`}
-              >
-                {ugel}
+          {ugeles.isError && (
+            <p role="alert" className="text-sm text-error">
+              No se pudieron cargar las UGEL para el filtro.{' '}
+              <button type="button" onClick={() => void ugeles.refetch()} className="font-semibold underline">
+                Reintentar
               </button>
-            );
-          })}
-          <p className="flex items-center text-sm text-on-surface-variant sm:ml-auto">
-            {ugelSeleccionada === REGION_TODAS
-              ? 'Datos consolidados para la región'
-              : `Filtrado activo para ${ugelSeleccionada}`}
-          </p>
+            </p>
+          )}
         </div>
-        {ugeles.isError && (
-          <p role="alert" className="text-sm text-error">
-            No se pudieron cargar las UGEL para el filtro.{' '}
-            <button type="button" onClick={() => void ugeles.refetch()} className="font-semibold underline">
-              Reintentar
-            </button>
-          </p>
-        )}
-      </section>
+      </PanelFiltros>
+      <p className="text-sm text-on-surface-variant">
+        {ugelSeleccionada === REGION_TODAS
+          ? 'Datos consolidados para la región'
+          : `Filtrado activo para ${ugelSeleccionada}`}
+      </p>
 
       {resumen.isError && (
         <div

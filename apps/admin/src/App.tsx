@@ -10,18 +10,45 @@ import { VacantesPage } from '@/pages/VacantesPage';
 import { AlertasPage } from '@/pages/AlertasPage';
 import { InfraestructuraPage } from '@/pages/InfraestructuraPage';
 import { PortalCiudadanoPage } from '@/pages/PortalCiudadanoPage';
+import { DescargaAppPage } from '@/pages/DescargaAppPage';
+import { SimulacionAppPage } from '@/pages/SimulacionAppPage';
 
 export default function App() {
   const { cargando, estaAutenticado } = useAuth();
   const location = useLocation();
   const [verificado, setVerificado] = useState(false);
+  const esAplicacionMovil = import.meta.env.VITE_APP_MOBILE === 'true';
 
   useEffect(() => {
     if (!cargando) setVerificado(true);
   }, [cargando]);
 
+  if (esAplicacionMovil) {
+    return <PortalCiudadanoPage modoAplicacion />;
+  }
+
   if (!verificado) {
     return <div className="flex items-center justify-center h-screen text-slate-500">Cargando...</div>;
+  }
+
+  if (location.pathname === '/') {
+    return <PortalCiudadanoPage />;
+  }
+
+  if (location.pathname === '/descargar') {
+    return <DescargaAppPage />;
+  }
+
+  if (location.pathname === '/app') {
+    return <SimulacionAppPage />;
+  }
+
+  if (location.pathname === '/portal') {
+    return <PortalCiudadanoPage />;
+  }
+
+  if (location.pathname === '/login' && new URLSearchParams(location.search).get('modo') === 'app') {
+    return <LoginPage modoAplicacion />;
   }
 
   const rutasPublicas = ['/login'];
@@ -30,14 +57,7 @@ export default function App() {
     if (rutasPublicas.includes(location.pathname)) {
       return <LoginPage />;
     }
-    if (location.pathname === '/') {
-      return <PortalCiudadanoPage />;
-    }
     return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
-  if (location.pathname === '/') {
-    return <PortalCiudadanoPage />;
   }
 
   if (location.pathname === '/login') {

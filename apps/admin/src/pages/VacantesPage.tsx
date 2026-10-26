@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { Check, CircleHelp, MapPin, Pencil, Phone, Search, Trash2, X } from 'lucide-react';
+import { Check, CircleHelp, MapPin, Pencil, Phone, Search, Trash2 } from 'lucide-react';
 import { ESTADOS_VACANTE, ETIQUETAS_ESTADO_VACANTE, ETIQUETAS_NIVEL, ETIQUETAS_TURNO, NIVELES, TURNOS } from '@shared';
 import { api } from '@/lib/api';
 import type { Pagina, ResumenCupos, Vacante } from '@/lib/tipos';
@@ -18,6 +18,7 @@ import { CampoSelect, CampoTexto } from '@/components/ui/Campo';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
 import { Confirmacion } from '@/components/ui/Confirmacion';
+import { PanelFiltros } from '@/components/ui/PanelFiltros';
 
 const TONOS_ESTADO: Record<string, TonoBadge> = {
   LIBRE: 'exito', LISTA_ESPERA: 'advertencia', COMPLETO: 'info', CERRADO: 'neutro',
@@ -183,8 +184,11 @@ export function VacantesPage() {
   const { puede } = useAuth();
   const queryClient = useQueryClient();
   const { busqueda, setBusqueda, setPagina, params } = usePaginacion();
+  const [busquedaBorrador, setBusquedaBorrador] = useState('');
   const [fNivel, setFNivel] = useState('');
+  const [fNivelBorrador, setFNivelBorrador] = useState('');
   const [fEstado, setFEstado] = useState('');
+  const [fEstadoBorrador, setFEstadoBorrador] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [vacanteEditando, setVacanteEditando] = useState<Vacante | null>(null);
   const [vacanteEliminando, setVacanteEliminando] = useState<Vacante | null>(null);
@@ -222,6 +226,26 @@ export function VacantesPage() {
   const totalDisp = resumen.data?.porEstado.reduce((a, e) => a + (e._sum.cupoDisponibles ?? 0), 0) ?? 0;
   const totalCupo = resumen.data?.porEstado.reduce((a, e) => a + (e._sum.cupoTotal ?? 0), 0) ?? 0;
   const sel = 'h-12 px-3.5 rounded-lg border-[1.5px] border-outline-variant bg-white cursor-pointer';
+  const filtrosActivos = [
+    ...(busqueda ? [`Búsqueda: ${busqueda}`] : []),
+    ...(fNivel ? [`Nivel: ${ETIQUETAS_NIVEL[fNivel as keyof typeof ETIQUETAS_NIVEL]}`] : []),
+    ...(fEstado ? [`Estado: ${ETIQUETAS_ESTADO_VACANTE[fEstado as keyof typeof ETIQUETAS_ESTADO_VACANTE]}`] : []),
+  ];
+  const aplicarFiltros = () => {
+    setBusqueda(busquedaBorrador);
+    setFNivel(fNivelBorrador);
+    setFEstado(fEstadoBorrador);
+    setPagina(1);
+  };
+  const limpiarFiltros = () => {
+    setBusquedaBorrador('');
+    setBusqueda('');
+    setFNivelBorrador('');
+    setFNivel('');
+    setFEstadoBorrador('');
+    setFEstado('');
+    setPagina(1);
+  };
   const contactoTelefono = contactoSeleccionado ? telefonoVacante(contactoSeleccionado) : '';
   const contactoWhatsapp = contactoSeleccionado ? urlWhatsappVacante(contactoSeleccionado) : '';
   return (
@@ -244,74 +268,66 @@ export function VacantesPage() {
           <p className="text-3xl font-bold text-primary">{consulta.data?.meta.total ?? '...'}</p>
         </div>
       </div>
-      <div className="flex flex-wrap gap-3">
-        <div className="relative w-full sm:max-w-sm">
-          <Search
-            size={18}
-            aria-hidden="true"
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
-          />
-          <input
-            type="search"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar institución educativa..."
-            className="h-12 w-full rounded-lg border-[1.5px] border-outline-variant bg-white pl-10 pr-10 outline-none placeholder:text-on-surface-variant/60 focus:border-primary-container"
-          />
-          {busqueda && (
+      <PanelFiltros
+        filtrosActivos={filtrosActivos}
+        onAplicar={aplicarFiltros}
+        onLimpiar={limpiarFiltros}
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="relative sm:col-span-2">
+            <Search size={18} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            <input
+              type="search"
+              value={busquedaBorrador}
+              onChange={(e) => setBusquedaBorrador(e.target.value)}
+              placeholder="Buscar institución educativa..."
+              className="h-12 w-full rounded-lg border-[1.5px] border-outline-variant bg-white pl-10 pr-10 outline-none placeholder:text-on-surface-variant/60 focus:border-primary-container"
+            />
+          </div>
+          <select
+            aria-label="Filtrar por estado"
+            value={fEstadoBorrador}
+            onChange={(e) => setFEstadoBorrador(e.target.value)}
+            className={sel}
+          >
+            <option value="">Todos los estados</option>
+            {ESTADOS_VACANTE.map((e) => <option key={e} value={e}>{ETIQUETAS_ESTADO_VACANTE[e]}</option>)}
+          </select>
+          <div className="flex flex-wrap gap-2 sm:col-span-2">
             <button
               type="button"
-              aria-label="Limpiar búsqueda"
-              onClick={() => setBusqueda('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
-            >
-              <X size={17} />
-            </button>
-          )}
-        </div>
-        <select
-          aria-label="Filtrar por estado"
-          value={fEstado}
-          onChange={(e) => { setFEstado(e.target.value); setPagina(1); }}
-          className={sel}
-        >
-          <option value="">Todos los estados</option>
-          {ESTADOS_VACANTE.map((e) => <option key={e} value={e}>{ETIQUETAS_ESTADO_VACANTE[e]}</option>)}
-        </select>
-      </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <button
-          type="button"
-          aria-pressed={!fNivel}
-          onClick={() => { setFNivel(''); setPagina(1); }}
-          className={`shrink-0 rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
-            !fNivel
-              ? 'border-primary-container bg-primary-container text-on-primary'
-              : 'border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low'
-          }`}
-        >
-          {!fNivel && <Check size={15} className="mr-1 inline" />}
-          Todos
-        </button>
-        {NIVELES.map((nivel) => {
-          const activo = fNivel === nivel;
-          return (
-            <button
-              key={nivel}
-              type="button"
-              aria-pressed={activo}
-              onClick={() => { setFNivel(activo ? '' : nivel); setPagina(1); }}
-              className={`shrink-0 rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
-                activo
+              aria-pressed={!fNivelBorrador}
+              onClick={() => setFNivelBorrador('')}
+              className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+                !fNivelBorrador
                   ? 'border-primary-container bg-primary-container text-on-primary'
                   : 'border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low'
               }`}
             >
-              {ETIQUETAS_NIVEL[nivel]}
+              {!fNivelBorrador && <Check size={15} className="mr-1 inline" />}
+              Todos los niveles
             </button>
-          );
-        })}
-      </div>
+            {NIVELES.map((nivel) => {
+              const activo = fNivelBorrador === nivel;
+              return (
+                <button
+                  key={nivel}
+                  type="button"
+                  aria-pressed={activo}
+                  onClick={() => setFNivelBorrador(activo ? '' : nivel)}
+                  className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+                    activo
+                      ? 'border-primary-container bg-primary-container text-on-primary'
+                      : 'border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low'
+                  }`}
+                >
+                  {ETIQUETAS_NIVEL[nivel]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </PanelFiltros>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-on-surface-variant">Seleccione una vacante para ver sus datos.</p>
         <span className="shrink-0 text-sm font-semibold text-primary">

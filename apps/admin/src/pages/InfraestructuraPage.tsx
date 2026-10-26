@@ -14,7 +14,6 @@ import {
   Search,
   Trash2,
   Wifi,
-  X,
   Zap,
 } from 'lucide-react';
 
@@ -32,6 +31,7 @@ import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
+import { PanelFiltros } from '@/components/ui/PanelFiltros';
 import { useAuth, mensajeDeError } from '@/features/auth/auth-context';
 import { usePaginacion } from '@/hooks/usePaginacion';
 import { useInstitucionesOpciones, useUgeles } from '@/hooks/useCatalogos';
@@ -279,9 +279,13 @@ export function InfraestructuraPage() {
   const { usuario, puede } = useAuth();
   const queryClient = useQueryClient();
   const { busqueda, setBusqueda, setPagina, params } = usePaginacion();
+  const [busquedaBorrador, setBusquedaBorrador] = useState('');
   const [fUgel, setFUgel] = useState('');
+  const [fUgelBorrador, setFUgelBorrador] = useState('');
   const [fEstado, setFEstado] = useState('');
+  const [fEstadoBorrador, setFEstadoBorrador] = useState('');
   const [prioritario, setPrioritario] = useState(false);
+  const [prioritarioBorrador, setPrioritarioBorrador] = useState(false);
   const [detalleAbierto, setDetalleAbierto] = useState<number | null>(null);
   const [formularioAbierto, setFormularioAbierto] = useState(false);
   const [localEditando, setLocalEditando] = useState<LocalEscolar | null>(null);
@@ -324,6 +328,19 @@ export function InfraestructuraPage() {
     cambio();
     setPagina(1);
   };
+  const filtrosActivos = [
+    ...(busqueda ? [`Búsqueda: ${busqueda}`] : []),
+    ...(fEstado ? [`Estado: ${ETIQUETAS_ESTADO_LOCAL[fEstado as keyof typeof ETIQUETAS_ESTADO_LOCAL] ?? fEstado}`] : []),
+    ...(fUgel ? [`UGEL: ${ugeles.data?.find((ugel) => String(ugel.id) === fUgel)?.nombre ?? fUgel}`] : []),
+    ...(prioritario ? ['Locales prioritarios'] : []),
+  ];
+  const activarPrioritarios = () => {
+    setBusquedaBorrador(busqueda);
+    setFUgelBorrador(fUgel);
+    setFEstadoBorrador(fEstado);
+    setPrioritarioBorrador(true);
+    cambiarFiltro(() => setPrioritario(true));
+  };
 
   return (
     <div className="space-y-6">
@@ -342,95 +359,95 @@ export function InfraestructuraPage() {
         }
       />
 
-      <section className="space-y-4 rounded-xl border border-outline-variant bg-white p-4">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative min-w-0 flex-1">
-            <Search size={18} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-            <input
-              type="search"
-              value={busqueda}
-              onChange={(evento) => setBusqueda(evento.target.value)}
-              placeholder="Buscar local, código o distrito..."
-              aria-label="Buscar locales escolares"
-              className="h-11 w-full rounded-lg border border-outline-variant bg-white pl-10 pr-10 text-sm outline-none placeholder:text-on-surface-variant/70 focus:border-primary"
-            />
-            {busqueda && (
-              <button
-                type="button"
-                onClick={() => setBusqueda('')}
-                aria-label="Limpiar búsqueda"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
-              >
-                <X size={16} />
-              </button>
-            )}
+      <PanelFiltros
+        filtrosActivos={filtrosActivos}
+        onAplicar={() => {
+          setBusqueda(busquedaBorrador);
+          setFUgel(fUgelBorrador);
+          setFEstado(fEstadoBorrador);
+          setPrioritario(prioritarioBorrador);
+          setPagina(1);
+        }}
+        onLimpiar={() => {
+          setBusquedaBorrador('');
+          setBusqueda('');
+          setFUgelBorrador('');
+          setFUgel('');
+          setFEstadoBorrador('');
+          setFEstado('');
+          setPrioritarioBorrador(false);
+          setPrioritario(false);
+          setPagina(1);
+        }}
+      >
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="relative sm:col-span-2">
+              <Search size={18} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+              <input
+                type="search"
+                value={busquedaBorrador}
+                onChange={(evento) => setBusquedaBorrador(evento.target.value)}
+                placeholder="Buscar local, código o distrito..."
+                aria-label="Buscar locales escolares"
+                className="h-11 w-full rounded-lg border border-outline-variant bg-white pl-10 pr-10 text-sm outline-none placeholder:text-on-surface-variant/70 focus:border-primary"
+              />
+            </div>
+            <select
+              aria-label="Filtrar por estado del local"
+              value={fEstadoBorrador}
+              onChange={(evento) => setFEstadoBorrador(evento.target.value)}
+              className={sel}
+            >
+              <option value="">Todos los estados</option>
+              {ESTADOS_LOCAL.map((estado) => (
+                <option key={estado} value={estado}>{ETIQUETAS_ESTADO_LOCAL[estado]}</option>
+              ))}
+            </select>
           </div>
-          <select
-            aria-label="Filtrar por estado del local"
-            value={fEstado}
-            onChange={(evento) => cambiarFiltro(() => setFEstado(evento.target.value))}
-            className={sel}
-          >
-            <option value="">Todos los estados</option>
-            {ESTADOS_LOCAL.map((estado) => (
-              <option key={estado} value={estado}>{ETIQUETAS_ESTADO_LOCAL[estado]}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" aria-pressed={!fUgelBorrador} onClick={() => setFUgelBorrador('')}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                !fUgelBorrador ? 'bg-primary-container text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
+              }`}>
+              Todas las UGEL
+            </button>
+            {(ugeles.data ?? []).map((ugel) => {
+              const activa = fUgelBorrador === String(ugel.id);
+              return (
+                <button key={ugel.id} type="button" aria-pressed={activa}
+                  onClick={() => setFUgelBorrador(activa ? '' : String(ugel.id))}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    activa ? 'bg-primary-container text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
+                  }`}>
+                  {ugel.nombre}
+                </button>
+              );
+            })}
+          </div>
+          {ugeles.isError && (
+            <p role="alert" className="text-sm text-error">
+              No se pudieron cargar las UGEL: {mensajeDeError(ugeles.error)}
+            </p>
+          )}
           <button
             type="button"
-            aria-pressed={!fUgel}
-            onClick={() => cambiarFiltro(() => setFUgel(''))}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
-              !fUgel ? 'bg-primary-container text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            Todas las UGEL
-          </button>
-          {(ugeles.data ?? []).map((ugel) => {
-            const activa = fUgel === String(ugel.id);
-            return (
-              <button
-                key={ugel.id}
-                type="button"
-                aria-pressed={activa}
-                onClick={() => cambiarFiltro(() => setFUgel(activa ? '' : String(ugel.id)))}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  activa ? 'bg-primary-container text-on-primary' : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high'
-                }`}
-              >
-                {ugel.nombre}
-              </button>
-            );
-          })}
-        </div>
-        {ugeles.isError && (
-          <p role="alert" className="text-sm text-error">
-            No se pudieron cargar las UGEL: {mensajeDeError(ugeles.error)}
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/60 pt-3">
-          <button
-            type="button"
-            aria-pressed={prioritario}
-            onClick={() => cambiarFiltro(() => setPrioritario((actual) => !actual))}
+            aria-pressed={prioritarioBorrador}
+            onClick={() => setPrioritarioBorrador((actual) => !actual)}
             className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
-              prioritario
+              prioritarioBorrador
                 ? 'border-error/30 bg-error-container text-on-error-container'
                 : 'border-outline-variant text-on-surface-variant hover:bg-surface-container-low'
             }`}
           >
             <AlertTriangle size={16} />
-            {prioritario ? 'Mostrando locales prioritarios' : 'Ver locales prioritarios'}
+            {prioritarioBorrador ? 'Solo locales prioritarios' : 'Incluir solo locales prioritarios'}
           </button>
-          <p className="text-sm font-semibold text-primary">
-            {locales.isLoading ? 'Cargando locales...' : `${locales.data?.meta.total ?? 0} locales escolares`}
-          </p>
         </div>
-      </section>
+      </PanelFiltros>
+      <p className="text-right text-sm font-semibold text-primary">
+        {locales.isLoading ? 'Cargando locales...' : `${locales.data?.meta.total ?? 0} locales escolares`}
+      </p>
 
       <section className="rounded-xl border border-error/20 bg-error-container/50 p-4 sm:p-5">
         <div className="flex items-start gap-3">
@@ -445,7 +462,7 @@ export function InfraestructuraPage() {
             </p>
             <button
               type="button"
-              onClick={() => cambiarFiltro(() => setPrioritario(true))}
+              onClick={activarPrioritarios}
               className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-error hover:underline"
             >
               Ver locales prioritarios <ChevronRight size={16} />

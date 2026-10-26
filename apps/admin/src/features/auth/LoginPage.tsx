@@ -3,14 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useAuth, mensajeDeError } from '@/features/auth/auth-context';
-import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle, ArrowLeft } from 'lucide-react';
+
+interface LoginPageProps {
+  modoAplicacion?: boolean;
+}
 
 const schema = z.object({
   email: z.string().email('Ingrese un correo v&aacute;lido'),
   password: z.string().min(1, 'La contrase&ntilde;a es obligatoria'),
 });
 
-export function LoginPage() {
+export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
   const navigate = useNavigate();
   const { iniciarSesion } = useAuth();
   const [error, setError] = useState('');
@@ -39,11 +43,20 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-outline-variant p-8">
-        <div className="text-center mb-8">
+    <div className={`flex min-h-dvh items-center justify-center bg-background p-4 ${modoAplicacion ? 'h-full overflow-y-auto' : 'h-screen'}`}>
+      <div className={`w-full bg-white border border-outline-variant ${modoAplicacion ? 'max-w-md rounded-2xl p-6 shadow-none sm:p-7' : 'max-w-md rounded-xl p-8 shadow-lg'}`}>
+        <div className="mb-7 text-center">
+          {modoAplicacion && (
+            <img
+              src="/Imagenes/GORE.png"
+              alt="Gobierno Regional de Lambayeque"
+              className="mx-auto mb-4 h-16 w-16 object-contain"
+            />
+          )}
           <h1 className="text-2xl font-bold text-primary">Educa Lambayeque</h1>
-          <p className="text-sm text-slate-500 mt-1">Panel Administrativo - Inicio de sesión</p>
+          <p className="mt-2 text-sm text-slate-500">
+            {modoAplicacion ? 'Inicia sesión en la aplicación' : 'Panel Administrativo - Inicio de sesión'}
+          </p>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">
@@ -53,7 +66,7 @@ export function LoginPage() {
               <input
                 {...form.register('email')}
                 type="email"
-                className="w-full pl-10 pr-4 py-2.5 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition bg-white"
+                className={`w-full pl-10 pr-4 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition bg-white ${modoAplicacion ? 'py-3 text-sm' : 'py-2.5'}`}
                 placeholder="admin@gredlambayeque.gob.pe"
               />
             </div>
@@ -68,7 +81,7 @@ export function LoginPage() {
               <input
                 {...form.register('password')}
                 type="password"
-                className="w-full pl-10 pr-4 py-2.5 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition bg-white"
+                className={`w-full pl-10 pr-4 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition bg-white ${modoAplicacion ? 'py-3 text-sm' : 'py-2.5'}`}
                 placeholder="••••••••"
               />
             </div>
@@ -85,21 +98,25 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={cargando}
-            className="w-full py-3 bg-primary-container hover:bg-primary disabled:bg-primary-fixed-dim text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+            className={`w-full bg-primary-container hover:bg-primary disabled:bg-primary-fixed-dim text-white rounded-lg font-medium transition flex items-center justify-center gap-2 py-3 ${modoAplicacion ? 'text-sm' : ''}`}
           >
             {cargando ? 'Ingresando...' : 'Iniciar sesión'}
           </button>
         </form>
-        <div className="mt-6 text-center">
+        {!modoAplicacion && <div className="mt-6 text-center">
           <p className="text-xs text-slate-500">
             Usuarios de prueba: admin / editor / consultor
             <br />
             Contrase&ntilde;a: `Educa2025!`
           </p>
-        </div>
-        <p className="mt-4 text-center">
-          <Link to="/" className="text-sm text-primary hover:underline">&larr; Volver al inicio</Link>
-        </p>
+        </div>}
+        {!modoAplicacion && (
+          <p className="mt-5 text-center">
+            <Link to="/" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+              <ArrowLeft size={15} /> Volver al inicio
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

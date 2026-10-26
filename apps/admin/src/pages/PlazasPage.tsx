@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, ChevronRight, FileText, GraduationCap, MapPin, Pencil, Search, Trash2, X } from "lucide-react";
+import { Check, ChevronRight, FileText, GraduationCap, MapPin, Pencil, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import {
@@ -35,6 +35,7 @@ import { Modal } from "@/components/ui/Modal";
 import { VistaPreviaArchivo } from "@/components/ui/VistaPreviaArchivo";
 import { Paginacion } from "@/components/ui/Paginacion";
 import { Confirmacion } from "@/components/ui/Confirmacion";
+import { PanelFiltros } from "@/components/ui/PanelFiltros";
 const TONOS_ESTADO: Record<string, TonoBadge> = {
   ACTIVA: "exito",
   CONVOCADA: "info",
@@ -230,10 +231,15 @@ export function PlazasPage() {
   const { puede } = useAuth();
   const queryClient = useQueryClient();
   const { busqueda, setBusqueda, setPagina, params } = usePaginacion();
+  const [busquedaBorrador, setBusquedaBorrador] = useState("");
   const [fTipo, setFTipo] = useState("");
+  const [fTipoBorrador, setFTipoBorrador] = useState("");
   const [fNivel, setFNivel] = useState("");
+  const [fNivelBorrador, setFNivelBorrador] = useState("");
   const [fEstado, setFEstado] = useState("");
+  const [fEstadoBorrador, setFEstadoBorrador] = useState("");
   const [fUgel, setFUgel] = useState("");
+  const [fUgelBorrador, setFUgelBorrador] = useState("");
   const [modal, setModal] = useState(false);
   const [plazaEditando, setPlazaEditando] = useState<Plaza | null>(null);
   const [plazaEliminando, setPlazaEliminando] = useState<Plaza | null>(null);
@@ -241,6 +247,13 @@ export function PlazasPage() {
   const puedeRegistrar = puede("ADMIN_GRED", "EDITOR_UGEL");
   const puedeAdministrar = puede("ADMIN_GRED");
   const { data: ugeles } = useUgeles();
+  const filtrosActivos = [
+    ...(busqueda ? [`Búsqueda: ${busqueda}`] : []),
+    ...(fTipo ? [`Tipo: ${ETIQUETAS_TIPO_PLAZA[fTipo as keyof typeof ETIQUETAS_TIPO_PLAZA]}`] : []),
+    ...(fNivel ? [`Nivel: ${ETIQUETAS_NIVEL[fNivel as keyof typeof ETIQUETAS_NIVEL]}`] : []),
+    ...(fEstado ? [`Estado: ${ETIQUETAS_ESTADO_PLAZA[fEstado as keyof typeof ETIQUETAS_ESTADO_PLAZA]}`] : []),
+    ...(fUgel ? [`UGEL: ${ugeles?.find((ugel) => String(ugel.id) === fUgel)?.nombre ?? fUgel}`] : []),
+  ];
   const eliminar = useMutation({
     mutationFn: (id: number) => api.delete(`/plazas/${id}`),
     onSuccess: () => {
@@ -277,105 +290,91 @@ export function PlazasPage() {
         }
       />
 
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-full sm:max-w-sm">
+      <PanelFiltros
+        filtrosActivos={filtrosActivos}
+        onAplicar={() => {
+          setBusqueda(busquedaBorrador);
+          setFTipo(fTipoBorrador);
+          setFNivel(fNivelBorrador);
+          setFEstado(fEstadoBorrador);
+          setFUgel(fUgelBorrador);
+          setPagina(1);
+        }}
+        onLimpiar={() => {
+          setBusquedaBorrador("");
+          setBusqueda("");
+          setFTipoBorrador("");
+          setFTipo("");
+          setFNivelBorrador("");
+          setFNivel("");
+          setFEstadoBorrador("");
+          setFEstado("");
+          setFUgelBorrador("");
+          setFUgel("");
+          setPagina(1);
+        }}
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="relative sm:col-span-2">
             <Search size={18} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
             <input
               type="search"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
+              value={busquedaBorrador}
+              onChange={(e) => setBusquedaBorrador(e.target.value)}
               placeholder="Buscar por I.E., cargo o especialidad..."
               className="h-12 w-full rounded-lg border-[1.5px] border-outline-variant bg-white pl-10 pr-10 outline-none placeholder:text-on-surface-variant/60 focus:border-primary-container"
             />
-            {busqueda && (
-              <button
-                type="button"
-                aria-label="Limpiar búsqueda"
-                onClick={() => setBusqueda("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
-              >
-                <X size={17} />
-              </button>
-            )}
           </div>
-          <select
-            aria-label="Filtrar por tipo de plaza"
-            value={fTipo}
-            onChange={(e) => { setFTipo(e.target.value); setPagina(1); }}
-            className={sel}
-          >
+          <select aria-label="Filtrar por tipo de plaza" value={fTipoBorrador} onChange={(e) => setFTipoBorrador(e.target.value)} className={sel}>
             <option value="">Todos los tipos</option>
-            {TIPOS_PLAZA.map((tipo) => (
-              <option key={tipo} value={tipo}>{ETIQUETAS_TIPO_PLAZA[tipo]}</option>
-            ))}
+            {TIPOS_PLAZA.map((tipo) => <option key={tipo} value={tipo}>{ETIQUETAS_TIPO_PLAZA[tipo]}</option>)}
           </select>
-          <select
-            aria-label="Filtrar por estado"
-            value={fEstado}
-            onChange={(e) => { setFEstado(e.target.value); setPagina(1); }}
-            className={sel}
-          >
+          <select aria-label="Filtrar por estado" value={fEstadoBorrador} onChange={(e) => setFEstadoBorrador(e.target.value)} className={sel}>
             <option value="">Todos los estados</option>
-            {ESTADOS_PLAZA.map((estado) => (
-              <option key={estado} value={estado}>{ETIQUETAS_ESTADO_PLAZA[estado]}</option>
-            ))}
+            {ESTADOS_PLAZA.map((estado) => <option key={estado} value={estado}>{ETIQUETAS_ESTADO_PLAZA[estado]}</option>)}
           </select>
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <button
-            type="button"
-            aria-pressed={!fUgel}
-            onClick={() => { setFUgel(""); setPagina(1); }}
-            className={`shrink-0 rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
-              !fUgel
-                ? "border-primary-container bg-primary-container text-on-primary"
-                : "border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low"
-            }`}
-          >
-            {!fUgel && <Check size={15} className="mr-1 inline" />}
-            Todas las UGEL
-          </button>
-          {(ugeles ?? []).map((ugel) => {
-            const activa = fUgel === String(ugel.id);
-            return (
-              <button
-                key={ugel.id}
-                type="button"
-                aria-pressed={activa}
-                onClick={() => { setFUgel(activa ? "" : String(ugel.id)); setPagina(1); }}
-                className={`shrink-0 rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
-                  activa
-                    ? "border-primary-container bg-primary-container text-on-primary"
-                    : "border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low"
-                }`}
-              >
-                {ugel.nombre}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap gap-2">
-            <select
-              aria-label="Filtrar por nivel educativo"
-              value={fNivel}
-              onChange={(e) => { setFNivel(e.target.value); setPagina(1); }}
-              className={sel}
+          <select aria-label="Filtrar por nivel educativo" value={fNivelBorrador} onChange={(e) => setFNivelBorrador(e.target.value)} className={sel}>
+            <option value="">Todos los niveles</option>
+            {NIVELES.map((nivel) => <option key={nivel} value={nivel}>{ETIQUETAS_NIVEL[nivel]}</option>)}
+          </select>
+          <div className="flex flex-wrap gap-2 sm:col-span-2">
+            <button
+              type="button"
+              aria-pressed={!fUgelBorrador}
+              onClick={() => setFUgelBorrador("")}
+              className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+                !fUgelBorrador
+                  ? "border-primary-container bg-primary-container text-on-primary"
+                  : "border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low"
+              }`}
             >
-              <option value="">Todos los niveles</option>
-              {NIVELES.map((nivel) => (
-                <option key={nivel} value={nivel}>{ETIQUETAS_NIVEL[nivel]}</option>
-              ))}
-            </select>
+              {!fUgelBorrador && <Check size={15} className="mr-1 inline" />}
+              Todas las UGEL
+            </button>
+            {(ugeles ?? []).map((ugel) => {
+              const activa = fUgelBorrador === String(ugel.id);
+              return (
+                <button
+                  key={ugel.id}
+                  type="button"
+                  aria-pressed={activa}
+                  onClick={() => setFUgelBorrador(activa ? "" : String(ugel.id))}
+                  className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+                    activa
+                      ? "border-primary-container bg-primary-container text-on-primary"
+                      : "border-outline-variant bg-white text-on-surface-variant hover:bg-surface-container-low"
+                  }`}
+                >
+                  {ugel.nombre}
+                </button>
+              );
+            })}
           </div>
-          <p className="text-sm font-semibold text-primary">
-            {q.isLoading ? "Cargando..." : `${q.data?.meta.total ?? 0} plazas encontradas`}
-          </p>
         </div>
-      </section>
+      </PanelFiltros>
+      <p className="text-right text-sm font-semibold text-primary">
+        {q.isLoading ? "Cargando..." : `${q.data?.meta.total ?? 0} plazas encontradas`}
+      </p>
 
       <section className="space-y-3" aria-label="Listado de plazas docentes">
         {q.isError ? (
