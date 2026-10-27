@@ -11,6 +11,7 @@ interface VistaPreviaArchivoProps {
 }
 
 function esUrlWeb(valor: string): boolean {
+  if (/^data:(?:image\/(?:avif|jpeg|png|webp)|application\/pdf);base64,/i.test(valor)) return true;
   if (valor.startsWith('/') && !valor.startsWith('//')) return true;
   try {
     const url = new URL(valor);
@@ -21,6 +22,7 @@ function esUrlWeb(valor: string): boolean {
 }
 
 function esImagen(valor: string): boolean {
+  if (/^data:image\/(?:avif|jpeg|png|webp);base64,/i.test(valor)) return true;
   try {
     return /\.(avif|gif|jpe?g|png|svg|webp)$/i.test(
       new URL(valor, window.location.origin).pathname,

@@ -14,6 +14,7 @@ import { EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { Badge, type TonoBadge } from '@/components/ui/Badge';
 import { Boton } from '@/components/ui/Boton';
 import { CampoArea, CampoSelect, CampoTexto } from '@/components/ui/Campo';
+import { CampoCargaArchivo } from '@/components/ui/CampoCargaArchivo';
 import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
@@ -132,15 +133,23 @@ function FormularioConvocatoria({ inicial, onExito, onCancelar }: FormularioProp
       </div>
       <div className="md:col-span-2">
         <Controller name="pdfMeritosUrl" control={c} render={({ field, fieldState }) => (
-          <CampoTexto
-            etiqueta="PDF o enlace de la convocatoria (opcional)"
-            tipo="text"
-            valor={field.value ?? ''}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            ayuda="Pega una URL web o una ruta pública como /documentos/convocatoria.pdf."
-            placeholder="/documentos/convocatoria.pdf"
-          />
+          <div className="space-y-3">
+            <CampoTexto
+              etiqueta="PDF o enlace de la convocatoria (opcional)"
+              tipo="text"
+              valor={field.value?.startsWith('data:') ? '' : field.value ?? ''}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              ayuda="Pega una URL web o una ruta pública como /documentos/convocatoria.pdf."
+              placeholder="/documentos/convocatoria.pdf"
+            />
+            <CampoCargaArchivo
+              etiqueta="Adjuntar bases en PDF"
+              tipo="pdf"
+              archivos={field.value ? [field.value] : []}
+              onChange={(archivos) => field.onChange(archivos[0] ?? '')}
+            />
+          </div>
         )} />
       </div>
       <div className="md:col-span-2 flex justify-end gap-3 pt-2">

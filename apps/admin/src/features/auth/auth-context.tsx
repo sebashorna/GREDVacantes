@@ -12,6 +12,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { api, normalizarError, tokens } from '@/lib/api';
 import type { Rol } from '@shared';
 
+const MODO_DEMOSTRACION = import.meta.env.VITE_APP_DEMO === 'true';
+const CLAVE_SESION_DEMOSTRACION = 'educa.demoSession';
+const USUARIO_DEMOSTRACION: UsuarioAutenticado = {
+  id: 0,
+  nombre: 'Administrador de demostración',
+  email: 'demo@educa.gob.pe',
+  rol: 'ADMIN_GRED',
+  ugelId: null,
+  ugel: null,
+};
+
 export interface UsuarioAutenticado {
   id: number;
   nombre: string;
@@ -44,6 +55,11 @@ export function ProveedorAuth({ children }: { children: ReactNode }) {
    * se conserva; si no, el interceptor ya habra intentado renovarlo.
    */
   const restaurar = useCallback(async () => {
+    if (MODO_DEMOSTRACION) {
+      setUsuario(localStorage.getItem(CLAVE_SESION_DEMOSTRACION) === 'true' ? USUARIO_DEMOSTRACION : null);
+      setCargando(false);
+      return;
+    }
     if (!tokens.haySesion) {
       setCargando(false);
       return;
@@ -64,7 +80,14 @@ export function ProveedorAuth({ children }: { children: ReactNode }) {
     void restaurar();
   }, [restaurar]);
 
-  const iniciarSesion = useCallback(    async (email: string, password: string) => {
+  const iniciarSesion = useCallback(async (email: string, password: string) => {
+      if (MODO_DEMOSTRACION) {
+        localStorage.setItem(CLAVE_SESION_DEMOSTRACION, 'true');
+        setUsuario(USUARIO_DEMOSTRACION);
+        queryClient.clear();
+        return;
+      }
+
       const { data } = await api.post<{
         accessToken: string;
         refreshToken: string;
@@ -81,9 +104,10 @@ export function ProveedorAuth({ children }: { children: ReactNode }) {
   const cerrarSesion = useCallback(async () => {
     const refresh = tokens.refresh;
     tokens.clear();
+    localStorage.removeItem(CLAVE_SESION_DEMOSTRACION);
     setUsuario(null);
     queryClient.clear();
-    if (refresh) {
+    if (refresh && !MODO_DEMOSTRACION) {
       // Best effort: si el servidor ya no reconoce el token, da igual.
       try {
         await api.post('/auth/logout', { refreshToken: refresh });

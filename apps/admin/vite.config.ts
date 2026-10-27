@@ -1,4 +1,5 @@
-﻿import path from 'node:path';
+import { existsSync, unlinkSync } from 'node:fs';
+import path from 'node:path';
 
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -14,7 +15,7 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
 
-  if (mode === 'mobile') {
+  if (mode === 'mobile' && env.VITE_APP_DEMO !== 'true') {
     const configuredApiUrl = env.VITE_API_URL;
     if (!configuredApiUrl) {
       throw new Error('Define VITE_API_URL en apps/admin/.env.mobile.local con la URL HTTPS de la API accesible desde el teléfono.');
@@ -34,8 +35,23 @@ export default defineConfig(({ mode }) => {
     }
   }
 
+  if (mode === 'mobile' && env.VITE_APP_MOBILE !== 'true') {
+    throw new Error('Define VITE_APP_MOBILE=true en apps/admin/.env.mobile.local.');
+  }
+
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'omit-apk-download-from-mobile-assets',
+        closeBundle() {
+          if (mode !== 'mobile') return;
+          const apkDescargable = path.resolve(__dirname, 'dist/downloads/educa-lambayeque-demo.apk');
+          if (existsSync(apkDescargable)) unlinkSync(apkDescargable);
+        },
+      },
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

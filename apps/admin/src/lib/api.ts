@@ -1,4 +1,5 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
+import { demoApiAdapter } from '@/lib/demo-api';
 
 /**
  * Cliente HTTP del panel.
@@ -12,6 +13,7 @@ export const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api',
   timeout: 30_000,
   headers: { 'Content-Type': 'application/json' },
+  ...(import.meta.env.VITE_APP_DEMO === 'true' ? { adapter: demoApiAdapter } : {}),
 });
 
 /* ------------------------------------------------------------------ */

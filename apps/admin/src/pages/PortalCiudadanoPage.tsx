@@ -7,6 +7,7 @@ import {
   Download,
   FileText,
   GraduationCap,
+  LogOut,
   Menu,
   Phone,
   Search,
@@ -15,6 +16,7 @@ import {
 import { Link } from 'react-router-dom';
 
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
+import { useAuth } from '@/features/auth/auth-context';
 import { api } from '@/lib/api';
 
 interface VacanteCiudadana {
@@ -82,6 +84,149 @@ interface ComunicadoCiudadano {
 interface ResumenVacantes {
   totalCuposDisponibles: number;
 }
+
+const DATOS_DEMO = {
+  resumen: { totalCuposDisponibles: 42 } satisfies ResumenVacantes,
+  vacantes: [
+    {
+      id: 1,
+      nivel: 'PRIMARIA',
+      turno: 'MANANA',
+      cupoDisponibles: 18,
+      fechaLimite: '2026-12-31T23:59:59.000Z',
+      ie: {
+        nombre: 'I.E. Demostrativa José Leonardo Ortiz',
+        distrito: 'José Leonardo Ortiz',
+        provincia: 'Chiclayo',
+        ugel: 'UGEL Chiclayo',
+        telefono: null,
+        whatsapp: null,
+      },
+    },
+    {
+      id: 2,
+      nivel: 'SECUNDARIA',
+      turno: 'TARDE',
+      cupoDisponibles: 14,
+      fechaLimite: '2026-12-31T23:59:59.000Z',
+      ie: {
+        nombre: 'I.E. Demostrativa Santa Victoria',
+        distrito: 'Chiclayo',
+        provincia: 'Chiclayo',
+        ugel: 'UGEL Chiclayo',
+        telefono: null,
+        whatsapp: null,
+      },
+    },
+    {
+      id: 3,
+      nivel: 'INICIAL_JARDIN',
+      turno: 'MANANA',
+      cupoDisponibles: 10,
+      fechaLimite: '2026-12-31T23:59:59.000Z',
+      ie: {
+        nombre: 'I.E. Demostrativa Ferreñafe',
+        distrito: 'Ferreñafe',
+        provincia: 'Ferreñafe',
+        ugel: 'UGEL Ferreñafe',
+        telefono: null,
+        whatsapp: null,
+      },
+    },
+  ] satisfies VacanteCiudadana[],
+  convocatorias: [
+    {
+      id: 1,
+      titulo: 'Convocatoria de demostración para plazas docentes',
+      numeroRD: 'R.D. DEMO-2026-001',
+      descripcion: 'Información referencial para la presentación de la aplicación.',
+      fechaInicio: '2026-10-01T00:00:00.000Z',
+      fechaFin: '2026-12-31T23:59:59.000Z',
+      fase: 'INSCRIPCION',
+      pdfMeritosUrl: null,
+    },
+    {
+      id: 2,
+      titulo: 'Proceso demostrativo de contratación docente',
+      numeroRD: 'R.D. DEMO-2026-002',
+      descripcion: 'Registro de ejemplo; no corresponde a una convocatoria vigente.',
+      fechaInicio: '2026-10-15T00:00:00.000Z',
+      fechaFin: '2026-11-30T23:59:59.000Z',
+      fase: 'ADJUDICACION',
+      pdfMeritosUrl: null,
+    },
+  ] satisfies ConvocatoriaCiudadana[],
+  plazas: [
+    {
+      id: 1,
+      cargo: 'Docente de primaria',
+      area: 'Educación primaria',
+      nivel: 'PRIMARIA',
+      jornada: 'JORNADA_30',
+      zona: 'URBANA',
+      turno: 'MANANA',
+      tipo: 'ORGANICA',
+      cantidad: 2,
+      ie: {
+        nombre: 'I.E. Demostrativa José Leonardo Ortiz',
+        distrito: 'José Leonardo Ortiz',
+        provincia: 'Chiclayo',
+        ugel: 'UGEL Chiclayo',
+      },
+      convocatoria: {
+        titulo: 'Convocatoria de demostración para plazas docentes',
+        numeroRD: 'R.D. DEMO-2026-001',
+        fechaInicio: '2026-10-01T00:00:00.000Z',
+        fechaFin: '2026-12-31T23:59:59.000Z',
+        pdfMeritosUrl: null,
+      },
+    },
+    {
+      id: 2,
+      cargo: 'Docente de comunicación',
+      area: 'Comunicación',
+      nivel: 'SECUNDARIA',
+      jornada: 'JORNADA_30',
+      zona: 'URBANA',
+      turno: 'TARDE',
+      tipo: 'EVENTUAL_CUADRO',
+      cantidad: 1,
+      ie: {
+        nombre: 'I.E. Demostrativa Santa Victoria',
+        distrito: 'Chiclayo',
+        provincia: 'Chiclayo',
+        ugel: 'UGEL Chiclayo',
+      },
+      convocatoria: {
+        titulo: 'Proceso demostrativo de contratación docente',
+        numeroRD: 'R.D. DEMO-2026-002',
+        fechaInicio: '2026-10-15T00:00:00.000Z',
+        fechaFin: '2026-11-30T23:59:59.000Z',
+        pdfMeritosUrl: null,
+      },
+    },
+  ] satisfies PlazaCiudadana[],
+  comunicados: [
+    {
+      id: 'demo-1',
+      titulo: 'Comunicado de ejemplo sobre el calendario escolar',
+      categoria: 'Información demostrativa',
+      resumen: 'Aviso de muestra para enseñar cómo se presentarán las novedades educativas.',
+      contenido: 'Este comunicado es ficticio y se incluye únicamente para la demostración.',
+      fecha: '2026-10-25T12:00:00.000Z',
+      imagenUrl: null,
+    },
+    {
+      id: 'demo-2',
+      titulo: 'Orientaciones educativas de muestra',
+      categoria: 'Orientación',
+      resumen: 'Ejemplo de una publicación informativa para la comunidad educativa.',
+      contenido: 'El contenido de esta publicación es de demostración; no es una comunicación oficial.',
+      fecha: '2026-10-20T12:00:00.000Z',
+      imagenUrl: null,
+    },
+  ] satisfies ComunicadoCiudadano[],
+};
 
 const ETIQUETAS: Record<string, string> = {
   INICIAL_JARDIN: 'Inicial',
@@ -199,10 +344,14 @@ function ErrorConsulta({ reintentar }: { reintentar: () => void }) {
 export function PortalCiudadanoPage({
   modoAplicacion = false,
   modoPresentacion = false,
+  modoDemostracion = false,
 }: {
   modoAplicacion?: boolean;
   modoPresentacion?: boolean;
+  modoDemostracion?: boolean;
 }) {
+  const { cerrarSesion } = useAuth();
+  const esDemostracion = modoAplicacion && modoDemostracion;
   const [busqueda, setBusqueda] = useState('');
   const [busquedaPlazas, setBusquedaPlazas] = useState('');
   const [nivelPlaza, setNivelPlaza] = useState('');
@@ -212,37 +361,47 @@ export function PortalCiudadanoPage({
   const resumenVacantes = useQuery({
     queryKey: ['publico', 'vacantes-resumen'],
     queryFn: async () => {
+      if (esDemostracion) return DATOS_DEMO.resumen;
       const { data } = await api.get<ResumenVacantes>('/public/vacantes');
       return data;
     },
+    staleTime: esDemostracion ? Infinity : undefined,
   });
   const vacantes = useQuery({
     queryKey: ['publico', 'vacantes'],
     queryFn: async () => {
+      if (esDemostracion) return DATOS_DEMO.vacantes;
       const { data } = await api.get<VacanteCiudadana[]>('/public/vacantes/listado');
       return data;
     },
+    staleTime: esDemostracion ? Infinity : undefined,
   });
   const convocatorias = useQuery({
     queryKey: ['publico', 'convocatorias'],
     queryFn: async () => {
+      if (esDemostracion) return DATOS_DEMO.convocatorias;
       const { data } = await api.get<ConvocatoriaCiudadana[]>('/public/convocatorias');
       return data;
     },
+    staleTime: esDemostracion ? Infinity : undefined,
   });
   const plazas = useQuery({
     queryKey: ['publico', 'plazas'],
     queryFn: async () => {
+      if (esDemostracion) return DATOS_DEMO.plazas;
       const { data } = await api.get<PlazaCiudadana[]>('/public/plazas?limite=50');
       return data;
     },
+    staleTime: esDemostracion ? Infinity : undefined,
   });
   const comunicados = useQuery({
     queryKey: ['publico', 'comunicados'],
     queryFn: async () => {
+      if (esDemostracion) return DATOS_DEMO.comunicados;
       const { data } = await api.get<ComunicadoCiudadano[]>('/public/comunicados?limite=6');
       return data;
     },
+    staleTime: esDemostracion ? Infinity : undefined,
   });
 
   const vacantesFiltradas = useMemo(() => {
@@ -330,6 +489,16 @@ export function PortalCiudadanoPage({
               <span className="hidden sm:inline">Descargar aplicación</span>
             </Link>
           )}
+          {esDemostracion && (
+            <button
+              type="button"
+              onClick={() => void cerrarSesion()}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-primary hover:bg-surface-container-low"
+            >
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Salir</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setMenuMovilAbierto((abierto) => !abierto)}
@@ -360,6 +529,12 @@ export function PortalCiudadanoPage({
           </nav>
         )}
       </header>
+
+      {esDemostracion && (
+        <div className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-xs font-medium text-amber-900 sm:text-sm">
+          Modo demostración: los registros son ficticios y no provienen de la API.
+        </div>
+      )}
 
       <main>
         <section

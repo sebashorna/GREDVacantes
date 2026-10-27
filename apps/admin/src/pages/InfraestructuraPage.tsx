@@ -27,6 +27,7 @@ import { EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { Badge, type TonoBadge } from '@/components/ui/Badge';
 import { Boton } from '@/components/ui/Boton';
 import { CampoSelect, CampoTexto } from '@/components/ui/Campo';
+import { CampoCargaArchivo } from '@/components/ui/CampoCargaArchivo';
 import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
@@ -241,12 +242,22 @@ function FormularioLocal({
         valor={datos.ultimaInspeccion}
         onChange={(valor) => actualizar('ultimaInspeccion', valor)}
       />
-      <CampoTexto
-        etiqueta="URL de ficha EDAN (opcional)"
-        tipo="url"
-        valor={datos.fichaEdanUrl}
-        onChange={(valor) => actualizar('fichaEdanUrl', valor)}
-      />
+      <div>
+        <CampoTexto
+          etiqueta="URL de ficha EDAN (opcional)"
+          tipo="url"
+          valor={datos.fichaEdanUrl.startsWith('data:') ? '' : datos.fichaEdanUrl}
+          onChange={(valor) => actualizar('fichaEdanUrl', valor)}
+        />
+        <div className="mt-3">
+          <CampoCargaArchivo
+            etiqueta="Adjuntar ficha EDAN en PDF"
+            tipo="pdf"
+            archivos={datos.fichaEdanUrl ? [datos.fichaEdanUrl] : []}
+            onChange={(archivos) => actualizar('fichaEdanUrl', archivos[0] ?? '')}
+          />
+        </div>
+      </div>
       <label className="flex items-center gap-2 text-sm font-medium text-on-surface">
         <input type="checkbox" checked={datos.luz} onChange={(evento) => actualizar('luz', evento.target.checked)} />
         Cuenta con energía eléctrica

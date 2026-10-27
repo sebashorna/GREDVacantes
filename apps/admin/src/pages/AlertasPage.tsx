@@ -26,6 +26,7 @@ import { EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { Badge, type TonoBadge } from '@/components/ui/Badge';
 import { Boton } from '@/components/ui/Boton';
 import { CampoArea, CampoSelect, CampoTexto } from '@/components/ui/Campo';
+import { CampoCargaArchivo } from '@/components/ui/CampoCargaArchivo';
 import { Confirmacion } from '@/components/ui/Confirmacion';
 import { Modal } from '@/components/ui/Modal';
 import { Paginacion } from '@/components/ui/Paginacion';
@@ -108,6 +109,7 @@ function fechaHora(valor: string): string {
 }
 
 function esUrlSegura(valor: string): boolean {
+  if (/^data:image\/(?:avif|jpeg|png|webp);base64,/i.test(valor)) return true;
   try {
     const url = new URL(valor);
     return url.protocol === 'https:' || url.protocol === 'http:';
@@ -128,6 +130,7 @@ export function AlertasPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [alertaEditando, setAlertaEditando] = useState<Alerta | null>(null);
   const [formulario, setFormulario] = useState<FormularioAlerta>(FORMULARIO_VACIO);
+  const [fotosAdjuntas, setFotosAdjuntas] = useState<string[]>([]);
   const [localBusqueda, setLocalBusqueda] = useState('');
   const [localSeleccionado, setLocalSeleccionado] = useState<LocalOpcion | null>(null);
   const [alertaEliminando, setAlertaEliminando] = useState<Alerta | null>(null);
@@ -221,6 +224,7 @@ export function AlertasPage() {
     setModalAbierto(false);
     setAlertaEditando(null);
     setFormulario(FORMULARIO_VACIO);
+    setFotosAdjuntas([]);
     setLocalBusqueda('');
     setLocalSeleccionado(null);
   }
@@ -228,20 +232,26 @@ export function AlertasPage() {
   function abrirNuevaAlerta() {
     setAlertaEditando(null);
     setFormulario(FORMULARIO_VACIO);
+    setFotosAdjuntas([]);
     setLocalBusqueda('');
     setLocalSeleccionado(null);
     setModalAbierto(true);
   }
 
   function abrirEdicion(alerta: Alerta) {
+    const fotos = alerta.fotos ?? [];
+    const imagenesAdjuntas = fotos.filter((foto) =>
+      /^data:image\/(?:avif|jpeg|png|webp);base64,/i.test(foto),
+    );
     setAlertaEditando(alerta);
     setFormulario({
       tipo: alerta.tipo as TipoAlerta,
       descripcion: alerta.descripcion,
       reportadoPor: alerta.reportadoPor,
       telefonoReporte: alerta.telefonoReporte ?? '',
-      fotos: (alerta.fotos ?? []).join('\n'),
+      fotos: fotos.filter((foto) => !imagenesAdjuntas.includes(foto)).join('\n'),
     });
+    setFotosAdjuntas(imagenesAdjuntas);
     setLocalSeleccionado(
       alerta.localEscolar && alerta.ie
         ? {
@@ -263,10 +273,11 @@ export function AlertasPage() {
       return;
     }
 
-    const fotos = formulario.fotos
+    const enlaces = formulario.fotos
       .split(/\r?\n/)
       .map((foto) => foto.trim())
       .filter(Boolean);
+    const fotos = [...enlaces, ...fotosAdjuntas];
     if (fotos.length > 10) {
       toast.error('Puede registrar como máximo 10 enlaces de evidencia.');
       return;
@@ -646,14 +657,23 @@ export function AlertasPage() {
               placeholder="999 999 999"
             />
           </div>
-          <CampoArea
-            etiqueta="Enlaces a fotos o evidencias (opcional)"
-            valor={formulario.fotos}
-            onChange={(fotos) => setFormulario((actual) => ({ ...actual, fotos }))}
-            placeholder={'https://... (un enlace por línea)'}
-            filas={2}
-            ayuda="Hasta 10 enlaces, uno por línea."
-          />
+          <div className="space-y-3">
+            <CampoArea
+              etiqueta="Enlaces a fotos o evidencias (opcional)"
+              valor={formulario.fotos}
+              onChange={(fotos) => setFormulario((actual) => ({ ...actual, fotos }))}
+              placeholder={'https://... (un enlace por línea)'}
+              filas={2}
+              ayuda="Hasta 10 enlaces o imágenes adjuntas en total."
+            />
+            <CampoCargaArchivo
+              etiqueta="Adjuntar fotos de evidencia"
+              tipo="imagen"
+              maxArchivos={10}
+              archivos={fotosAdjuntas}
+              onChange={setFotosAdjuntas}
+            />
+          </div>
           <div className="flex justify-end gap-2 border-t border-outline-variant pt-4">
             <Boton variante="secundario" onClick={cerrarFormulario} disabled={guardarAlerta.isPending}>
               Cancelar

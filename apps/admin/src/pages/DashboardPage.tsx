@@ -196,8 +196,12 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <EncabezadoPagina
-        titulo="Portal Educativo Regional"
-        descripcion="Información de vacantes, plazas docentes e instituciones de Lambayeque."
+        titulo={import.meta.env.VITE_APP_MOBILE === 'true' ? 'Panel administrativo' : 'Portal Educativo Regional'}
+        descripcion={
+          import.meta.env.VITE_APP_MOBILE === 'true'
+            ? 'Gestión regional de vacantes, plazas, convocatorias e infraestructura educativa.'
+            : 'Información de vacantes, plazas docentes e instituciones de Lambayeque.'
+        }
         extra={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm font-medium text-on-surface-variant">
             <BadgeCheck size={16} className="text-primary" />

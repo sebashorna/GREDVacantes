@@ -23,12 +23,31 @@ export default function App() {
     if (!cargando) setVerificado(true);
   }, [cargando]);
 
-  if (esAplicacionMovil) {
-    return <PortalCiudadanoPage modoAplicacion />;
-  }
-
   if (!verificado) {
     return <div className="flex items-center justify-center h-screen text-slate-500">Cargando...</div>;
+  }
+
+  if (esAplicacionMovil) {
+    const esDemostracion = import.meta.env.VITE_APP_DEMO === 'true';
+    if (esDemostracion && !estaAutenticado) {
+      return <LoginPage modoAplicacion />;
+    }
+    if (!estaAutenticado) {
+      return <LoginPage modoAplicacion />;
+    }
+    return (
+      <MainLayout>
+        <Routes>
+          <Route path="*" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/convocatorias" element={<ConvocatoriasPage />} />
+          <Route path="/plazas" element={<PlazasPage />} />
+          <Route path="/vacantes" element={<VacantesPage />} />
+          <Route path="/alertas" element={<AlertasPage />} />
+          <Route path="/infraestructura" element={<InfraestructuraPage />} />
+        </Routes>
+      </MainLayout>
+    );
   }
 
   if (location.pathname === '/') {

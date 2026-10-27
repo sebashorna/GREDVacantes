@@ -140,6 +140,11 @@ export function MainLayout({ children }: MainLayoutProps) {
             <h2 className="text-lg font-semibold">{typeof children === 'string' ? children : ''}</h2>
           </div>
           <div className="flex items-center gap-4">
+            {import.meta.env.VITE_APP_DEMO === 'true' && (
+              <span className="rounded-full bg-amber-300/20 px-2.5 py-1 text-xs font-semibold text-amber-100">
+                DEMOSTRACIÓN · DATOS FICTICIOS
+              </span>
+            )}
             <span className="text-sm text-white/85 hidden sm:block">GRE Lambayeque</span>
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-xs border border-white/40">
               {usuario?.nombre?.charAt(0) ?? '?'}

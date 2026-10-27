@@ -1,10 +1,7 @@
-import { ArrowLeft, ArrowRight, Check, Download, Smartphone } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Download, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function DescargaAppPage() {
-  const [descargaSimulada, setDescargaSimulada] = useState(false);
-
   return (
     <main className="flex min-h-screen flex-col bg-background text-on-surface">
       <header className="border-b border-outline-variant bg-white">
@@ -37,39 +34,32 @@ export function DescargaAppPage() {
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-3 shadow">
             <img src="/Imagenes/GORE.png" alt="Logotipo del Gobierno Regional de Lambayeque" className="h-full w-full object-contain" />
           </div>
-          <p className="mt-6 text-center text-xs font-bold uppercase tracking-[0.15em] text-white/75">Aplicación ciudadana</p>
+          <p className="mt-6 text-center text-xs font-bold uppercase tracking-[0.15em] text-white/75">APK de demostración</p>
           <h1 className="mt-2 text-center text-2xl font-bold sm:text-3xl">Educa Lambayeque</h1>
           <p className="mt-3 text-center text-sm leading-relaxed text-white/85">
-            Vacantes, plazas docentes, convocatorias y comunicados educativos en un solo lugar.
+            Descarga e instala la aplicación de prueba para comprobar su funcionamiento en un teléfono Android.
           </p>
 
-          {!descargaSimulada ? (
-            <button
-              type="button"
-              onClick={() => setDescargaSimulada(true)}
-              className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-primary hover:bg-[#fff1ec]"
-            >
-              <Download size={19} /> Descargar aplicación
-            </button>
-          ) : (
-            <div className="mt-7 rounded-2xl bg-white p-4 text-on-surface" aria-live="polite">
-              <p className="flex items-center gap-2 font-semibold text-primary">
-                <Check size={19} /> Descarga simulada completada
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-on-surface-variant">
-                En esta presentación no se instala un APK real. Puedes abrir la app e iniciar sesión.
-              </p>
-              <Link
-                to="/app"
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-container"
-              >
-                <Smartphone size={18} /> Abrir aplicación <ArrowRight size={17} />
-              </Link>
-            </div>
-          )}
+          <a
+            href="/downloads/educa-lambayeque-demo.apk"
+            download
+            className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-primary hover:bg-[#fff1ec]"
+          >
+            <Download size={19} /> Descargar APK para Android
+          </a>
 
-          <p className="mt-5 text-center text-xs text-white/65">
-            Demostración para presentación · No se descarga ningún archivo APK
+          <div className="mt-5 rounded-2xl bg-white p-4 text-sm leading-relaxed text-on-surface">
+            <p className="flex items-center gap-2 font-semibold text-primary">
+              <Smartphone size={18} /> Instalación en Android
+            </p>
+            <ol className="mt-2 list-inside list-decimal space-y-1 text-xs text-on-surface-variant">
+              <li>Descarga el archivo y ábrelo desde las notificaciones o la carpeta Descargas.</li>
+              <li>Si Android lo solicita, permite instalar aplicaciones desde esta fuente y confirma la instalación.</li>
+              <li>Abre Educa Lambayeque e inicia sesión en el panel de demostración.</li>
+            </ol>
+          </div>
+          <p className="mt-4 text-center text-xs text-white/75">
+            Versión de demostración: muestra el panel administrativo y usa datos ficticios locales. No requiere depuración ni conexión a la nube.
           </p>
         </div>
       </section>

@@ -5,10 +5,12 @@ Portal ciudadano y panel administrativo de la Gerencia Regional de Educación de
 ## Experiencia ciudadana y Android
 
 - La página web `/` es el portal ciudadano adaptable; se muestra como sitio web tanto en computadora como en teléfono.
-- El botón «Descargar aplicación» lleva a `/descargar`, donde se simula la descarga para la presentación.
-- Al completar la simulación aparece «Abrir aplicación», que lleva a `/app` y muestra la vista de la app.
-- El flujo de presentación no descarga ni instala un APK real.
-- El APK muestra directamente el portal ciudadano; el panel administrativo permanece en `/login`.
+- El botón «Descargar aplicación» lleva a `/descargar`, desde donde se descarga el APK real de demostración incluido en `apps/admin/public/downloads/`.
+- En Android, abre el APK descargado y confirma la instalación si el teléfono lo solicita. No se requiere depuración USB.
+- El APK es una demostración del panel administrativo con datos ficticios locales; no es la aplicación ciudadana conectada a servicios reales.
+- El APK abre el panel administrativo: solicita inicio de sesión y, al ingresar, muestra el dashboard y los módulos administrativos. El portal ciudadano permanece en la web.
+- En modo de demostración se pueden adjuntar fotos a las alertas y PDF de bases/ficha EDAN a las convocatorias y locales. Los archivos se guardan en el almacenamiento local del navegador o dispositivo, no se suben a un servidor y tienen un límite de 2 MB por registro.
+- En modo conectado, la carga local de archivos queda deshabilitada hasta contar con almacenamiento en el servidor; se pueden seguir usando enlaces públicos.
 
 La configuración de Capacitor está en `apps/admin/capacitor.config.json`; el proyecto nativo está en `apps/admin/android/`.
 
@@ -23,9 +25,32 @@ El repositorio incluye `railway.json` y `apps/api/Dockerfile`. En Railway crea u
 
 Railway ejecutará las migraciones existentes antes del despliegue y comprobará `/health`. Configura estos valores directamente en el panel de Railway; no los guardes en el repositorio ni los compartas en el chat. El despliegue no carga automáticamente datos de demostración.
 
-### Preparar y probar el APK
+### Preparar un APK de demostración
 
-Antes de compilar, instala Android Studio con un JDK y Android SDK compatibles. Copia `apps/admin/.env.mobile.example` como `apps/admin/.env.mobile.local` y reemplaza el dominio de ejemplo por la URL HTTPS de la API que sea accesible desde el teléfono:
+La demostración permite iniciar sesión localmente con cualquier correo válido y una contraseña no vacía. Abre el panel administrativo con rol de Administrador GRED, datos ficticios y operaciones locales que se guardan en el dispositivo. No autentica usuarios ni se conecta a la API; sus registros no son oficiales ni deben usarse para tomar decisiones reales.
+
+Instala Android SDK Platform 36, Android SDK Build-Tools 36.0.0 y Android SDK Platform-Tools desde el SDK Manager de Android Studio. El wrapper del proyecto usa Gradle 8.14.3, que no es compatible con el Java 25 incluido en esta versión de Android Studio; instala JDK 21 y selecciona esa instalación en **Settings > Build Tools > Gradle > Gradle JDK**.
+
+Copia la configuración de demostración como archivo local:
+
+```powershell
+Copy-Item apps/admin/.env.mobile.demo.example apps/admin/.env.mobile.local
+```
+
+Sincroniza los recursos y compila el APK de depuración:
+
+```powershell
+npm run android:sync --workspace @educa/admin
+Set-Location apps/admin/android
+.\gradlew.bat assembleDebug
+Set-Location ../../..
+```
+
+El APK de demostración se genera en `apps/admin/android/app/build/outputs/apk/debug/app-debug.apk`. Sus registros son ficticios, no funciona como servicio real y no se debe publicar como versión de producción.
+
+### Preparar un APK conectado a la API
+
+Para un APK funcional con autenticación y datos reales, primero publica la API en una URL HTTPS accesible desde el teléfono. Copia `apps/admin/.env.mobile.example` como `apps/admin/.env.mobile.local` y configura su dirección:
 
 ```dotenv
 VITE_API_URL=https://<servidor-api>/api
@@ -48,6 +73,8 @@ Set-Location apps/admin/android
 Set-Location ../../..
 ```
 
-El APK de depuración se genera en `apps/admin/android/app/build/outputs/apk/debug/app-debug.apk`. Para distribuir la aplicación se debe generar un APK de versión firmado; no se debe publicar el APK de depuración.
+El APK conectado de depuración se genera en `apps/admin/android/app/build/outputs/apk/debug/app-debug.apk`. Para distribuir la aplicación se debe generar un APK de versión firmado; no se debe publicar el APK de depuración.
 
-Cuando se autorice y publique un APK firmado, el botón «Descargar aplicación» podrá conectarse a su URL HTTPS; hasta entonces, `/descargar` mantiene la simulación de presentación.
+La página de descarga usa el archivo `apps/admin/public/downloads/educa-lambayeque-demo.apk`. Si se recompila el APK de demostración, copia el nuevo `app-debug.apk` a esa ruta antes de desplegar la web. El archivo se publica junto con la aplicación web y el botón lo descarga directamente.
+
+Esta descarga permite comprobar el flujo de página, descarga e instalación antes de tener el servicio en la nube. El APK actual es de demostración y está firmado para depuración; para una distribución pública posterior deberá generarse una versión firmada de producción y sustituirse el archivo descargable.

@@ -17,11 +17,12 @@ const schema = z.object({
 export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
   const navigate = useNavigate();
   const { iniciarSesion } = useAuth();
+  const modoDemostracion = modoAplicacion && import.meta.env.VITE_APP_DEMO === 'true';
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
 
   const form = useForm<z.infer<typeof schema>>({
-    defaultValues: { email: 'admin@gredlambayeque.gob.pe', password: '' },
+    defaultValues: { email: modoDemostracion ? 'demo@educa.gob.pe' : 'admin@gredlambayeque.gob.pe', password: '' },
   });
 
   const onSubmit = async (datos: z.infer<typeof schema>) => {
@@ -55,8 +56,13 @@ export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
           )}
           <h1 className="text-2xl font-bold text-primary">Educa Lambayeque</h1>
           <p className="mt-2 text-sm text-slate-500">
-            {modoAplicacion ? 'Inicia sesión en la aplicación' : 'Panel Administrativo - Inicio de sesión'}
+            {modoAplicacion ? 'Inicia sesión en el panel administrativo' : 'Panel Administrativo - Inicio de sesión'}
           </p>
+          {modoDemostracion && (
+            <p className="mt-2 text-xs text-slate-500">
+              Modo demostración: usa cualquier correo válido y una contraseña de muestra.
+            </p>
+          )}
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">
