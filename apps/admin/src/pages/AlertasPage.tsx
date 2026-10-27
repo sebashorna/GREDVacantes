@@ -110,6 +110,7 @@ function fechaHora(valor: string): string {
 
 function esUrlSegura(valor: string): boolean {
   if (/^data:image\/(?:avif|jpeg|png|webp);base64,/i.test(valor)) return true;
+  if (valor.startsWith('/') && !valor.startsWith('//')) return true;
   try {
     const url = new URL(valor);
     return url.protocol === 'https:' || url.protocol === 'http:';
@@ -312,6 +313,7 @@ export function AlertasPage() {
     <div className="space-y-6">
       <EncabezadoPagina
         titulo="Alertas e incidencias"
+        icono={AlertTriangle}
         descripcion="Reportes de daños y problemas de servicios en aulas y locales escolares."
         accion={
           puedeRegistrar

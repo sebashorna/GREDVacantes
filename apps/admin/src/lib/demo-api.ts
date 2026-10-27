@@ -12,7 +12,7 @@ interface DemoState {
   instituciones: DemoRow[];
 }
 
-const STORAGE_KEY = 'educa.adminDemoData.v1';
+const STORAGE_KEY = 'educa.adminDemoData.v2';
 const FECHA_DEMO = '2026-10-27T12:00:00.000Z';
 
 const UGELES = [
@@ -53,13 +53,13 @@ function createInitialState(): DemoState {
       id: 1, titulo: 'Convocatoria de demostración para plazas docentes', numeroRD: 'R.D. DEMO-2026-001',
       fechaInicio: '2026-10-01T00:00:00.000Z', fechaFin: '2026-12-31T23:59:59.000Z',
       fase: 'INSCRIPCION', activo: true, descripcion: 'Registro ficticio para la presentación.',
-      pdfMeritosUrl: null, _count: { plazas: 2 },
+      pdfMeritosUrl: '/documentos/convocatoria-demo.pdf', _count: { plazas: 2 },
     },
     {
       id: 2, titulo: 'Proceso demostrativo de contratación docente', numeroRD: 'R.D. DEMO-2026-002',
       fechaInicio: '2026-10-15T00:00:00.000Z', fechaFin: '2026-11-30T23:59:59.000Z',
       fase: 'ADJUDICACION', activo: true, descripcion: 'Registro ficticio para la presentación.',
-      pdfMeritosUrl: null, _count: { plazas: 1 },
+      pdfMeritosUrl: '/documentos/convocatoria-demo.pdf', _count: { plazas: 1 },
     },
   ];
   const locales: DemoRow[] = instituciones.map((ie, index) => ({
@@ -75,7 +75,7 @@ function createInitialState(): DemoState {
     capacidadAlumnos: 320,
     avanceObras: 0,
     presupuesto: 0,
-    fichaEdanUrl: null,
+    fichaEdanUrl: index === 1 ? '/documentos/convocatoria-demo.pdf' : null,
     ultimaInspeccion: FECHA_DEMO,
     ie,
     alertas: [],
@@ -116,7 +116,7 @@ function createInitialState(): DemoState {
     {
       id: 1, localEscolarId: 2, ieId: 2, tipo: 'FALTA_AGUA', estado: 'ABIERTA',
       descripcion: 'Reporte demostrativo: revisar el servicio de agua del local escolar.',
-      fotos: [], reportadoPor: 'Usuario de demostración', telefonoReporte: null,
+      fotos: ['/Imagenes/Pedro-ruiz-gallo-eten.jpg', '/Imagenes/ieSantaRosa.jpeg'], reportadoPor: 'Usuario de demostración', telefonoReporte: null,
       observacion: null, resueltoEn: null, createdAt: FECHA_DEMO,
       ie: instituciones[1], localEscolar: locales[1],
     },
@@ -139,14 +139,20 @@ function createInitialState(): DemoState {
         id: 'demo-1', titulo: 'Comunicado de ejemplo sobre el calendario escolar',
         categoria: 'Información demostrativa', resumen: 'Aviso ficticio para la presentación.',
         contenido: 'Este comunicado es ficticio y no constituye una comunicación oficial.',
-        fecha: FECHA_DEMO, imagenUrl: null, publicado: true,
+        fecha: FECHA_DEMO, imagenUrl: '/Imagenes/comunicado-aula-laptop.jpg', publicado: true,
       },
       {
         id: 'demo-2', titulo: 'Orientaciones educativas de muestra',
         categoria: 'Orientación', resumen: 'Publicación de ejemplo para la comunidad educativa.',
-        contenido: 'El contenido de esta publicación es ficticio.', fecha: FECHA_DEMO, imagenUrl: null, publicado: true,
+        contenido: 'El contenido de esta publicación es ficticio.',         fecha: FECHA_DEMO, imagenUrl: '/Imagenes/comunicado-libros.jpg', publicado: true,
       },
-    ],
+              {
+                id: 'demo-3', titulo: 'Recomendaciones para el estudio en casa',
+                categoria: 'Orientación', resumen: 'Consejos de ejemplo para estudiantes y familias.',
+                contenido: 'El contenido de esta publicación es ficticio.', fecha: FECHA_DEMO,
+                imagenUrl: '/Imagenes/comunicado-escritorio-estudio.jpg', publicado: true,
+              },
+            ],
   };
 }
 
@@ -305,12 +311,26 @@ function reply(data: unknown, config: Parameters<AxiosAdapter>[0]): AxiosRespons
 }
 
 export const demoApiAdapter: AxiosAdapter = async (config) => {
+  const method = (config.method ?? 'get').toUpperCase();
+  const soloConsulta =
+    import.meta.env.VITE_APP_MOBILE === 'true' ||
+    window.location.pathname === '/app/consulta';
+  if (soloConsulta && method !== 'GET' && method !== 'HEAD') {
+    const response: AxiosResponse = {
+      data: { error: { codigo: 'SOLO_LECTURA', mensaje: 'La aplicación ciudadana solo permite consultar información.' } },
+      status: 403,
+      statusText: 'Forbidden',
+      headers: new AxiosHeaders(),
+      config,
+    };
+    throw new AxiosError('La aplicación ciudadana solo permite consultar información.', 'ERR_DEMO_READ_ONLY', config, undefined, response);
+  }
+
   const state = getState();
   withRelationships(state);
   const url = new URL(config.url ?? '/', 'http://demo.local');
   const basePath = new URL(config.baseURL ?? '/api', 'http://demo.local').pathname.replace(/\/$/, '');
   const path = `${basePath}/${url.pathname.replace(/^\/+/, '')}`.replace(/\/+/g, '/');
-  const method = (config.method ?? 'get').toUpperCase();
   const params = new URLSearchParams(url.search);
 
   let data: unknown;

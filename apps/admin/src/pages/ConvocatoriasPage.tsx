@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { FileText, Search } from 'lucide-react';
+import { FileText, Megaphone, Search } from 'lucide-react';
 import { FASES_CONVOCATORIA } from '@shared';
 import { api } from '@/lib/api';
 import type { Convocatoria, Pagina } from '@/lib/tipos';
@@ -242,6 +242,7 @@ export function ConvocatoriasPage() {
     <div className="space-y-6">
       <EncabezadoPagina
         titulo="Convocatorias"
+        icono={Megaphone}
         descripcion="Gestion de convocatorias de vacantes y plazas."
         accion={puedeRegistrar ? { etiqueta: 'Nueva convocatoria', onClick: () => { setEditando(undefined); setModalAbierto(true); } } : undefined}
       />

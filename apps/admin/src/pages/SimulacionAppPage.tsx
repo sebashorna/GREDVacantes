@@ -14,8 +14,8 @@ export function SimulacionAppPage() {
       </header>
       <div className="h-[min(900px,calc(100dvh-72px))] w-[min(480px,calc(100vw-32px))] overflow-hidden rounded-[2.6rem] border-[8px] border-[#211e1d] bg-white shadow-2xl max-sm:h-dvh max-sm:w-screen max-sm:rounded-none max-sm:border-0 max-sm:shadow-none">
         <iframe
-          title="Inicio de sesión de la aplicación Educa Lambayeque"
-          src="/login?modo=app"
+          title="Aplicación ciudadana Educa Lambayeque"
+          src="/app/consulta"
           className="h-full w-full border-0"
         />
       </div>

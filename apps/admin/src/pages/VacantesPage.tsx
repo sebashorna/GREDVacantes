@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { Check, CircleHelp, MapPin, Pencil, Phone, Search, Trash2 } from 'lucide-react';
+import { Check, CircleHelp, MapPin, Pencil, Phone, School, Search, Trash2 } from 'lucide-react';
 import { ESTADOS_VACANTE, ETIQUETAS_ESTADO_VACANTE, ETIQUETAS_NIVEL, ETIQUETAS_TURNO, NIVELES, TURNOS } from '@shared';
 import { api } from '@/lib/api';
 import type { Pagina, ResumenCupos, Vacante } from '@/lib/tipos';
@@ -251,7 +251,7 @@ export function VacantesPage() {
   return (
     <div className="space-y-6">
       <EncabezadoPagina
-        titulo="Vacantes" descripcion="Vacantes de matricula por institucion educativa."
+        titulo="Vacantes" icono={School} descripcion="Vacantes de matricula por institucion educativa."
         accion={puedeRegistrar ? { etiqueta: 'Nueva vacante', onClick: () => { setVacanteEditando(null); setModalAbierto(true); } } : undefined}
       />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

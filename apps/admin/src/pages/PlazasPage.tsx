@@ -280,6 +280,7 @@ export function PlazasPage() {
     <div className="space-y-6">
       <EncabezadoPagina
         titulo="Plazas disponibles"
+        icono={GraduationCap}
         descripcion="Convocatorias y plazas docentes por institución educativa."
         accion={puedeRegistrar ? { etiqueta: "Nueva plaza", onClick: () => { setPlazaEditando(null); setModal(true); } } : undefined}
         extra={

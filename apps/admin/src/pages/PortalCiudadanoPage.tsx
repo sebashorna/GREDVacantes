@@ -7,7 +7,6 @@ import {
   Download,
   FileText,
   GraduationCap,
-  LogOut,
   Menu,
   Phone,
   Search,
@@ -16,7 +15,6 @@ import {
 import { Link } from 'react-router-dom';
 
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
-import { useAuth } from '@/features/auth/auth-context';
 import { api } from '@/lib/api';
 
 interface VacanteCiudadana {
@@ -350,7 +348,6 @@ export function PortalCiudadanoPage({
   modoPresentacion?: boolean;
   modoDemostracion?: boolean;
 }) {
-  const { cerrarSesion } = useAuth();
   const esDemostracion = modoAplicacion && modoDemostracion;
   const [busqueda, setBusqueda] = useState('');
   const [busquedaPlazas, setBusquedaPlazas] = useState('');
@@ -488,16 +485,6 @@ export function PortalCiudadanoPage({
               <span className="sm:hidden">Descargar app</span>
               <span className="hidden sm:inline">Descargar aplicación</span>
             </Link>
-          )}
-          {esDemostracion && (
-            <button
-              type="button"
-              onClick={() => void cerrarSesion()}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-primary hover:bg-surface-container-low"
-            >
-              <LogOut size={16} />
-              <span className="hidden sm:inline">Salir</span>
-            </button>
           )}
           <button
             type="button"

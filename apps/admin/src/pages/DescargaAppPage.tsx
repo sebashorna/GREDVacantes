@@ -34,10 +34,10 @@ export function DescargaAppPage() {
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-3 shadow">
             <img src="/Imagenes/GORE.png" alt="Logotipo del Gobierno Regional de Lambayeque" className="h-full w-full object-contain" />
           </div>
-          <p className="mt-6 text-center text-xs font-bold uppercase tracking-[0.15em] text-white/75">APK de demostración</p>
+          <p className="mt-6 text-center text-xs font-bold uppercase tracking-[0.15em] text-white/75">Aplicación ciudadana · Demo</p>
           <h1 className="mt-2 text-center text-2xl font-bold sm:text-3xl">Educa Lambayeque</h1>
           <p className="mt-3 text-center text-sm leading-relaxed text-white/85">
-            Descarga e instala la aplicación de prueba para comprobar su funcionamiento en un teléfono Android.
+            Descarga e instala la aplicación para consultar datos educativos en un teléfono Android.
           </p>
 
           <a
@@ -55,11 +55,11 @@ export function DescargaAppPage() {
             <ol className="mt-2 list-inside list-decimal space-y-1 text-xs text-on-surface-variant">
               <li>Descarga el archivo y ábrelo desde las notificaciones o la carpeta Descargas.</li>
               <li>Si Android lo solicita, permite instalar aplicaciones desde esta fuente y confirma la instalación.</li>
-              <li>Abre Educa Lambayeque e inicia sesión en el panel de demostración.</li>
+              <li>Abre Educa Lambayeque y consulta el dashboard y sus módulos de datos; no requiere iniciar sesión.</li>
             </ol>
           </div>
           <p className="mt-4 text-center text-xs text-white/75">
-            Versión de demostración: muestra el panel administrativo y usa datos ficticios locales. No requiere depuración ni conexión a la nube.
+            Versión de consulta: muestra datos ficticios sin funciones para crear, editar o eliminar registros.
           </p>
         </div>
       </section>

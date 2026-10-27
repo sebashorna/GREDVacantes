@@ -7,9 +7,11 @@ Portal ciudadano y panel administrativo de la Gerencia Regional de Educación de
 - La página web `/` es el portal ciudadano adaptable; se muestra como sitio web tanto en computadora como en teléfono.
 - El botón «Descargar aplicación» lleva a `/descargar`, desde donde se descarga el APK real de demostración incluido en `apps/admin/public/downloads/`.
 - En Android, abre el APK descargado y confirma la instalación si el teléfono lo solicita. No se requiere depuración USB.
-- El APK es una demostración del panel administrativo con datos ficticios locales; no es la aplicación ciudadana conectada a servicios reales.
-- El APK abre el panel administrativo: solicita inicio de sesión y, al ingresar, muestra el dashboard y los módulos administrativos. El portal ciudadano permanece en la web.
-- En modo de demostración se pueden adjuntar fotos a las alertas y PDF de bases/ficha EDAN a las convocatorias y locales. Los archivos se guardan en el almacenamiento local del navegador o dispositivo, no se suben a un servidor y tienen un límite de 2 MB por registro.
+- El APK abre directamente las pantallas de consulta de datos (dashboard, vacantes, plazas, convocatorias, alertas e infraestructura), sin mostrar el landing ciudadano y sin solicitar login. En teléfonos, estos módulos se navegan desde una barra inferior fija con todas las opciones.
+- En modo de demostración, el APK presenta datos ficticios y asigna el rol de consulta `CONSULTOR`: no muestra acciones para crear, editar, eliminar o gestionar registros. Las solicitudes que modifican datos también se rechazan en el adaptador de demostración móvil.
+- El APK no requiere conexión a la nube para esta demostración. El manifiesto de Android solo solicita acceso a Internet, necesario para cargar recursos y consultar la API cuando esté disponible; no solicita permisos de cámara ni almacenamiento.
+- El panel administrativo sigue siendo una aplicación web independiente, con su propio inicio de sesión y permisos.
+- En modo de demostración web se pueden adjuntar fotos a las alertas y PDF de bases/ficha EDAN a las convocatorias y locales. Los archivos se guardan en el almacenamiento local del navegador, no se suben a un servidor y tienen un límite de 2 MB por registro.
 - En modo conectado, la carga local de archivos queda deshabilitada hasta contar con almacenamiento en el servidor; se pueden seguir usando enlaces públicos.
 
 La configuración de Capacitor está en `apps/admin/capacitor.config.json`; el proyecto nativo está en `apps/admin/android/`.

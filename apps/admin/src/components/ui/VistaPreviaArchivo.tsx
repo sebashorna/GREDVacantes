@@ -1,7 +1,48 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { ExternalLink, FileText } from 'lucide-react';
 
 import { Modal } from '@/components/ui/Modal';
+
+interface PdfRenderPlugin {
+  renderizar(opciones: { ruta: string }): Promise<{ paginas: string[]; total: number }>;
+}
+
+const PdfRender = registerPlugin<PdfRenderPlugin>('PdfRender');
+
+function esPdfLocalNativo(valor: string): boolean {
+  return (
+    Capacitor.isNativePlatform() &&
+    valor.startsWith('/') &&
+    !valor.startsWith('//') &&
+    /\.pdf$/i.test(valor)
+  );
+}
+
+function PaginasPdfNativo({ ruta, titulo }: { ruta: string; titulo: string }) {
+  const [paginas, setPaginas] = useState<string[] | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let activo = true;
+    PdfRender.renderizar({ ruta })
+      .then((r) => activo && setPaginas(r.paginas))
+      .catch(() => activo && setError(true));
+    return () => {
+      activo = false;
+    };
+  }, [ruta]);
+
+  if (error) return <p className="p-6 text-center text-sm text-error">No se pudo mostrar el documento.</p>;
+  if (!paginas) return <p className="p-6 text-center text-sm text-on-surface-variant">Cargando documento...</p>;
+  return (
+    <div className="max-h-[70vh] space-y-3 overflow-y-auto rounded-lg bg-surface-container p-2">
+      {paginas.map((src, i) => (
+        <img key={i} src={src} alt={`${titulo}, página ${i + 1}`} className="w-full rounded bg-white shadow-sm" />
+      ))}
+    </div>
+  );
+}
 
 interface VistaPreviaArchivoProps {
   url: string;
@@ -63,6 +104,8 @@ export function VistaPreviaArchivo({
           <div className="flex min-h-[50vh] items-center justify-center rounded-lg bg-on-surface p-2">
             <img src={url} alt={titulo} className="max-h-[70vh] max-w-full object-contain" />
           </div>
+        ) : esPdfLocalNativo(url) ? (
+          <PaginasPdfNativo ruta={url} titulo={titulo} />
         ) : (
           <div className="h-[70vh] min-h-[24rem] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
             <iframe
@@ -73,18 +116,20 @@ export function VistaPreviaArchivo({
             />
           </div>
         )}
-        <div className="mt-3 flex justify-end">
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-          >
-            <FileText size={15} />
-            Abrir original
-            <ExternalLink size={14} />
-          </a>
-        </div>
+        {!esPdfLocalNativo(url) && (
+          <div className="mt-3 flex justify-end">
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+            >
+              <FileText size={15} />
+              Abrir original
+              <ExternalLink size={14} />
+            </a>
+          </div>
+        )}
       </Modal>
     </>
   );

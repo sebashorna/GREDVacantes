@@ -357,6 +357,7 @@ export function InfraestructuraPage() {
     <div className="space-y-6">
       <EncabezadoPagina
         titulo="Infraestructura y aulas"
+        icono={Building2}
         descripcion="Diagnóstico regional de locales escolares y sus servicios."
         accion={puedeRegistrar ? {
           etiqueta: 'Registrar local',

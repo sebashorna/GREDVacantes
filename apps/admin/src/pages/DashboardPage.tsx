@@ -91,6 +91,7 @@ function etiqueta(valor: string): string {
 }
 
 function esUrlSegura(valor: string): boolean {
+  if (valor.startsWith('/') && !valor.startsWith('//')) return true;
   try {
     const url = new URL(valor);
     return url.protocol === 'https:' || url.protocol === 'http:';
@@ -195,20 +196,33 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <EncabezadoPagina
-        titulo={import.meta.env.VITE_APP_MOBILE === 'true' ? 'Panel administrativo' : 'Portal Educativo Regional'}
-        descripcion={
-          import.meta.env.VITE_APP_MOBILE === 'true'
-            ? 'Gestión regional de vacantes, plazas, convocatorias e infraestructura educativa.'
-            : 'Información de vacantes, plazas docentes e instituciones de Lambayeque.'
-        }
-        extra={
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm font-medium text-on-surface-variant">
+      {import.meta.env.VITE_APP_MOBILE === 'true' || window.location.pathname === '/app/consulta' ? (
+        <header className="flex flex-col items-center gap-2 text-center">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-on-surface">
+            <BadgeCheck size={26} className="text-primary" aria-hidden="true" />
+            GRED Lambayeque • Oficial
+          </h1>
+          <p className="max-w-md text-sm text-on-surface-variant">
+            Información en tiempo real de vacantes, plazas docentes e instituciones en Chiclayo, Ferreñafe y Lambayeque.
+          </p>
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-white px-3 py-1.5 text-sm font-medium text-on-surface-variant">
             <BadgeCheck size={16} className="text-primary" />
             Datos demostrativos
           </span>
-        }
-      />
+        </header>
+      ) : (
+        <EncabezadoPagina
+          titulo="Portal Educativo Regional"
+          icono={BadgeCheck}
+          descripcion="Información de vacantes, plazas docentes e instituciones de Lambayeque."
+          extra={
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm font-medium text-on-surface-variant">
+              <BadgeCheck size={16} className="text-primary" />
+              Datos demostrativos
+            </span>
+          }
+        />
+      )}
 
       <PanelFiltros
         filtrosActivos={filtrosActivos}
@@ -314,7 +328,10 @@ export function DashboardPage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-on-surface">Vacantes registradas</h2>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-on-surface">
+              <ClipboardList size={19} className="text-primary" />
+              Vacantes registradas
+            </h2>
             <p className="mt-1 text-sm text-on-surface-variant">
               Consulta el estado y la disponibilidad de cada institución.
             </p>

@@ -13,12 +13,15 @@ import { api, normalizarError, tokens } from '@/lib/api';
 import type { Rol } from '@shared';
 
 const MODO_DEMOSTRACION = import.meta.env.VITE_APP_DEMO === 'true';
+const MODO_MOVIL = import.meta.env.VITE_APP_MOBILE === 'true';
+const MODO_CONSULTA_WEB = window.location.pathname === '/app/consulta';
+const MODO_SOLO_CONSULTA = MODO_MOVIL || MODO_CONSULTA_WEB;
 const CLAVE_SESION_DEMOSTRACION = 'educa.demoSession';
-const USUARIO_DEMOSTRACION: UsuarioAutenticado = {
+const USUARIO_CONSULTA: UsuarioAutenticado = {
   id: 0,
-  nombre: 'Administrador de demostración',
-  email: 'demo@educa.gob.pe',
-  rol: 'ADMIN_GRED',
+  nombre: 'Visitante ciudadano',
+  email: 'consulta@educa.gob.pe',
+  rol: 'CONSULTOR',
   ugelId: null,
   ugel: null,
 };
@@ -55,8 +58,15 @@ export function ProveedorAuth({ children }: { children: ReactNode }) {
    * se conserva; si no, el interceptor ya habra intentado renovarlo.
    */
   const restaurar = useCallback(async () => {
+    if (MODO_SOLO_CONSULTA) {
+      tokens.clear();
+      localStorage.removeItem(CLAVE_SESION_DEMOSTRACION);
+      setUsuario(USUARIO_CONSULTA);
+      setCargando(false);
+      return;
+    }
     if (MODO_DEMOSTRACION) {
-      setUsuario(localStorage.getItem(CLAVE_SESION_DEMOSTRACION) === 'true' ? USUARIO_DEMOSTRACION : null);
+      setUsuario(localStorage.getItem(CLAVE_SESION_DEMOSTRACION) === 'true' ? USUARIO_CONSULTA : null);
       setCargando(false);
       return;
     }
@@ -81,9 +91,16 @@ export function ProveedorAuth({ children }: { children: ReactNode }) {
   }, [restaurar]);
 
   const iniciarSesion = useCallback(async (email: string, password: string) => {
+      if (MODO_SOLO_CONSULTA) {
+        throw new Error('El modo de consulta ciudadana no permite iniciar sesión.');
+      }
       if (MODO_DEMOSTRACION) {
         localStorage.setItem(CLAVE_SESION_DEMOSTRACION, 'true');
-        setUsuario(USUARIO_DEMOSTRACION);
+        setUsuario({
+          ...USUARIO_CONSULTA,
+          nombre: 'Consultor de demostración',
+          email,
+        });
         queryClient.clear();
         return;
       }

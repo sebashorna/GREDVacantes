@@ -23,18 +23,7 @@ export default function App() {
     if (!cargando) setVerificado(true);
   }, [cargando]);
 
-  if (!verificado) {
-    return <div className="flex items-center justify-center h-screen text-slate-500">Cargando...</div>;
-  }
-
   if (esAplicacionMovil) {
-    const esDemostracion = import.meta.env.VITE_APP_DEMO === 'true';
-    if (esDemostracion && !estaAutenticado) {
-      return <LoginPage modoAplicacion />;
-    }
-    if (!estaAutenticado) {
-      return <LoginPage modoAplicacion />;
-    }
     return (
       <MainLayout>
         <Routes>
@@ -48,6 +37,10 @@ export default function App() {
         </Routes>
       </MainLayout>
     );
+  }
+
+  if (!verificado) {
+    return <div className="flex items-center justify-center h-screen text-on-surface-variant">Cargando...</div>;
   }
 
   if (location.pathname === '/') {
@@ -64,6 +57,23 @@ export default function App() {
 
   if (location.pathname === '/portal') {
     return <PortalCiudadanoPage />;
+  }
+
+  if (location.pathname === '/app/consulta') {
+    return (
+      <MainLayout>
+        <Routes>
+          <Route path="*" element={<DashboardPage />} />
+          <Route path="/app/consulta" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/convocatorias" element={<ConvocatoriasPage />} />
+          <Route path="/plazas" element={<PlazasPage />} />
+          <Route path="/vacantes" element={<VacantesPage />} />
+          <Route path="/alertas" element={<AlertasPage />} />
+          <Route path="/infraestructura" element={<InfraestructuraPage />} />
+        </Routes>
+      </MainLayout>
+    );
   }
 
   if (location.pathname === '/login' && new URLSearchParams(location.search).get('modo') === 'app') {

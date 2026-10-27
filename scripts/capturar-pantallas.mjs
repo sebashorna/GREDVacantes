@@ -12,6 +12,16 @@ const OUT_DIR = path.join(ROOT, '_mockups', 'capturas');
 const USER_DATA = path.join(process.env.TEMP || 'C:/temp', 'chrome-mockup-profile');
 const BASE_URL = 'http://127.0.0.1:5173';
 
+// Pantallas de la app móvil (sin login)
+const PANTALLAS = [
+  ['/dashboard', '01-dashboard.png'],
+  ['/convocatorias', '02-convocatorias.png'],
+  ['/plazas', '03-plazas.png'],
+  ['/vacantes', '04-vacantes.png'],
+  ['/alertas', '05-alertas.png'],
+  ['/infraestructura', '06-infraestructura.png'],
+];
+
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 function httpGet(url) {
@@ -42,7 +52,6 @@ async function waitForServer() {
 
 async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-
   await waitForServer();
 
   const chrome = spawn(CHROME, [
@@ -124,32 +133,12 @@ async function main() {
         }
       };
       ws.addEventListener('message', handler);
-      // fallback timeout
       setTimeout(() => { ws.removeEventListener('message', handler); resolve(); }, 8000);
     });
     await sleep(4500);
   }
 
-  // 1. Login (sin sesion)
-  await navigate(BASE_URL + '/');
-  await screenshot('01-login.png');
-
-  // Activar sesion demo
-  await cdp('Runtime.evaluate', {
-    expression: "localStorage.setItem('educa.demoSession','true');",
-    awaitPromise: false,
-  });
-  await navigate(BASE_URL + '/');
-  await screenshot('02-dashboard.png');
-
-  const rutas = [
-    ['/convocatorias', '03-convocatorias.png'],
-    ['/plazas', '04-plazas.png'],
-    ['/vacantes', '05-vacantes.png'],
-    ['/alertas', '06-alertas.png'],
-    ['/infraestructura', '07-infraestructura.png'],
-  ];
-  for (const [ruta, nombre] of rutas) {
+  for (const [ruta, nombre] of PANTALLAS) {
     await navigate(BASE_URL + ruta);
     await screenshot(nombre);
   }

@@ -1,6 +1,12 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
 import { demoApiAdapter } from '@/lib/demo-api';
 
+const MODO_CONSULTA_WEB = window.location.pathname === '/app/consulta';
+const USAR_API_DEMO =
+  import.meta.env.VITE_APP_DEMO === 'true' ||
+  import.meta.env.VITE_APP_MOBILE === 'true' ||
+  MODO_CONSULTA_WEB;
+
 /**
  * Cliente HTTP del panel.
  *
@@ -13,7 +19,7 @@ export const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api',
   timeout: 30_000,
   headers: { 'Content-Type': 'application/json' },
-  ...(import.meta.env.VITE_APP_DEMO === 'true' ? { adapter: demoApiAdapter } : {}),
+  ...(USAR_API_DEMO ? { adapter: demoApiAdapter } : {}),
 });
 
 /* ------------------------------------------------------------------ */
