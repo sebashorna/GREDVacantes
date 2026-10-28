@@ -5,35 +5,42 @@ import { ExternalLink, FileText } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 
 interface PdfRenderPlugin {
-  renderizar(opciones: { ruta: string }): Promise<{ paginas: string[]; total: number }>;
+  renderizar(opciones: { url: string }): Promise<{ paginas: string[]; total: number }>;
 }
 
 const PdfRender = registerPlugin<PdfRenderPlugin>('PdfRender');
 
-function esPdfLocalNativo(valor: string): boolean {
-  return (
-    Capacitor.isNativePlatform() &&
-    valor.startsWith('/') &&
-    !valor.startsWith('//') &&
-    /\.pdf$/i.test(valor)
-  );
+function esPdfNativo(valor: string): boolean {
+  if (!Capacitor.isNativePlatform() || !/\.pdf$/i.test(valor)) return false;
+  if (valor.startsWith('/') && !valor.startsWith('//')) return true;
+  try {
+    const url = new URL(valor);
+    return (
+      (url.protocol === 'https:' || url.protocol === 'http:') &&
+      url.pathname.startsWith('/uploads/')
+    );
+  } catch {
+    return false;
+  }
 }
 
-function PaginasPdfNativo({ ruta, titulo }: { ruta: string; titulo: string }) {
+function PaginasPdfNativo({ url, titulo }: { url: string; titulo: string }) {
   const [paginas, setPaginas] = useState<string[] | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let activo = true;
-    PdfRender.renderizar({ ruta })
+    PdfRender.renderizar({ url })
       .then((r) => activo && setPaginas(r.paginas))
-      .catch(() => activo && setError(true));
+      .catch((causa: unknown) =>
+        activo && setError(causa instanceof Error ? causa.message : 'Error desconocido'),
+      );
     return () => {
       activo = false;
     };
-  }, [ruta]);
+  }, [url]);
 
-  if (error) return <p className="p-6 text-center text-sm text-error">No se pudo mostrar el documento.</p>;
+  if (error) return <p role="alert" className="p-6 text-center text-sm text-error">No se pudo mostrar el documento: {error}</p>;
   if (!paginas) return <p className="p-6 text-center text-sm text-on-surface-variant">Cargando documento...</p>;
   return (
     <div className="max-h-[70vh] space-y-3 overflow-y-auto rounded-lg bg-surface-container p-2">
@@ -82,6 +89,7 @@ export function VistaPreviaArchivo({
   const [abierto, setAbierto] = useState(false);
   const urlValida = esUrlWeb(url);
   const esVistaDeImagen = urlValida && (tipo === 'imagen' || (tipo === 'auto' && esImagen(url)));
+  const esPdfMovil = esPdfNativo(url);
 
   return (
     <>
@@ -104,8 +112,8 @@ export function VistaPreviaArchivo({
           <div className="flex min-h-[50vh] items-center justify-center rounded-lg bg-on-surface p-2">
             <img src={url} alt={titulo} className="max-h-[70vh] max-w-full object-contain" />
           </div>
-        ) : esPdfLocalNativo(url) ? (
-          <PaginasPdfNativo ruta={url} titulo={titulo} />
+        ) : esPdfMovil ? (
+          <PaginasPdfNativo url={url} titulo={titulo} />
         ) : (
           <div className="h-[70vh] min-h-[24rem] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
             <iframe
@@ -116,7 +124,7 @@ export function VistaPreviaArchivo({
             />
           </div>
         )}
-        {!esPdfLocalNativo(url) && (
+        {!esPdfMovil && (
           <div className="mt-3 flex justify-end">
             <a
               href={url}

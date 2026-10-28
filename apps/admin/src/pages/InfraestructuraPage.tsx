@@ -77,6 +77,7 @@ interface DatosLocal {
   avanceObras: string;
   presupuesto: string;
   fichaEdanUrl: string;
+  fotos: string[];
   ultimaInspeccion: string;
 }
 
@@ -94,6 +95,7 @@ function formularioInicial(local?: LocalEscolar): DatosLocal {
     avanceObras: local?.avanceObras == null ? '' : String(local.avanceObras),
     presupuesto: local?.presupuesto == null ? '' : String(local.presupuesto),
     fichaEdanUrl: local?.fichaEdanUrl ?? '',
+    fotos: local?.fotos ?? [],
     ultimaInspeccion: local?.ultimaInspeccion?.slice(0, 10) ?? '',
   };
 }
@@ -110,6 +112,7 @@ function FormularioLocal({
   const queryClient = useQueryClient();
   const instituciones = useInstitucionesOpciones(inicial?.ie?.codigoModular ?? '');
   const [datos, setDatos] = useState(() => formularioInicial(inicial));
+  const [subiendoArchivo, setSubiendoArchivo] = useState(false);
   const guardar = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -125,6 +128,7 @@ function FormularioLocal({
         avanceObras: datos.avanceObras ? Number(datos.avanceObras) : null,
         presupuesto: datos.presupuesto ? Number(datos.presupuesto) : null,
         fichaEdanUrl: datos.fichaEdanUrl.trim() || null,
+        fotos: datos.fotos,
         ultimaInspeccion: datos.ultimaInspeccion
           ? new Date(`${datos.ultimaInspeccion}T00:00:00`).toISOString()
           : null,
@@ -242,6 +246,16 @@ function FormularioLocal({
         valor={datos.ultimaInspeccion}
         onChange={(valor) => actualizar('ultimaInspeccion', valor)}
       />
+      <div className="md:col-span-2">
+        <CampoCargaArchivo
+          etiqueta="Fotos del local y sus aulas (opcional)"
+          tipo="imagen"
+          maxArchivos={10}
+          archivos={datos.fotos}
+          onChange={(fotos) => actualizar('fotos', fotos)}
+          onSubiendoChange={setSubiendoArchivo}
+        />
+      </div>
       <div>
         <CampoTexto
           etiqueta="URL de ficha EDAN (opcional)"
@@ -255,6 +269,7 @@ function FormularioLocal({
             tipo="pdf"
             archivos={datos.fichaEdanUrl ? [datos.fichaEdanUrl] : []}
             onChange={(archivos) => actualizar('fichaEdanUrl', archivos[0] ?? '')}
+            onSubiendoChange={setSubiendoArchivo}
           />
         </div>
       </div>
@@ -267,10 +282,10 @@ function FormularioLocal({
         Cuenta con conectividad de fibra
       </label>
       <div className="md:col-span-2 flex justify-end gap-2">
-        <Boton variante="secundario" onClick={onCancelar} disabled={guardar.isPending}>Cancelar</Boton>
+        <Boton variante="secundario" onClick={onCancelar} disabled={guardar.isPending || subiendoArchivo}>Cancelar</Boton>
         <Boton
           type="submit"
-          disabled={guardar.isPending || instituciones.isLoading || instituciones.isError || !datos.ieId || !datos.codigoLocal.trim()}
+          disabled={guardar.isPending || subiendoArchivo || instituciones.isLoading || instituciones.isError || !datos.ieId || !datos.codigoLocal.trim()}
         >
           {guardar.isPending ? 'Guardando...' : inicial ? 'Guardar cambios' : 'Registrar local'}
         </Boton>
@@ -610,6 +625,30 @@ export function InfraestructuraPage() {
                           </div>
                         )}
                       </dl>
+                      {local.fotos?.length > 0 && (
+                        <div className="rounded-lg border border-outline-variant/70 p-3">
+                          <h4 className="mb-2 text-sm font-semibold text-on-surface">Fotos del local y sus aulas</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {local.fotos.map((foto, indice) => (
+                              <VistaPreviaArchivo
+                                key={`${foto}-${indice}`}
+                                url={foto}
+                                titulo={`Foto ${indice + 1} del local escolar`}
+                                tipo="imagen"
+                              >
+                                <span className="block h-24 w-32 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low transition hover:ring-2 hover:ring-primary">
+                                  <img
+                                    src={foto}
+                                    alt={`Foto ${indice + 1} del local escolar`}
+                                    loading="lazy"
+                                    className="h-full w-full object-cover"
+                                  />
+                                </span>
+                              </VistaPreviaArchivo>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <section aria-label={`Alertas recientes de ${local.ie?.nombre ?? 'la institución'}`} className="rounded-lg border border-outline-variant/70 p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <h4 className="text-sm font-semibold text-on-surface">Alertas recientes</h4>

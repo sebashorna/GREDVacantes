@@ -260,7 +260,21 @@ export const localCreateSchema = z.object({
   capacidadAlumnos: z.coerce.number().int().min(0).max(10000).optional().nullable(),
   avanceObras: z.coerce.number().min(0).max(100).optional().nullable(),
   presupuesto: z.coerce.number().min(0).optional().nullable(),
-  fichaEdanUrl: z.string().trim().url('URL invalida').optional().nullable(),
+  fichaEdanUrl: z
+    .string()
+    .trim()
+    .refine((valor) => {
+      if (valor.startsWith('/') && !valor.startsWith('//')) return true;
+      try {
+        const url = new URL(valor);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }, 'Ingresa una URL web o una ruta publica valida')
+    .optional()
+    .nullable(),
+  fotos: z.array(z.string().trim()).max(10, 'Maximo 10 fotos por local').default([]),
   ultimaInspeccion: z.coerce.date().optional().nullable(),
 });
 export type LocalCreateInput = z.infer<typeof localCreateSchema>;

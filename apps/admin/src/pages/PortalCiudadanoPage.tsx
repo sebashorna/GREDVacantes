@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
@@ -279,6 +279,8 @@ const IMAGENES_COMUNICADOS = [
   },
 ] as const;
 
+const LIMITE_VISTA_PREVIA = 4;
+
 const FOTOS_INSTITUCIONES = [
   {
     termino: 'san jose',
@@ -305,6 +307,11 @@ const FOTOS_INSTITUCIONES = [
 function fotoInstitucion(nombre: string) {
   const nombreNormalizado = normalizarBusqueda(nombre);
   return FOTOS_INSTITUCIONES.find((foto) => nombreNormalizado.includes(foto.termino)) ?? null;
+}
+
+// En la vista previa se muestran primero los registros con imagen o documento.
+function conPrioridad<T>(items: T[], tiene: (item: T) => boolean): T[] {
+  return [...items.filter(tiene), ...items.filter((item) => !tiene(item))];
 }
 
 function imagenIlustrativaComunicado(categoria: string, titulo: string, indice: number) {
@@ -355,6 +362,16 @@ export function PortalCiudadanoPage({
   const [busquedaConvocatoria, setBusquedaConvocatoria] = useState('');
   const [faseConvocatoria, setFaseConvocatoria] = useState('');
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
+  const [mostrarAnuncioDescarga, setMostrarAnuncioDescarga] = useState(false);
+  const anuncioDescargaRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (mostrarAnuncioDescarga) {
+      anuncioDescargaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      anuncioDescargaRef.current?.focus({ preventScroll: true });
+    }
+  }, [mostrarAnuncioDescarga]);
+
   const resumenVacantes = useQuery({
     queryKey: ['publico', 'vacantes-resumen'],
     queryFn: async () => {
@@ -619,7 +636,7 @@ export function PortalCiudadanoPage({
               </p>
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {vacantesFiltradas.map((vacante) => {
+                {conPrioridad(vacantesFiltradas, (v) => fotoInstitucion(v.ie.nombre) !== null).slice(0, LIMITE_VISTA_PREVIA).map((vacante) => {
                   const foto = fotoInstitucion(vacante.ie.nombre);
                   return (
                     <article key={vacante.id} className="rounded-xl border border-outline-variant p-5">
@@ -657,6 +674,15 @@ export function PortalCiudadanoPage({
                 })}
               </div>
             )}
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setMostrarAnuncioDescarga(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-primary px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white"
+              >
+                Ver más <ArrowRight size={17} aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </section>
 
@@ -713,7 +739,7 @@ export function PortalCiudadanoPage({
               </p>
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {plazasFiltradas.map((plaza) => {
+                {conPrioridad(plazasFiltradas, (p) => fotoInstitucion(p.ie.nombre) !== null).slice(0, LIMITE_VISTA_PREVIA).map((plaza) => {
                   const foto = fotoInstitucion(plaza.ie.nombre);
                   return (
                     <article key={plaza.id} className="rounded-xl border border-outline-variant p-5">
@@ -754,6 +780,15 @@ export function PortalCiudadanoPage({
                 })}
               </div>
             )}
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setMostrarAnuncioDescarga(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-primary px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white"
+              >
+                Ver más <ArrowRight size={17} aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </section>
 
@@ -806,7 +841,7 @@ export function PortalCiudadanoPage({
             </p>
           ) : (
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              {convocatoriasFiltradas.map((convocatoria) => (
+              {conPrioridad(convocatoriasFiltradas, (c) => Boolean(c.pdfMeritosUrl)).slice(0, LIMITE_VISTA_PREVIA).map((convocatoria) => (
                 <article key={convocatoria.id} className="rounded-xl border border-outline-variant bg-white p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(convocatoria.fase)} · {convocatoria.numeroRD}</p>
                   <h3 className="mt-2 text-lg font-semibold">{convocatoria.titulo}</h3>
@@ -827,6 +862,15 @@ export function PortalCiudadanoPage({
               ))}
             </div>
           )}
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setMostrarAnuncioDescarga(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-primary px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white"
+            >
+              Ver más <ArrowRight size={17} aria-hidden="true" />
+            </button>
+          </div>
         </section>
 
         <section id="comunicados" className="bg-[#fcf1ef]">
@@ -844,7 +888,7 @@ export function PortalCiudadanoPage({
               </p>
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {comunicados.data?.map((comunicado, indice) => {
+                {comunicados.data?.slice(0, LIMITE_VISTA_PREVIA).map((comunicado, indice) => {
                   const imagen = comunicado.imagenUrl
                     ? {
                         url: comunicado.imagenUrl,
@@ -876,9 +920,47 @@ export function PortalCiudadanoPage({
                 })}
               </div>
             )}
+            <div className="mt-6 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setMostrarAnuncioDescarga(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-primary px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white"
+              >
+                Ver más <ArrowRight size={17} aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </section>
       </main>
+
+      {mostrarAnuncioDescarga && (
+        <section
+          ref={anuncioDescargaRef}
+          id="anuncio-descarga-app"
+          tabIndex={-1}
+          aria-labelledby="anuncio-descarga-titulo"
+          className="scroll-mt-6 border-y-4 border-secondary bg-primary px-4 py-10 text-white outline-none ring-4 ring-secondary/50 sm:px-6"
+        >
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-5 text-center sm:flex-row sm:justify-between sm:text-left">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-wide text-white/75">Lleva el portal contigo</p>
+              <h2 id="anuncio-descarga-titulo" className="mt-1 text-2xl font-bold">
+                Consulta desde la aplicación móvil
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-white/85">
+                Descarga Educa Lambayeque para revisar vacantes, plazas, convocatorias y comunicados desde tu teléfono.
+              </p>
+            </div>
+            <Link
+              to="/descargar"
+              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-white px-5 py-3 font-semibold text-primary transition hover:bg-[#fff1ec]"
+            >
+              <Download size={18} aria-hidden="true" />
+              Descargar aplicación
+            </Link>
+          </div>
+        </section>
+      )}
 
       <footer className="border-t border-outline-variant bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-on-surface-variant sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">

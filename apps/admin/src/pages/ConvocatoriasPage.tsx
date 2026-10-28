@@ -59,6 +59,7 @@ interface FormularioProps {
 }
 function FormularioConvocatoria({ inicial, onExito, onCancelar }: FormularioProps) {
   const queryClient = useQueryClient();
+  const [subiendoPdf, setSubiendoPdf] = useState(false);
   const form = useForm<FormDatos>({
     resolver: zodResolver(formSchema),
     defaultValues: inicial
@@ -148,13 +149,14 @@ function FormularioConvocatoria({ inicial, onExito, onCancelar }: FormularioProp
               tipo="pdf"
               archivos={field.value ? [field.value] : []}
               onChange={(archivos) => field.onChange(archivos[0] ?? '')}
+              onSubiendoChange={setSubiendoPdf}
             />
           </div>
         )} />
       </div>
       <div className="md:col-span-2 flex justify-end gap-3 pt-2">
-        <Boton variante="secundario" onClick={onCancelar} disabled={guardar.isPending}>Cancelar</Boton>
-        <Boton type="submit" disabled={guardar.isPending}>{guardar.isPending ? 'Guardando...' : inicial ? 'Guardar cambios' : 'Crear convocatoria'}</Boton>
+        <Boton variante="secundario" onClick={onCancelar} disabled={guardar.isPending || subiendoPdf}>Cancelar</Boton>
+        <Boton type="submit" disabled={guardar.isPending || subiendoPdf}>{guardar.isPending ? 'Guardando...' : inicial ? 'Guardar cambios' : 'Crear convocatoria'}</Boton>
       </div>
     </form>
   );

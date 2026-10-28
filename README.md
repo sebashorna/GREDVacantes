@@ -11,8 +11,8 @@ Portal ciudadano y panel administrativo de la Gerencia Regional de Educación de
 - En modo de demostración, el APK presenta datos ficticios y asigna el rol de consulta `CONSULTOR`: no muestra acciones para crear, editar, eliminar o gestionar registros. Las solicitudes que modifican datos también se rechazan en el adaptador de demostración móvil.
 - El APK no requiere conexión a la nube para esta demostración. El manifiesto de Android solo solicita acceso a Internet, necesario para cargar recursos y consultar la API cuando esté disponible; no solicita permisos de cámara ni almacenamiento.
 - El panel administrativo sigue siendo una aplicación web independiente, con su propio inicio de sesión y permisos.
-- En modo de demostración web se pueden adjuntar fotos a las alertas y PDF de bases/ficha EDAN a las convocatorias y locales. Los archivos se guardan en el almacenamiento local del navegador, no se suben a un servidor y tienen un límite de 2 MB por registro.
-- En modo conectado, la carga local de archivos queda deshabilitada hasta contar con almacenamiento en el servidor; se pueden seguir usando enlaces públicos.
+- En modo de demostración web se pueden adjuntar fotos a alertas e infraestructura y PDF a convocatorias y fichas EDAN. Se guardan en el navegador, con un límite de 2 MB por registro.
+- En modo conectado, los archivos se cargan a la API autenticada, que valida el contenido y los conserva en el directorio `DIRECTORIO_ARCHIVOS` (máximo 10 MB por archivo). Configura ese directorio en almacenamiento persistente antes de desplegar; Docker Compose usa el volumen `api_uploads`. Los enlaces de descarga son públicos para que el portal ciudadano y la app puedan mostrar las imágenes y documentos.
 
 La configuración de Capacitor está en `apps/admin/capacitor.config.json`; el proyecto nativo está en `apps/admin/android/`.
 
@@ -24,6 +24,7 @@ El repositorio incluye `railway.json` y `apps/api/Dockerfile`. En Railway crea u
 - `JWT_SECRET` y `JWT_REFRESH_SECRET`: dos valores secretos distintos, generados con `node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"`.
 - `CORS_ORIGINS`: `https://localhost` para las peticiones del APK.
 - `NODE_ENV`: `production`.
+- `DIRECTORIO_ARCHIVOS`: directorio de almacenamiento para cargas. En Railway, monta un volumen persistente en esta ruta; sin un volumen, los archivos podrían perderse al redesplegar.
 
 Railway ejecutará las migraciones existentes antes del despliegue y comprobará `/health`. Configura estos valores directamente en el panel de Railway; no los guardes en el repositorio ni los compartas en el chat. El despliegue no carga automáticamente datos de demostración.
 

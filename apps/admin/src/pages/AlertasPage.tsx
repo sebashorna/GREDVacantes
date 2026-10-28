@@ -119,6 +119,15 @@ function esUrlSegura(valor: string): boolean {
   }
 }
 
+function esArchivoAdjunto(valor: string): boolean {
+  if (valor.startsWith('data:')) return true;
+  try {
+    return new URL(valor, window.location.origin).pathname.startsWith('/uploads/');
+  } catch {
+    return false;
+  }
+}
+
 export function AlertasPage() {
   const { usuario, puede } = useAuth();
   const queryClient = useQueryClient();
@@ -132,6 +141,7 @@ export function AlertasPage() {
   const [alertaEditando, setAlertaEditando] = useState<Alerta | null>(null);
   const [formulario, setFormulario] = useState<FormularioAlerta>(FORMULARIO_VACIO);
   const [fotosAdjuntas, setFotosAdjuntas] = useState<string[]>([]);
+  const [subiendoFotos, setSubiendoFotos] = useState(false);
   const [localBusqueda, setLocalBusqueda] = useState('');
   const [localSeleccionado, setLocalSeleccionado] = useState<LocalOpcion | null>(null);
   const [alertaEliminando, setAlertaEliminando] = useState<Alerta | null>(null);
@@ -241,9 +251,7 @@ export function AlertasPage() {
 
   function abrirEdicion(alerta: Alerta) {
     const fotos = alerta.fotos ?? [];
-    const imagenesAdjuntas = fotos.filter((foto) =>
-      /^data:image\/(?:avif|jpeg|png|webp);base64,/i.test(foto),
-    );
+    const imagenesAdjuntas = fotos.filter(esArchivoAdjunto);
     setAlertaEditando(alerta);
     setFormulario({
       tipo: alerta.tipo as TipoAlerta,
@@ -269,6 +277,10 @@ export function AlertasPage() {
 
   function enviarFormulario(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
+    if (subiendoFotos) {
+      toast.error('Espera a que termine la carga de las imágenes.');
+      return;
+    }
     if (!localSeleccionado) {
       toast.error('Seleccione el local escolar relacionado con la alerta.');
       return;
@@ -280,7 +292,7 @@ export function AlertasPage() {
       .filter(Boolean);
     const fotos = [...enlaces, ...fotosAdjuntas];
     if (fotos.length > 10) {
-      toast.error('Puede registrar como máximo 10 enlaces de evidencia.');
+      toast.error('Puede registrar como máximo 10 evidencias entre enlaces e imágenes.');
       return;
     }
 
@@ -674,13 +686,14 @@ export function AlertasPage() {
               maxArchivos={10}
               archivos={fotosAdjuntas}
               onChange={setFotosAdjuntas}
+              onSubiendoChange={setSubiendoFotos}
             />
           </div>
           <div className="flex justify-end gap-2 border-t border-outline-variant pt-4">
-            <Boton variante="secundario" onClick={cerrarFormulario} disabled={guardarAlerta.isPending}>
+            <Boton variante="secundario" onClick={cerrarFormulario} disabled={guardarAlerta.isPending || subiendoFotos}>
               Cancelar
             </Boton>
-            <Boton type="submit" disabled={guardarAlerta.isPending || locales.isError}>
+            <Boton type="submit" disabled={guardarAlerta.isPending || subiendoFotos || locales.isError}>
               <Plus size={16} />
               {guardarAlerta.isPending
                 ? 'Guardando...'

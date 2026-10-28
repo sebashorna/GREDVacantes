@@ -12,7 +12,7 @@ interface DemoState {
   instituciones: DemoRow[];
 }
 
-const STORAGE_KEY = 'educa.adminDemoData.v2';
+const STORAGE_KEY = 'educa.adminDemoData.v3';
 const FECHA_DEMO = '2026-10-27T12:00:00.000Z';
 
 const UGELES = [
@@ -76,6 +76,7 @@ function createInitialState(): DemoState {
     avanceObras: 0,
     presupuesto: 0,
     fichaEdanUrl: index === 1 ? '/documentos/convocatoria-demo.pdf' : null,
+    fotos: index === 1 ? ['/Imagenes/Sanjose.png'] : [],
     ultimaInspeccion: FECHA_DEMO,
     ie,
     alertas: [],

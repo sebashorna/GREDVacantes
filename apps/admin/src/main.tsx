@@ -7,7 +7,17 @@ import { ProveedorAuth } from '@/features/auth/auth-context';
 import App from '@/App';
 import '@/styles/index.css';
 
-const queryClient = new QueryClient();
+const modoConsulta =
+  import.meta.env.VITE_APP_MOBILE === 'true' || window.location.pathname === '/app/consulta';
+
+// En consulta ciudadana los datos se refrescan solos para mostrar siempre lo más reciente.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: modoConsulta
+      ? { refetchInterval: 15_000, refetchOnWindowFocus: true, refetchOnReconnect: true, staleTime: 0 }
+      : {},
+  },
+});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -18,29 +18,37 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 /** Convierte un PDF empaquetado en la app en imágenes PNG, porque el WebView no muestra PDF. */
 @CapacitorPlugin(name = "PdfRender")
 public class PdfRenderPlugin extends Plugin {
     private static final int ANCHO_PX = 1000;
     private static final int MAX_PAGINAS = 20;
+    private static final int MAX_PDF_BYTES = 10 * 1024 * 1024;
 
     @PluginMethod
     public void renderizar(PluginCall call) {
-        String ruta = call.getString("ruta");
-        if (ruta == null || !ruta.startsWith("/") || ruta.contains("..") || !ruta.toLowerCase().endsWith(".pdf")) {
-            call.reject("Ruta de PDF no válida");
+        String url = call.getString("url");
+        if (!esUrlPdfPermitida(url)) {
+            call.reject("La dirección del PDF no es válida");
             return;
         }
         new Thread(() -> {
             File temporal = null;
             try {
                 temporal = File.createTempFile("pdf", ".pdf", getContext().getCacheDir());
-                try (InputStream entrada = getContext().getAssets().open("public" + ruta);
+                try (InputStream entrada = abrirPdf(url);
                      FileOutputStream salida = new FileOutputStream(temporal)) {
                     byte[] buffer = new byte[8192];
                     int leido;
-                    while ((leido = entrada.read(buffer)) > 0) salida.write(buffer, 0, leido);
+                    int total = 0;
+                    while ((leido = entrada.read(buffer)) > 0) {
+                        total += leido;
+                        if (total > MAX_PDF_BYTES) throw new IllegalArgumentException("El PDF supera 10 MB");
+                        salida.write(buffer, 0, leido);
+                    }
                 }
                 JSArray paginas = new JSArray();
                 try (ParcelFileDescriptor pfd = ParcelFileDescriptor.open(temporal, ParcelFileDescriptor.MODE_READ_ONLY);
@@ -69,5 +77,43 @@ public class PdfRenderPlugin extends Plugin {
                 if (temporal != null) temporal.delete();
             }
         }).start();
+    }
+
+    private boolean esUrlPdfPermitida(String valor) {
+        if (valor == null || !valor.toLowerCase().endsWith(".pdf")) return false;
+        if (valor.startsWith("/") && !valor.startsWith("//") && !valor.contains("..")) return true;
+        try {
+            URL url = new URL(valor);
+            return ("https".equals(url.getProtocol()) || "http".equals(url.getProtocol()))
+                && url.getPath().startsWith("/uploads/");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private InputStream abrirPdf(String valor) throws Exception {
+        if (valor.startsWith("/")) return getContext().getAssets().open("public" + valor);
+
+        HttpURLConnection conexion = (HttpURLConnection) new URL(valor).openConnection();
+        conexion.setConnectTimeout(15000);
+        conexion.setReadTimeout(30000);
+        conexion.setRequestMethod("GET");
+        int estado = conexion.getResponseCode();
+        if (estado < 200 || estado >= 300) {
+            conexion.disconnect();
+            throw new IllegalStateException("El servidor respondió con HTTP " + estado);
+        }
+        int longitud = conexion.getContentLength();
+        if (longitud > MAX_PDF_BYTES) {
+            conexion.disconnect();
+            throw new IllegalArgumentException("El PDF supera 10 MB");
+        }
+        return new java.io.FilterInputStream(conexion.getInputStream()) {
+            @Override
+            public void close() throws java.io.IOException {
+                super.close();
+                conexion.disconnect();
+            }
+        };
     }
 }

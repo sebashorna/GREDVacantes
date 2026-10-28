@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { EncabezadoPagina } from '@/components/EncabezadoPagina';
+import { ActualizadoEn, EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
 import { PanelFiltros } from '@/components/ui/PanelFiltros';
 import { useAuth } from '@/features/auth/auth-context';
@@ -202,6 +202,7 @@ export function DashboardPage() {
             <BadgeCheck size={26} className="text-primary" aria-hidden="true" />
             GRED Lambayeque • Oficial
           </h1>
+          <ActualizadoEn />
           <p className="max-w-md text-sm text-on-surface-variant">
             Información en tiempo real de vacantes, plazas docentes e instituciones en Chiclayo, Ferreñafe y Lambayeque.
           </p>

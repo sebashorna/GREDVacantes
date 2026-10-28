@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
+import multer from 'multer';
 
 import { requiereAuth, requiereRol } from '../../common/auth.js';
 import { auditar } from '../../common/auditoria.js';
@@ -11,6 +12,10 @@ import { parsearCSV } from './csv.js';
 import * as service from './importacion.service.js';
 import type { TipoImportacion } from './importacion.schema.js';
 const router = Router();
+const cargarArchivo = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+}).single('archivo');
 
 /** Limite de 5 importaciones por hora y por IP: las importaciones son pesadas. */
 const limitador = rateLimit({
@@ -180,6 +185,7 @@ router.post(
   limitador,
   requiereRol('ADMIN_GRED'),
   auditar({ accion: 'IMPORTAR', entidad: 'importacion' }),
+  cargarArchivo,
   async (req, res, next) => {
     try {
       const tipo = String(req.body?.tipo ?? '').toUpperCase() as TipoImportacion;
@@ -189,8 +195,7 @@ router.post(
         );
       }
 
-      const archivo = (req.files as { archivo?: { buffer: Buffer; originalname: string }[] } | undefined)
-        ?.archivo?.[0];
+      const archivo = req.file;
 
       if (!archivo) {
         throw AppError.badRequest('No se recibio el archivo. Envie el CSV en el campo "archivo"');
@@ -227,4 +232,3 @@ router.post(
 );
 
 export default router;
-

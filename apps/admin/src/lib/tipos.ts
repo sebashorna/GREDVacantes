@@ -135,6 +135,7 @@ export interface LocalEscolar {
   avanceObras: number | string | null;
   presupuesto: number | string | null;
   fichaEdanUrl: string | null;
+  fotos: string[];
   ultimaInspeccion: string | null;
   ie?: InstitucionResumen & {
     ugel?: UgelResumen | null;

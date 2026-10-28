@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import multer from 'multer';
 import { ZodError } from 'zod';
 
 import { AppError } from './errors.js';
@@ -42,6 +43,19 @@ export function errorHandler(
           campo: i.path.join('.') || '(raiz)',
           mensaje: i.message,
         })),
+      },
+    });
+    return;
+  }
+
+  if (err instanceof multer.MulterError) {
+    const demasiadoGrande = err.code === 'LIMIT_FILE_SIZE';
+    res.status(demasiadoGrande ? 413 : 400).json({
+      error: {
+        codigo: demasiadoGrande ? 'ARCHIVO_DEMASIADO_GRANDE' : 'CARGA_ARCHIVO_INVALIDA',
+        mensaje: demasiadoGrande
+          ? 'El archivo supera el límite permitido de 10 MB.'
+          : 'La carga del archivo no es válida.',
       },
     });
     return;

@@ -7,7 +7,6 @@ import express, { type Express } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import multer from 'multer';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
@@ -27,6 +26,7 @@ import alertasRoutes from './modules/alertas/alertas.routes.js';
 import comunicadosRoutes from './modules/comunicados/comunicados.routes.js';
 import importacionRoutes from './modules/importacion/importacion.routes.js';
 import publicRoutes from './modules/public/public.routes.js';
+import archivosRoutes from './modules/archivos/archivos.routes.js';
 import { auditar } from './common/auditoria.js';
 import { prisma } from './config/prisma.js';
 
@@ -72,16 +72,6 @@ export function crearApp(): Express {
     app.use(morgan('combined'));
   }
 
-  // Carga de archivos (importacion masiva). El limite de tamano se valida
-  // tambien en el controlador, para dar un mensaje de negocio claro.
-  const almacenamiento = multer.memoryStorage();
-  app.use(
-    multer({
-      storage: almacenamiento,
-      limits: { fileSize: 10 * 1024 * 1024 },
-    }).fields([{ name: 'archivo', maxCount: 1 }]),
-  );
-
   // Limite global de peticiones: evita abuso accidental.
   app.use(
     '/api',
@@ -121,6 +111,12 @@ export function crearApp(): Express {
     customSiteTitle: 'API Educa Lambayeque',
   }));
   app.get('/openapi.json', (_req, res) => res.json(especificacion));
+  app.use('/uploads', express.static(path.resolve(config.DIRECTORIO_ARCHIVOS), {
+    dotfiles: 'deny',
+    index: false,
+    maxAge: '1d',
+    fallthrough: false,
+  }));
 
   /* ----------------------- Salud y estado ---------------------- */
 
@@ -146,6 +142,7 @@ export function crearApp(): Express {
   app.use('/api/alertas', alertasRoutes);
   app.use('/api/comunicados', comunicadosRoutes);
   app.use('/api/importacion', importacionRoutes);
+  app.use('/api/archivos', archivosRoutes);
   app.use('/api/public', publicRoutes);
 
   /* ----------------------- Manejo de errores -------------------- */
