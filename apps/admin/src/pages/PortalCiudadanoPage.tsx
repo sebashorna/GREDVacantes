@@ -355,7 +355,8 @@ export function PortalCiudadanoPage({
   modoPresentacion?: boolean;
   modoDemostracion?: boolean;
 }) {
-  const esDemostracion = modoAplicacion && modoDemostracion;
+  const esDemostracion =
+    modoDemostracion || import.meta.env.VITE_APP_DEMO === 'true';
   const [busqueda, setBusqueda] = useState('');
   const [busquedaPlazas, setBusquedaPlazas] = useState('');
   const [nivelPlaza, setNivelPlaza] = useState('');
