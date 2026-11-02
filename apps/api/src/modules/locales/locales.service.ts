@@ -105,13 +105,19 @@ export async function obtenerPorId(id: number) {
   return local;
 }
 
+// `fotos` aún no existe en la tabla de locales; se descarta hasta migrar la BD.
+function sinFotos<T extends { fotos?: unknown }>(datos: T): Omit<T, 'fotos'> {
+  const { fotos: _fotos, ...resto } = datos;
+  return resto;
+}
+
 export async function crear(datos: LocalCreateInput) {
-  const data = localCreateSchema.parse(datos);
+  const data = sinFotos(localCreateSchema.parse(datos));
   return prisma.localEscolar.create({ data, include: INCLUYE });
 }
 
 export async function actualizar(id: number, datos: LocalUpdateInput) {
-  const data = localUpdateSchema.parse(datos);
+  const data = sinFotos(localUpdateSchema.parse(datos));
   const existe = await prisma.localEscolar.findUnique({ where: { id } });
   if (!existe) throw AppError.noEncontrado('Local escolar');
   return prisma.localEscolar.update({ where: { id }, data, include: INCLUYE });

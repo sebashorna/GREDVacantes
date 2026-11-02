@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { ActualizadoRegistro } from '@/components/ui/ActualizadoRegistro';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
@@ -551,6 +552,7 @@ export function InfraestructuraPage() {
                       </div>
                     </div>
 
+                    <ActualizadoRegistro fecha={local.updatedAt} className="mt-2" />
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Badge tono={estadoTono}>{ETIQUETAS_ESTADO[local.estado] ?? local.estado}</Badge>
                       {local._count && local._count.alertas > 0 && (

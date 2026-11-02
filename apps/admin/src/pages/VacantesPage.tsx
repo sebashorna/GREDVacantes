@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ActualizadoRegistro } from '@/components/ui/ActualizadoRegistro';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -379,6 +380,7 @@ export function VacantesPage() {
                       </span>
                     </div>
 
+                    <ActualizadoRegistro fecha={vacante.updatedAt} className="mt-1" />
                     <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
                       <dl className="space-y-1 text-sm text-on-surface-variant">
                         <div>

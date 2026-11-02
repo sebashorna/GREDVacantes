@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { ActualizadoRegistro } from '@/components/ui/ActualizadoRegistro';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Check, ChevronRight, FileText, GraduationCap, MapPin, Pencil, Search, Trash2 } from "lucide-react";
@@ -417,6 +418,7 @@ export function PlazasPage() {
                   </div>
                 </div>
 
+                <ActualizadoRegistro fecha={plaza.updatedAt} className="mt-2" />
                 <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-1 border-t border-outline-variant/60 pt-3 text-sm text-on-surface-variant sm:grid-cols-2">
                   <div>
                     <dt className="inline font-semibold text-on-surface">Nivel: </dt>

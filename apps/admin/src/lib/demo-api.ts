@@ -12,7 +12,7 @@ interface DemoState {
   instituciones: DemoRow[];
 }
 
-const STORAGE_KEY = 'educa.adminDemoData.v3';
+const STORAGE_KEY = 'educa.adminDemoData.v4';
 const FECHA_DEMO = '2026-10-27T12:00:00.000Z';
 
 const UGELES = [
@@ -128,12 +128,14 @@ function createInitialState(): DemoState {
     id: item.id, tipo: item.tipo, estado: item.estado, descripcion: item.descripcion, createdAt: item.createdAt,
   }));
 
+  const conFecha = <T extends object>(filas: T[]) => filas.map((fila) => ({ ...fila, updatedAt: FECHA_DEMO }));
+
   return {
-    vacantes,
-    plazas,
-    convocatorias,
-    alertas,
-    locales,
+    vacantes: conFecha(vacantes),
+    plazas: conFecha(plazas),
+    convocatorias: conFecha(convocatorias),
+    alertas: conFecha(alertas),
+    locales: conFecha(locales),
     instituciones,
     comunicados: [
       {
@@ -374,7 +376,7 @@ export const demoApiAdapter: AxiosAdapter = async (config) => {
       const collection = path.split('/').pop() as keyof DemoState;
       const rows = state[collection];
       if (!Array.isArray(rows)) throw new Error(`Endpoint de demostración POST no soportado: ${path}`);
-      const created = { ...requestPayload(config.data), id: Date.now(), createdAt: FECHA_DEMO };
+      const created = { ...requestPayload(config.data), id: Date.now(), createdAt: FECHA_DEMO, updatedAt: new Date().toISOString() };
       rows.unshift(created);
       saveState(state);
       data = created;
@@ -393,6 +395,7 @@ export const demoApiAdapter: AxiosAdapter = async (config) => {
         rows[index] = path.endsWith('/estado')
           ? { ...rows[index], estado: payload.estado, observacion: payload.observacion, resueltoEn: payload.estado === 'RESUELTA' ? FECHA_DEMO : null }
           : { ...rows[index], ...payload };
+        rows[index] = { ...rows[index], updatedAt: new Date().toISOString() };
         withRelationships(state);
         saveState(state);
         data = rows[index];

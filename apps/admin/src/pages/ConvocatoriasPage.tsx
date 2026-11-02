@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ActualizadoRegistro } from '@/components/ui/ActualizadoRegistro';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -214,6 +215,7 @@ export function ConvocatoriasPage() {
             {c.titulo}
           </button>
           <p className="text-xs text-on-surface-variant">{c.numeroRD}</p>
+          <ActualizadoRegistro fecha={c.updatedAt} className="mt-0.5" />
         </div>
       ),
     },

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { ActualizadoRegistro } from '@/components/ui/ActualizadoRegistro';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -446,9 +447,12 @@ export function AlertasPage() {
                       {alerta.descripcion}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5 text-xs text-on-surface-variant sm:justify-end">
-                    <CalendarClock size={15} />
-                    <time dateTime={alerta.createdAt}>{fechaHora(alerta.createdAt)}</time>
+                  <div className="flex shrink-0 flex-col items-start gap-1 text-xs text-on-surface-variant sm:items-end">
+                    <span className="flex items-center gap-1.5">
+                      <CalendarClock size={15} />
+                      <time dateTime={alerta.createdAt}>{fechaHora(alerta.createdAt)}</time>
+                    </span>
+                    <ActualizadoRegistro fecha={alerta.updatedAt} />
                   </div>
                 </div>
 

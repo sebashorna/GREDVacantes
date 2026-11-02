@@ -31,6 +31,7 @@ export interface Convocatoria {
   activo: boolean;
   descripcion: string | null;
   pdfMeritosUrl?: string | null;
+  updatedAt?: string;
   _count?: { plazas: number };
 }
 
@@ -47,6 +48,7 @@ export interface Vacante {
   cupoTotal: number;
   cupoDisponibles: number;
   estado: string;
+  updatedAt?: string;
   ie?: InstitucionResumen & {
     telefono?: string | null;
     whatsapp?: string | null;
@@ -78,6 +80,7 @@ export interface Plaza {
   tipo: string;
   cantidad: number;
   estado: string;
+  updatedAt?: string;
   ie?: InstitucionResumen & {
     ugel?: UgelResumen | null;
     distrito?: { id: number; nombre: string } | null;
@@ -111,6 +114,7 @@ export interface Alerta {
   observacion: string | null;
   resueltoEn: string | null;
   createdAt: string;
+  updatedAt?: string;
   ie?: InstitucionResumen | null;
   localEscolar?: {
     id: number;
@@ -137,6 +141,7 @@ export interface LocalEscolar {
   fichaEdanUrl: string | null;
   fotos: string[];
   ultimaInspeccion: string | null;
+  updatedAt?: string;
   ie?: InstitucionResumen & {
     ugel?: UgelResumen | null;
     distrito?: {
