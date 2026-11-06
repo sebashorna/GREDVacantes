@@ -4,6 +4,13 @@ import { prisma } from '../../config/prisma.js';
 
 const router = Router();
 
+// Los datos publicos cambian poco: una cache corta absorbe los picos de
+// trafico (navegador/CDN) y los cambios del panel se ven en menos de ~30 s.
+router.use((_req, res, next) => {
+  res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+  next();
+});
+
 /**
  * Endpoints publicos (sin autenticacion).
  *

@@ -1,83 +1,92 @@
 # Educa Lambayeque
 
-Portal ciudadano y panel administrativo de la Gerencia Regional de Educación de Lambayeque.
+Portal ciudadano, panel administrativo y aplicación Android de la Gerencia Regional de Educación de Lambayeque.
 
-## Experiencia ciudadana y Android
+## Estado actual
 
-- La página web `/` es el portal ciudadano adaptable; se muestra como sitio web tanto en computadora como en teléfono.
-- El botón «Descargar aplicación» lleva a `/descargar`, desde donde se descarga el APK real de demostración incluido en `apps/admin/public/downloads/`.
-- En Android, abre el APK descargado y confirma la instalación si el teléfono lo solicita. No se requiere depuración USB.
-- El APK abre directamente las pantallas de consulta de datos (dashboard, vacantes, plazas, convocatorias, alertas e infraestructura), sin mostrar el landing ciudadano y sin solicitar login. En teléfonos, estos módulos se navegan desde una barra inferior fija con todas las opciones.
-- En modo de demostración, el APK presenta datos ficticios y asigna el rol de consulta `CONSULTOR`: no muestra acciones para crear, editar, eliminar o gestionar registros. Las solicitudes que modifican datos también se rechazan en el adaptador de demostración móvil.
-- El APK no requiere conexión a la nube para esta demostración. El manifiesto de Android solo solicita acceso a Internet, necesario para cargar recursos y consultar la API cuando esté disponible; no solicita permisos de cámara ni almacenamiento.
-- El panel administrativo sigue siendo una aplicación web independiente, con su propio inicio de sesión y permisos.
-- En modo de demostración web se pueden adjuntar fotos a alertas e infraestructura y PDF a convocatorias y fichas EDAN. Se guardan en el navegador, con un límite de 2 MB por registro.
-- En modo conectado, los archivos se cargan a la API autenticada, que valida el contenido y los conserva en el directorio `DIRECTORIO_ARCHIVOS` (máximo 10 MB por archivo). Configura ese directorio en almacenamiento persistente antes de desplegar; Docker Compose usa el volumen `api_uploads`. Los enlaces de descarga son públicos para que el portal ciudadano y la app puedan mostrar las imágenes y documentos.
+El proyecto está en etapa de demostración. Los datos de ejemplo no son oficiales y no deben utilizarse para tomar decisiones reales. La conexión con la base de datos real y la publicación de una versión de producción siguen pendientes.
 
-La configuración de Capacitor está en `apps/admin/capacitor.config.json`; el proyecto nativo está en `apps/admin/android/`.
+El objetivo de la integración es que el panel administre la información y que el landing y la APK consulten la misma fuente a través de la API. **Esto aún no está resuelto para las tres experiencias**:
 
-### Desplegar la API en Railway
+- La demo guarda datos en el almacenamiento local del navegador o de la aplicación. Estos datos no se sincronizan entre dispositivos.
+- En modo demo, el landing usa datos de ejemplo propios, distintos de los del adaptador de demostración del panel.
+- El código móvil activa el adaptador de demostración incluso si se configura `VITE_API_URL`. Por tanto, configurar esa variable no conecta actualmente la APK a la API.
 
-El repositorio incluye `railway.json` y `apps/api/Dockerfile`. En Railway crea un proyecto con PostgreSQL y un servicio desde este repositorio usando el Dockerfile configurado. Define las variables del servicio de API en Railway:
+La aplicación Android es una versión de consulta: abre directamente los módulos, sin iniciar sesión, con el rol `CONSULTOR` y sin acciones de administración. La simulación web está disponible en `/app`. La navegación del teléfono tiene una barra inferior y un acceso a alertas en el encabezado.
 
-- `DATABASE_URL`: referencia a la variable `DATABASE_URL` del servicio PostgreSQL de Railway.
-- `JWT_SECRET` y `JWT_REFRESH_SECRET`: dos valores secretos distintos, generados con `node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"`.
-- `CORS_ORIGINS`: `https://localhost` para las peticiones del APK.
-- `NODE_ENV`: `production`.
-- `DIRECTORIO_ARCHIVOS`: directorio de almacenamiento para cargas. En Railway, monta un volumen persistente en esta ruta; sin un volumen, los archivos podrían perderse al redesplegar.
+## Estructura
 
-Railway ejecutará las migraciones existentes antes del despliegue y comprobará `/health`. Configura estos valores directamente en el panel de Railway; no los guardes en el repositorio ni los compartas en el chat. El despliegue no carga automáticamente datos de demostración.
+| Ruta | Función |
+| --- | --- |
+| `apps/admin` | Aplicación React: landing, panel y recursos web de la APK. |
+| `apps/admin/android` | Proyecto Android con Capacitor. |
+| `apps/api` | API Express, esquema y migraciones de Prisma. |
+| `apps/shared` | Esquemas y tipos compartidos entre frontend y API. |
+| `scripts` | Herramientas auxiliares de captura, PostgreSQL local y carga. |
 
-### Preparar un APK de demostración
+Rutas web principales: `/` y `/portal` para el landing, `/descargar` para la descarga, `/app` para la simulación y `/login` para el panel. El panel incluye dashboard, convocatorias, plazas, vacantes, infraestructura y alertas. El landing muestra vacantes, plazas, convocatorias y comunicados.
 
-La demostración permite iniciar sesión localmente con cualquier correo válido y una contraseña no vacía. Abre el panel administrativo con rol de Administrador GRED, datos ficticios y operaciones locales que se guardan en el dispositivo. No autentica usuarios ni se conecta a la API; sus registros no son oficiales ni deben usarse para tomar decisiones reales.
+## Desarrollo local
 
-Instala Android SDK Platform 36, Android SDK Build-Tools 36.0.0 y Android SDK Platform-Tools desde el SDK Manager de Android Studio. El wrapper del proyecto usa Gradle 8.14.3, que no es compatible con el Java 25 incluido en esta versión de Android Studio; instala JDK 21 y selecciona esa instalación en **Settings > Build Tools > Gradle > Gradle JDK**.
-
-Copia la configuración de demostración como archivo local:
+Requisitos: Node.js 22 o superior y npm. Para usar la API conectada se necesita además PostgreSQL y un archivo de entorno válido.
 
 ```powershell
-Copy-Item apps/admin/.env.mobile.demo.example apps/admin/.env.mobile.local
+npm ci
+npm run dev:admin
 ```
 
-Sincroniza los recursos y compila el APK de depuración:
+Vite muestra la dirección local al iniciar. Por defecto, la web usa la API; sin ella, las consultas conectadas no funcionarán. Para usar datos ficticios en la web, configura `VITE_APP_DEMO=true` en `apps\admin\.env.local` antes de iniciar Vite. El inicio de sesión de esta demo acepta un correo válido y una contraseña no vacía, pero asigna el rol `CONSULTOR`; no equivale a una cuenta administrativa real.
+
+Para la API, copia `.env.example` como `apps\api\.env` si todavía no existe y configura la conexión a una **base de datos de desarrollo** y las demás variables necesarias. Nunca compartas ni subas archivos `.env` con credenciales.
 
 ```powershell
+npm run db:generate --workspace @educa/api
+npm run db:migrate
+npm run dev:api
+```
+
+`db:migrate` modifica la base de datos configurada y puede generar migraciones: úsalo solo en desarrollo. `npm run db:seed` carga datos y usuarios de ejemplo; no lo ejecutes contra una base de datos real o de producción. La API ofrece `/health` y documentación de rutas en `/docs`.
+
+El archivo `docker-compose.yml` incluye PostgreSQL y la API, pero el servicio `admin` referencia `apps/admin/Dockerfile`, que actualmente no existe. Por ello, levantar el conjunto completo con Compose está pendiente de corrección. La configuración de Compose es para desarrollo y no debe usarse tal cual en producción.
+
+## APK de demostración
+
+El botón «Descargar aplicación» lleva a `/descargar` y descarga `apps/admin/public/downloads/educa-lambayeque-demo.apk`. Es un APK de demostración firmado para depuración, no una versión de producción. El manifiesto solicita acceso a Internet, pero la demo usa datos ficticios locales y no necesita conectarse a una API.
+
+Para compilar la demo se necesitan Android SDK Platform 36, Build-Tools 36.0.0, Platform-Tools y JDK 21. El proyecto usa Gradle 8.14.3.
+
+Si existe `apps\admin\.env.mobile.local`, conserva una copia antes de reemplazarlo. Para configurar una compilación de demostración:
+
+```powershell
+Copy-Item apps\admin\.env.mobile.demo.example apps\admin\.env.mobile.local
 npm run android:sync --workspace @educa/admin
-Set-Location apps/admin/android
+Set-Location apps\admin\android
 .\gradlew.bat assembleDebug
-Set-Location ../../..
+Set-Location ..\..\..
 ```
 
-El APK de demostración se genera en `apps/admin/android/app/build/outputs/apk/debug/app-debug.apk`. Sus registros son ficticios, no funciona como servicio real y no se debe publicar como versión de producción.
+El resultado está en `apps/admin/android/app/build/outputs/apk/debug/app-debug.apk`. Para actualizar la descarga web, sustituye explícitamente el APK publicado en `apps/admin/public/downloads/` por la nueva compilación de demostración y vuelve a desplegar la web. Cambiar el código fuente no actualiza automáticamente un APK ya compilado.
 
-### Preparar un APK conectado a la API
+Para una distribución real habrá que completar la conexión móvil, comprobar el acceso a los datos autorizados y generar una versión de producción firmada. `apps/admin/.env.mobile.example` documenta variables previstas para esa integración, no una funcionalidad ya terminada.
 
-Para un APK funcional con autenticación y datos reales, primero publica la API en una URL HTTPS accesible desde el teléfono. Copia `apps/admin/.env.mobile.example` como `apps/admin/.env.mobile.local` y configura su dirección:
+## API, archivos y despliegue
 
-```dotenv
-VITE_API_URL=https://<servidor-api>/api
-VITE_APP_MOBILE=true
-```
+Las rutas públicas bajo `/api/public` ofrecen datos para el landing; las rutas administrativas requieren autenticación y sus permisos dependen del rol. Los endpoints públicos filtran qué registros muestran, por lo que un registro administrativo no siempre será visible: por ejemplo, las convocatorias deben estar activas y vigentes.
 
-La API debe permitir el origen `https://localhost` en `CORS_ORIGINS`. No uses `localhost` como host de la API: dentro de Android apunta al propio teléfono, no a la computadora.
+En modo conectado, las cargas autenticadas se guardan en `DIRECTORIO_ARCHIVOS`, con un máximo de 10 MB por archivo. El directorio necesita almacenamiento persistente. Los enlaces `/uploads` son públicos: no se deben subir documentos confidenciales. En modo demo, los adjuntos se guardan localmente y están limitados a 2 MB en total por campo de carga.
 
-Compila y sincroniza los recursos Android:
+Para Railway se incluyen `railway.json` y `apps/api/Dockerfile`: configura PostgreSQL, `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CORS_ORIGINS`, `NODE_ENV` y `DIRECTORIO_ARCHIVOS` en el servicio, y monta almacenamiento persistente para los archivos. Railway ejecuta las migraciones existentes antes del despliegue y comprueba `/health`; no carga el seed automáticamente. Revisa y valida la configuración antes de usarla con datos reales.
 
-```powershell
-npm run android:sync --workspace @educa/admin
-```
+## Herramientas auxiliares
 
-Con Android Studio instalado, genera un APK de depuración desde la carpeta `apps/admin/android/`, o desde PowerShell:
+- `scripts/carga-publica.k6.js`: prueba de carga de los cinco endpoints públicos de la API, no de la APK completa. Requiere k6 y una API conectada a una base de pruebas con volumen representativo. Ejemplo: `k6 run -e BASE_URL=http://localhost:3000 scripts\carga-publica.k6.js`. No ejecutar contra producción sin autorización y coordinación; el límite de peticiones por IP puede afectar los resultados.
+- `scripts/capturar-pantallas.mjs` y `scripts/capturar-web.mjs`: scripts locales de captura, dependientes de Chrome en una ruta específica de Windows y de un servidor Vite en el puerto 5173. Regeneran carpetas bajo `_mockups`; sus supuestos de sesión y rutas deben revisarse antes de usarlos.
+- `scripts/install-postgres-portable.ps1` y `start_api.bat`: herramientas locales específicas de Windows. Sus rutas y puertos no son consistentes entre sí y el instalador usa configuración de prueba; revisarlos antes de ejecutarlos. No están preparados para producción.
 
-```powershell
-Set-Location apps/admin/android
-.\gradlew.bat assembleDebug
-Set-Location ../../..
-```
+## Pendiente antes de datos reales
 
-El APK conectado de depuración se genera en `apps/admin/android/app/build/outputs/apk/debug/app-debug.apk`. Para distribuir la aplicación se debe generar un APK de versión firmado; no se debe publicar el APK de depuración.
-
-La página de descarga usa el archivo `apps/admin/public/downloads/educa-lambayeque-demo.apk`. Si se recompila el APK de demostración, copia el nuevo `app-debug.apk` a esa ruta antes de desplegar la web. El archivo se publica junto con la aplicación web y el botón lo descarga directamente.
-
-Esta descarga permite comprobar el flujo de página, descarga e instalación antes de tener el servicio en la nube. El APK actual es de demostración y está firmado para depuración; para una distribución pública posterior deberá generarse una versión firmada de producción y sustituirse el archivo descargable.
+1. Definir el acceso autorizado a la BD, el mapeo de datos y el despliegue de la API.
+2. Conectar la APK y verificar que landing, panel y APK consumen la fuente prevista, respetando permisos y filtros de publicación.
+3. Validar disponibilidad y refresco de cambios, incluyendo las políticas de caché y el comportamiento ante errores.
+4. Probar con datos y tráfico representativos en un entorno de pruebas; revisar capacidad, monitoreo, respaldos y recuperación.
+5. Documentar la operación y el traspaso con los datos definitivos del entorno, sin incluir secretos.
