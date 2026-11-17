@@ -1,11 +1,9 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
 import { demoApiAdapter } from '@/lib/demo-api';
 
-const MODO_CONSULTA_WEB = window.location.pathname === '/app/consulta';
 const USAR_API_DEMO =
   import.meta.env.VITE_APP_DEMO === 'true' ||
-  import.meta.env.VITE_APP_MOBILE === 'true' ||
-  MODO_CONSULTA_WEB;
+  import.meta.env.VITE_APP_MOBILE === 'true';
 
 /**
  * Cliente HTTP del panel.

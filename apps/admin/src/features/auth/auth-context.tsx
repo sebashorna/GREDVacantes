@@ -14,8 +14,7 @@ import type { Rol } from '@shared';
 
 const MODO_DEMOSTRACION = import.meta.env.VITE_APP_DEMO === 'true';
 const MODO_MOVIL = import.meta.env.VITE_APP_MOBILE === 'true';
-const MODO_CONSULTA_WEB = window.location.pathname === '/app/consulta';
-const MODO_SOLO_CONSULTA = MODO_MOVIL || MODO_CONSULTA_WEB;
+const MODO_SOLO_CONSULTA = MODO_MOVIL;
 const CLAVE_SESION_DEMOSTRACION = 'educa.demoSession';
 const USUARIO_CONSULTA: UsuarioAutenticado = {
   id: 0,

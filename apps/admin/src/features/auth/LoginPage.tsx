@@ -10,8 +10,8 @@ interface LoginPageProps {
 }
 
 const schema = z.object({
-  email: z.string().email('Ingrese un correo v&aacute;lido'),
-  password: z.string().min(1, 'La contrase&ntilde;a es obligatoria'),
+  email: z.string().email('Ingrese un correo válido'),
+  password: z.string().min(1, 'La contraseña es obligatoria'),
 });
 
 export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
@@ -28,7 +28,7 @@ export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
   const onSubmit = async (datos: z.infer<typeof schema>) => {
     const resultado = schema.safeParse(datos);
     if (!resultado.success) {
-      setError(resultado.error.errors[0]?.message ?? 'Datos inv&aacute;lidos');
+      setError(resultado.error.errors[0]?.message ?? 'Datos inválidos');
       return;
     }
     setCargando(true);
@@ -44,16 +44,20 @@ export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
   };
 
   return (
-    <div className={`flex min-h-dvh items-center justify-center bg-background p-4 ${modoAplicacion ? 'h-full overflow-y-auto' : 'h-screen'}`}>
-      <div className={`w-full bg-white border border-outline-variant ${modoAplicacion ? 'max-w-md rounded-2xl p-6 shadow-none sm:p-7' : 'max-w-md rounded-xl p-8 shadow-lg'}`}>
+    <div
+      className={`flex min-h-dvh items-center justify-center bg-[#4b180f] bg-cover bg-center p-4 ${modoAplicacion ? 'h-full overflow-y-auto' : 'h-screen'}`}
+      style={{
+        backgroundImage:
+          'linear-gradient(135deg, rgba(75, 24, 15, 0.94) 0%, rgba(129, 48, 25, 0.88) 55%, rgba(160, 71, 46, 0.8) 100%), url("/Imagenes/GoreUbigeo.jpg")',
+      }}
+    >
+      <div className={`animar-aparicion w-full max-w-md border border-white/40 bg-white/95 shadow-2xl backdrop-blur-sm ${modoAplicacion ? 'rounded-2xl p-6 sm:p-7' : 'rounded-2xl p-8'}`}>
         <div className="mb-7 text-center">
-          {modoAplicacion && (
-            <img
-              src="/Imagenes/GORE.png"
-              alt="Gobierno Regional de Lambayeque"
-              className="mx-auto mb-4 h-16 w-16 object-contain"
-            />
-          )}
+          <img
+            src="/Imagenes/GORE.png"
+            alt="Gobierno Regional de Lambayeque"
+            className="mx-auto mb-4 h-20 w-20 object-contain mix-blend-multiply"
+          />
           <h1 className="text-2xl font-bold text-primary">Educa Lambayeque</h1>
           <p className="mt-2 text-sm text-slate-500">
             {modoAplicacion ? 'Inicia sesión en el panel administrativo' : 'Panel Administrativo - Inicio de sesión'}
@@ -104,7 +108,7 @@ export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
           <button
             type="submit"
             disabled={cargando}
-            className={`w-full bg-primary-container hover:bg-primary disabled:bg-primary-fixed-dim text-white rounded-lg font-medium transition flex items-center justify-center gap-2 py-3 ${modoAplicacion ? 'text-sm' : ''}`}
+            className={`w-full bg-gradient-to-r from-primary to-primary-container hover:brightness-110 disabled:opacity-60 text-white rounded-lg font-semibold shadow-md transition flex items-center justify-center gap-2 py-3 ${modoAplicacion ? 'text-sm' : ''}`}
           >
             {cargando ? 'Ingresando...' : 'Iniciar sesión'}
           </button>

@@ -43,7 +43,7 @@ function PaginasPdfNativo({ url, titulo }: { url: string; titulo: string }) {
   if (error) return <p role="alert" className="p-6 text-center text-sm text-error">No se pudo mostrar el documento: {error}</p>;
   if (!paginas) return <p className="p-6 text-center text-sm text-on-surface-variant">Cargando documento...</p>;
   return (
-    <div className="max-h-[70vh] space-y-3 overflow-y-auto rounded-lg bg-surface-container p-2">
+    <div className="max-h-[calc(94vh-8rem)] space-y-3 overflow-y-auto rounded-lg bg-surface-container p-2">
       {paginas.map((src, i) => (
         <img key={i} src={src} alt={`${titulo}, página ${i + 1}`} className="w-full rounded bg-white shadow-sm" />
       ))}
@@ -106,16 +106,16 @@ export function VistaPreviaArchivo({
         abierto={abierto && urlValida}
         onCerrar={() => setAbierto(false)}
         titulo={titulo}
-        ancho="xl"
+        ancho="pantalla"
       >
         {esVistaDeImagen ? (
           <div className="flex min-h-[50vh] items-center justify-center rounded-lg bg-on-surface p-2">
-            <img src={url} alt={titulo} className="max-h-[70vh] max-w-full object-contain" />
+            <img src={url} alt={titulo} className="max-h-[calc(94vh-12rem)] max-w-full object-contain" />
           </div>
         ) : esPdfMovil ? (
           <PaginasPdfNativo url={url} titulo={titulo} />
         ) : (
-          <div className="h-[70vh] min-h-[24rem] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
+          <div className="h-[calc(94vh-12rem)] min-h-[24rem] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
             <iframe
               src={url}
               title={titulo}

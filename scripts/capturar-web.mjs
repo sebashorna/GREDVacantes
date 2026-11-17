@@ -15,7 +15,6 @@ const BASE_URL = 'http://127.0.0.1:5173';
 const PANTALLAS = [
   ['/', '01-landing.png'],
   ['/descargar', '02-descarga.png'],
-  ['/app', '03-simulacion-app.png'],
   ['/login', '04-panel-login.png'],
   // (sesion demo se activa despues de la captura de login)
   ['/dashboard', '05-panel-dashboard.png'],
@@ -70,14 +69,14 @@ async function main() {
     await sleep(4000);
   }
 
-  // Capturar landing, descarga, simulacion, login (sin sesion)
-  for (const [ruta, nombre] of PANTALLAS.slice(0, 4)) {
+  // Capturar landing, descarga y login (sin sesion)
+  for (const [ruta, nombre] of PANTALLAS.slice(0, 3)) {
     await navigate(BASE_URL + ruta);
     await screenshot(nombre);
   }
   // Activar sesion demo y capturar panel
   await cdp('Runtime.evaluate', { expression: "localStorage.setItem('educa.demoSession','true');", awaitPromise: false });
-  for (const [ruta, nombre] of PANTALLAS.slice(4)) {
+  for (const [ruta, nombre] of PANTALLAS.slice(3)) {
     await navigate(BASE_URL + ruta);
     await screenshot(nombre);
   }

@@ -315,9 +315,7 @@ function reply(data: unknown, config: Parameters<AxiosAdapter>[0]): AxiosRespons
 
 export const demoApiAdapter: AxiosAdapter = async (config) => {
   const method = (config.method ?? 'get').toUpperCase();
-  const soloConsulta =
-    import.meta.env.VITE_APP_MOBILE === 'true' ||
-    window.location.pathname === '/app/consulta';
+  const soloConsulta = import.meta.env.VITE_APP_MOBILE === 'true';
   if (soloConsulta && method !== 'GET' && method !== 'HEAD') {
     const response: AxiosResponse = {
       data: { error: { codigo: 'SOLO_LECTURA', mensaje: 'La aplicación ciudadana solo permite consultar información.' } },

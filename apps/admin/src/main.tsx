@@ -7,8 +7,7 @@ import { ProveedorAuth } from '@/features/auth/auth-context';
 import App from '@/App';
 import '@/styles/index.css';
 
-const modoConsulta =
-  import.meta.env.VITE_APP_MOBILE === 'true' || window.location.pathname === '/app/consulta';
+const modoConsulta = import.meta.env.VITE_APP_MOBILE === 'true';
 
 // En consulta ciudadana los datos se refrescan solos para mostrar siempre lo más reciente.
 const queryClient = new QueryClient({

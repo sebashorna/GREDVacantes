@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 /**
@@ -12,12 +13,14 @@ interface ModalProps {
   titulo: string;
   children: ReactNode;
   /** Ancho maximo del panel. */
-  ancho?: 'md' | 'lg' | 'xl';
+  ancho?: 'md' | 'lg' | 'xl' | 'pantalla';
   /** Pie del modal (botones de accion). */
   pie?: ReactNode;
 }
 
-const ANCHOS = { md: 'max-w-md', lg: 'max-w-2xl', xl: 'max-w-4xl' } as const;
+const ANCHOS = { md: 'max-w-md', lg: 'max-w-2xl', xl: 'max-w-4xl',
+  pantalla: 'max-w-7xl h-[94vh]',
+} as const;
 
 export function Modal({ abierto, onCerrar, titulo, children, ancho = 'lg', pie }: ModalProps) {
   useEffect(() => {
@@ -31,14 +34,14 @@ export function Modal({ abierto, onCerrar, titulo, children, ancho = 'lg', pie }
 
   if (!abierto) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40"
       onClick={onCerrar}
       role="presentation"
     >
       <div
-        className={`w-full ${ANCHOS[ancho]} bg-white rounded-xl shadow-lg max-h-[90vh] flex flex-col`}
+        className={`w-full ${ANCHOS[ancho]} bg-white rounded-xl shadow-lg max-h-[94vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -62,6 +65,7 @@ export function Modal({ abierto, onCerrar, titulo, children, ancho = 'lg', pie }
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

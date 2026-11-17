@@ -4,13 +4,16 @@ import {
   ArrowRight,
   BookOpen,
   BriefcaseBusiness,
+  Clock,
   Download,
   FileText,
   GraduationCap,
+  Megaphone,
   Menu,
   Phone,
   Search,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -335,6 +338,74 @@ function fecha(valor: string): string {
     : parsed.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function diasRestantes(fin: string): number {
+  return Math.ceil((new Date(fin).getTime() - Date.now()) / 86_400_000);
+}
+
+function InsigniaVigencia({ fin }: { fin: string }) {
+  const dias = diasRestantes(fin);
+  const porCerrar = dias <= 7;
+  const texto = dias <= 0 ? 'Cierra hoy' : dias === 1 ? 'Cierra mañana' : `Cierra en ${dias} días`;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+        porCerrar ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'
+      }`}
+    >
+      <Clock size={12} aria-hidden="true" /> {texto}
+    </span>
+  );
+}
+
+function ContadorAnimado({ valor }: { valor: number }) {
+  const [mostrado, setMostrado] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setMostrado(valor);
+      return;
+    }
+    const duracion = 900;
+    const inicio = performance.now();
+    let cuadro = 0;
+    const paso = (ahora: number) => {
+      const avance = Math.min((ahora - inicio) / duracion, 1);
+      setMostrado(Math.round(valor * (1 - Math.pow(1 - avance, 3))));
+      if (avance < 1) cuadro = requestAnimationFrame(paso);
+    };
+    cuadro = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(cuadro);
+  }, [valor]);
+  return <>{mostrado.toLocaleString('es-PE')}</>;
+}
+
+function EsqueletoTarjetas({ cantidad = 3, columnas = 'sm:grid-cols-2 lg:grid-cols-3' }: { cantidad?: number; columnas?: string }) {
+  return (
+    <div className={`mt-5 grid gap-4 ${columnas}`} role="status" aria-label="Cargando contenido">
+      {Array.from({ length: cantidad }, (_, i) => (
+        <div key={i} className="animate-pulse rounded-xl border border-outline-variant bg-white p-5">
+          <div className="h-32 rounded-lg bg-surface-container-low" />
+          <div className="mt-4 h-3 w-1/3 rounded bg-surface-container-low" />
+          <div className="mt-3 h-4 w-3/4 rounded bg-surface-container-low" />
+          <div className="mt-2 h-3 w-1/2 rounded bg-surface-container-low" />
+          <div className="mt-5 h-6 w-1/4 rounded bg-surface-container-low" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EstadoVacio({ icono: Icono, titulo, texto }: { icono: LucideIcon; titulo: string; texto: string }) {
+  return (
+    <div className="mt-5 flex flex-col items-center rounded-xl border border-dashed border-outline-variant bg-white/70 px-6 py-10 text-center">
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-fixed text-primary">
+        <Icono size={26} aria-hidden="true" />
+      </span>
+      <p className="mt-4 font-semibold">{titulo}</p>
+      <p className="mt-1 max-w-md text-sm text-on-surface-variant">{texto}</p>
+    </div>
+  );
+}
+
 function ErrorConsulta({ reintentar }: { reintentar: () => void }) {
   return (
     <div role="alert" className="rounded-xl border border-error/30 bg-error-container p-4 text-sm text-on-error-container">
@@ -346,17 +417,8 @@ function ErrorConsulta({ reintentar }: { reintentar: () => void }) {
   );
 }
 
-export function PortalCiudadanoPage({
-  modoAplicacion = false,
-  modoPresentacion = false,
-  modoDemostracion = false,
-}: {
-  modoAplicacion?: boolean;
-  modoPresentacion?: boolean;
-  modoDemostracion?: boolean;
-}) {
-  const esDemostracion =
-    modoDemostracion || import.meta.env.VITE_APP_DEMO === 'true';
+export function PortalCiudadanoPage() {
+  const esDemostracion = import.meta.env.VITE_APP_DEMO === 'true';
   const [busqueda, setBusqueda] = useState('');
   const [busquedaPlazas, setBusquedaPlazas] = useState('');
   const [nivelPlaza, setNivelPlaza] = useState('');
@@ -483,7 +545,7 @@ export function PortalCiudadanoPage({
             <span className="min-w-0 text-sm sm:text-base">
               Educa Lambayeque
               <span className="block text-xs font-medium text-on-surface-variant">
-                {modoPresentacion ? 'Simulación de app móvil' : modoAplicacion ? 'Aplicación ciudadana' : 'Portal ciudadano'}
+                Portal ciudadano
               </span>
             </span>
           </a>
@@ -493,17 +555,11 @@ export function PortalCiudadanoPage({
             <a href="#convocatorias" className="hover:text-primary">Convocatorias</a>
             <a href="#comunicados" className="hover:text-primary">Comunicados</a>
           </nav>
-          {modoPresentacion ? (
-            <Link to="/" className="rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-primary hover:bg-surface-container-low">
-              Volver a la web
-            </Link>
-          ) : modoAplicacion ? null : (
-            <Link to="/descargar" className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-2.5 py-2 text-xs font-semibold text-white hover:bg-primary-container sm:gap-2 sm:px-3 sm:text-sm">
-              <Download size={16} />
-              <span className="sm:hidden">Descargar app</span>
-              <span className="hidden sm:inline">Descargar aplicación</span>
-            </Link>
-          )}
+          <Link to="/descargar" className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-2.5 py-2 text-xs font-semibold text-white hover:bg-primary-container sm:gap-2 sm:px-3 sm:text-sm">
+            <Download size={16} />
+            <span className="sm:hidden">Descargar app</span>
+            <span className="hidden sm:inline">Descargar aplicación</span>
+          </Link>
           <button
             type="button"
             onClick={() => setMenuMovilAbierto((abierto) => !abierto)}
@@ -549,34 +605,49 @@ export function PortalCiudadanoPage({
               'linear-gradient(90deg, rgba(75, 24, 15, 0.96) 0%, rgba(92, 33, 19, 0.88) 55%, rgba(74, 26, 16, 0.76) 100%), url("/Imagenes/GoreUbigeo.jpg")',
           }}
         >
-          <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.4fr_0.6fr] lg:px-8">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-white/75">Gerencia Regional de Educación</p>
-              <h1 className="mt-3 max-w-3xl text-3xl font-bold leading-tight sm:text-5xl">
-                Información educativa de Lambayeque, al alcance de todos.
+          <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.3fr_0.7fr] lg:px-8">
+            <div className="animar-aparicion">
+              <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-[#ffd9a0]">
+                <GraduationCap size={14} aria-hidden="true" /> Gerencia Regional de Educación
+              </p>
+              <h1 className="mt-4 max-w-3xl text-3xl font-bold leading-tight sm:text-5xl">
+                Información educativa de Lambayeque, <span className="text-[#ffd9a0]">al alcance de todos.</span>
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/85 sm:text-lg">
                 Consulta oportunidades de matrícula, plazas docentes, convocatorias y comunicados oficiales desde un solo lugar.
               </p>
-              <a href="#servicios" className="mt-7 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 font-semibold text-primary hover:bg-[#fff1ec]">
-                Explorar servicios <ArrowRight size={18} />
-              </a>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a href="#vacantes" className="inline-flex items-center gap-2 rounded-lg bg-[#ffd9a0] px-5 py-3 font-semibold text-[#4b180f] shadow-lg shadow-black/20 transition hover:-translate-y-0.5 hover:bg-white">
+                  Ver vacantes <ArrowRight size={18} />
+                </a>
+                <a href="#convocatorias" className="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/10 px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/20">
+                  Ver convocatorias
+                </a>
+              </div>
             </div>
-            <div className="rounded-2xl border border-white/20 bg-white/10 p-6">
-              <GraduationCap size={32} aria-hidden="true" />
-              <p className="mt-4 text-sm font-semibold text-white/75">Cupos disponibles reportados</p>
-              {resumenVacantes.isError ? (
-                <button type="button" onClick={() => void resumenVacantes.refetch()} className="mt-2 text-sm underline">
-                  No se pudo cargar el total. Reintentar
-                </button>
-              ) : (
-                <p className="mt-1 text-4xl font-bold">
-                  {resumenVacantes.isLoading ? '…' : resumenVacantes.data?.totalCuposDisponibles ?? 0}
-                </p>
-              )}
-              <a href="#vacantes" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline">
-                Buscar vacantes <ArrowRight size={15} />
-              </a>
+            <div className="animar-aparicion grid grid-cols-2 gap-3 [animation-delay:150ms]">
+              {[
+                { icono: GraduationCap, valor: resumenVacantes.data?.totalCuposDisponibles, texto: 'Cupos disponibles', destino: '#vacantes', error: resumenVacantes.isError, recargar: () => void resumenVacantes.refetch() },
+                { icono: BriefcaseBusiness, valor: plazas.data?.length, texto: 'Plazas docentes', destino: '#plazas', error: plazas.isError, recargar: () => void plazas.refetch() },
+                { icono: FileText, valor: convocatorias.data?.length, texto: 'Convocatorias vigentes', destino: '#convocatorias', error: convocatorias.isError, recargar: () => void convocatorias.refetch() },
+                { icono: Megaphone, valor: comunicados.data?.length, texto: 'Comunicados', destino: '#comunicados', error: comunicados.isError, recargar: () => void comunicados.refetch() },
+              ].map(({ icono: Icono, valor, texto, destino, error, recargar }) => (
+                <a
+                  key={texto}
+                  href={destino}
+                  className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white/20"
+                >
+                  <Icono size={22} className="text-[#ffd9a0]" aria-hidden="true" />
+                  {error ? (
+                    <button type="button" onClick={(e) => { e.preventDefault(); recargar(); }} className="mt-2 block text-xs underline">
+                      Reintentar
+                    </button>
+                  ) : (
+                    <p className="mt-2 text-3xl font-bold">{valor === undefined ? '…' : <ContadorAnimado valor={valor} />}</p>
+                  )}
+                  <p className="mt-0.5 text-xs font-semibold text-white/75">{texto}</p>
+                </a>
+              ))}
             </div>
           </div>
         </section>
@@ -626,23 +697,24 @@ export function PortalCiudadanoPage({
             </div>
             {vacantes.isError && <div className="mt-5"><ErrorConsulta reintentar={() => void vacantes.refetch()} /></div>}
             {vacantes.isLoading ? (
-              <p className="py-10 text-center text-sm text-on-surface-variant">Cargando vacantes...</p>
+              <EsqueletoTarjetas />
             ) : vacantes.data?.length === 0 ? (
-              <p className="mt-5 rounded-xl border border-outline-variant p-6 text-center text-sm text-on-surface-variant">
-                No hay vacantes publicadas en este momento.
-              </p>
+              <EstadoVacio icono={GraduationCap} titulo="Aún no hay vacantes publicadas" texto="Vuelve pronto: las instituciones publican sus cupos durante el periodo de matrícula." />
             ) : vacantesFiltradas.length === 0 ? (
-              <p className="mt-5 rounded-xl border border-outline-variant p-6 text-center text-sm text-on-surface-variant">
-                No se encontraron instituciones para esa búsqueda.
-              </p>
+              <EstadoVacio icono={Search} titulo="Sin resultados" texto="No se encontraron instituciones para esa búsqueda. Prueba con otro nombre o distrito." />
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {conPrioridad(vacantesFiltradas, (v) => fotoInstitucion(v.ie.nombre) !== null).slice(0, LIMITE_VISTA_PREVIA).map((vacante) => {
                   const foto = fotoInstitucion(vacante.ie.nombre);
                   return (
-                    <article key={vacante.id} className="rounded-xl border border-outline-variant p-5">
-                      {foto && <img src={foto.url} alt={foto.alt} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover" />}
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(vacante.nivel)} · {etiqueta(vacante.turno)}</p>
+                    <article key={vacante.id} className="group animar-aparicion overflow-hidden rounded-xl border border-outline-variant border-l-4 border-l-primary bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg">
+                      {foto && <img src={foto.url} alt={foto.alt} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(vacante.nivel)} · {etiqueta(vacante.turno)}</p>
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${vacante.cupoDisponibles <= 5 ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}>
+                          {vacante.cupoDisponibles <= 5 ? 'Pocos cupos' : 'Disponible'}
+                        </span>
+                      </div>
                       <h3 className="mt-2 font-semibold">{vacante.ie.nombre}</h3>
                       <p className="mt-1 text-sm text-on-surface-variant">{vacante.ie.distrito}, {vacante.ie.provincia}</p>
                       <p className="mt-3 text-sm text-on-surface-variant">{vacante.ie.ugel}</p>
@@ -729,25 +801,24 @@ export function PortalCiudadanoPage({
             )}
             {plazas.isError && <div className="mt-5"><ErrorConsulta reintentar={() => void plazas.refetch()} /></div>}
             {plazas.isLoading ? (
-              <p className="py-10 text-center text-sm text-on-surface-variant">Cargando plazas docentes...</p>
+              <EsqueletoTarjetas />
             ) : plazas.data?.length === 0 ? (
-              <p className="mt-5 rounded-xl border border-outline-variant p-6 text-center text-sm text-on-surface-variant">
-                No hay plazas docentes vigentes para consulta.
-              </p>
+              <EstadoVacio icono={BriefcaseBusiness} titulo="No hay plazas vigentes" texto="Cuando se publique una convocatoria, sus plazas aparecerán aquí." />
             ) : plazasFiltradas.length === 0 ? (
-              <p className="mt-5 rounded-xl border border-outline-variant p-6 text-center text-sm text-on-surface-variant">
-                No se encontraron plazas con esos criterios. Prueba con otra búsqueda o nivel.
-              </p>
+              <EstadoVacio icono={Search} titulo="Sin resultados" texto="No se encontraron plazas con esos criterios. Prueba con otra búsqueda o nivel." />
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {conPrioridad(plazasFiltradas, (p) => fotoInstitucion(p.ie.nombre) !== null).slice(0, LIMITE_VISTA_PREVIA).map((plaza) => {
                   const foto = fotoInstitucion(plaza.ie.nombre);
                   return (
-                    <article key={plaza.id} className="rounded-xl border border-outline-variant p-5">
-                      {foto && <img src={foto.url} alt={foto.alt} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover" />}
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                        {etiqueta(plaza.tipo)} · {etiqueta(plaza.nivel)}
-                      </p>
+                    <article key={plaza.id} className="group animar-aparicion overflow-hidden rounded-xl border border-outline-variant border-l-4 border-l-primary bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg">
+                      {foto && <img src={foto.url} alt={foto.alt} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                          {etiqueta(plaza.tipo)} · {etiqueta(plaza.nivel)}
+                        </p>
+                        <InsigniaVigencia fin={plaza.convocatoria.fechaFin} />
+                      </div>
                       <h3 className="mt-2 font-semibold">{plaza.cargo} · {plaza.area}</h3>
                       <p className="mt-1 text-sm text-on-surface-variant">{plaza.ie.nombre}</p>
                       <p className="mt-1 text-sm text-on-surface-variant">
@@ -831,20 +902,19 @@ export function PortalCiudadanoPage({
           )}
           {convocatorias.isError && <div className="mt-5"><ErrorConsulta reintentar={() => void convocatorias.refetch()} /></div>}
           {convocatorias.isLoading ? (
-            <p className="py-10 text-center text-sm text-on-surface-variant">Cargando convocatorias...</p>
+            <EsqueletoTarjetas cantidad={2} columnas="lg:grid-cols-2" />
           ) : convocatorias.data?.length === 0 ? (
-            <p className="mt-5 rounded-xl border border-outline-variant bg-white p-6 text-center text-sm text-on-surface-variant">
-              No hay convocatorias vigentes publicadas.
-            </p>
+            <EstadoVacio icono={FileText} titulo="No hay convocatorias vigentes" texto="Las nuevas convocatorias docentes se publicarán en esta sección." />
           ) : convocatoriasFiltradas.length === 0 ? (
-            <p className="mt-5 rounded-xl border border-outline-variant bg-white p-6 text-center text-sm text-on-surface-variant">
-              No se encontraron convocatorias con esos criterios. Prueba otra búsqueda o fase.
-            </p>
+            <EstadoVacio icono={Search} titulo="Sin resultados" texto="No se encontraron convocatorias con esos criterios. Prueba otra búsqueda o fase." />
           ) : (
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
               {conPrioridad(convocatoriasFiltradas, (c) => Boolean(c.pdfMeritosUrl)).slice(0, LIMITE_VISTA_PREVIA).map((convocatoria) => (
-                <article key={convocatoria.id} className="rounded-xl border border-outline-variant bg-white p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(convocatoria.fase)} · {convocatoria.numeroRD}</p>
+                <article key={convocatoria.id} className="animar-aparicion rounded-xl border border-outline-variant border-l-4 border-l-primary bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(convocatoria.fase)} · {convocatoria.numeroRD}</p>
+                    <InsigniaVigencia fin={convocatoria.fechaFin} />
+                  </div>
                   <h3 className="mt-2 text-lg font-semibold">{convocatoria.titulo}</h3>
                   {convocatoria.descripcion && <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{convocatoria.descripcion}</p>}
                   <p className="mt-3 text-xs text-on-surface-variant">Vigencia: {fecha(convocatoria.fechaInicio)} – {fecha(convocatoria.fechaFin)}</p>
@@ -882,11 +952,9 @@ export function PortalCiudadanoPage({
             </div>
             {comunicados.isError && <div className="mt-5"><ErrorConsulta reintentar={() => void comunicados.refetch()} /></div>}
             {comunicados.isLoading ? (
-              <p className="py-10 text-center text-sm text-on-surface-variant">Cargando comunicados...</p>
+              <EsqueletoTarjetas />
             ) : comunicados.data?.length === 0 ? (
-              <p className="mt-5 rounded-xl border border-outline-variant bg-white p-6 text-center text-sm text-on-surface-variant">
-                No hay comunicados publicados.
-              </p>
+              <EstadoVacio icono={Megaphone} titulo="No hay comunicados publicados" texto="Los avisos oficiales de la GRED aparecerán aquí." />
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {comunicados.data?.slice(0, LIMITE_VISTA_PREVIA).map((comunicado, indice) => {
@@ -899,7 +967,7 @@ export function PortalCiudadanoPage({
                     : imagenIlustrativaComunicado(comunicado.categoria, comunicado.titulo, indice);
 
                   return (
-                    <article key={comunicado.id} className="overflow-hidden rounded-xl border border-outline-variant bg-white">
+                    <article key={comunicado.id} className="group animar-aparicion overflow-hidden rounded-xl border border-outline-variant bg-white transition hover:-translate-y-1 hover:shadow-lg">
                       <figure>
                         <img src={imagen.url} alt={imagen.alt} loading="lazy" className="h-44 w-full object-cover" />
                         {imagen.fuente && (

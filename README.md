@@ -12,7 +12,7 @@ El objetivo de la integración es que el panel administre la información y que 
 - En modo demo, el landing usa datos de ejemplo propios, distintos de los del adaptador de demostración del panel.
 - El código móvil activa el adaptador de demostración incluso si se configura `VITE_API_URL`. Por tanto, configurar esa variable no conecta actualmente la APK a la API.
 
-La aplicación Android es una versión de consulta: abre directamente los módulos, sin iniciar sesión, con el rol `CONSULTOR` y sin acciones de administración. La simulación web está disponible en `/app`. La navegación del teléfono tiene una barra inferior y un acceso a alertas en el encabezado.
+La aplicación Android es una versión de consulta: abre directamente los módulos, sin iniciar sesión, con el rol `CONSULTOR` y sin acciones de administración. La navegación del teléfono tiene una barra inferior y un acceso a alertas en el encabezado.
 
 ## Estructura
 
@@ -24,7 +24,7 @@ La aplicación Android es una versión de consulta: abre directamente los módul
 | `apps/shared` | Esquemas y tipos compartidos entre frontend y API. |
 | `scripts` | Herramientas auxiliares de captura, PostgreSQL local y carga. |
 
-Rutas web principales: `/` y `/portal` para el landing, `/descargar` para la descarga, `/app` para la simulación y `/login` para el panel. El panel incluye dashboard, convocatorias, plazas, vacantes, infraestructura y alertas. El landing muestra vacantes, plazas, convocatorias y comunicados.
+Rutas web principales: `/` y `/portal` para el landing, `/descargar` para la descarga y `/login` para el panel. Las antiguas rutas de simulación `/app` y `/app/consulta` redirigen al landing. El panel incluye dashboard, convocatorias, plazas, vacantes, infraestructura y alertas. El landing muestra vacantes, plazas, convocatorias y comunicados.
 
 ## Desarrollo local
 

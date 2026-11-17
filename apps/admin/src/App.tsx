@@ -11,7 +11,6 @@ import { AlertasPage } from '@/pages/AlertasPage';
 import { InfraestructuraPage } from '@/pages/InfraestructuraPage';
 import { PortalCiudadanoPage } from '@/pages/PortalCiudadanoPage';
 import { DescargaAppPage } from '@/pages/DescargaAppPage';
-import { SimulacionAppPage } from '@/pages/SimulacionAppPage';
 
 export default function App() {
   const { cargando, estaAutenticado } = useAuth();
@@ -51,29 +50,12 @@ export default function App() {
     return <DescargaAppPage />;
   }
 
-  if (location.pathname === '/app') {
-    return <SimulacionAppPage />;
-  }
-
   if (location.pathname === '/portal') {
     return <PortalCiudadanoPage />;
   }
 
-  if (location.pathname === '/app/consulta') {
-    return (
-      <MainLayout>
-        <Routes>
-          <Route path="*" element={<DashboardPage />} />
-          <Route path="/app/consulta" element={<DashboardPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/convocatorias" element={<ConvocatoriasPage />} />
-          <Route path="/plazas" element={<PlazasPage />} />
-          <Route path="/vacantes" element={<VacantesPage />} />
-          <Route path="/alertas" element={<AlertasPage />} />
-          <Route path="/infraestructura" element={<InfraestructuraPage />} />
-        </Routes>
-      </MainLayout>
-    );
+  if (location.pathname === '/app' || location.pathname === '/app/consulta') {
+    return <Navigate to="/" replace />;
   }
 
   if (location.pathname === '/login' && new URLSearchParams(location.search).get('modo') === 'app') {

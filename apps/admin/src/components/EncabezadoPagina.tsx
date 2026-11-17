@@ -21,8 +21,7 @@ function useUltimaActualizacion(): number {
 
 export function ActualizadoEn() {
   const ultima = useUltimaActualizacion();
-  const modoConsulta =
-    import.meta.env.VITE_APP_MOBILE === 'true' || window.location.pathname === '/app/consulta';
+  const modoConsulta = import.meta.env.VITE_APP_MOBILE === 'true';
   if (!modoConsulta || ultima === 0) return null;
   return (
     <p className="mt-0.5 text-xs text-on-surface-variant" aria-live="polite">

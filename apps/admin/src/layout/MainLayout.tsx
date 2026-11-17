@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/auth-context';
 import {
   AlertTriangle,
@@ -9,6 +10,7 @@ import {
   LogOut,
   Megaphone,
   Menu,
+  RefreshCw,
   School,
   Users,
   X,
@@ -42,7 +44,7 @@ function claseEnlace(activo: boolean): string {
 export function MainLayout({ children }: MainLayoutProps) {
   const { usuario, cerrarSesion } = useAuth();
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
-  const soloConsulta = import.meta.env.VITE_APP_MOBILE === 'true' || window.location.pathname === '/app/consulta';
+  const soloConsulta = import.meta.env.VITE_APP_MOBILE === 'true';
   const nombreVista = soloConsulta ? 'Consulta ciudadana · Solo lectura' : 'Panel Administrativo';
   const etiquetaMovil: Record<string, string> = {
     '/dashboard': 'Inicio',
@@ -51,6 +53,35 @@ export function MainLayout({ children }: MainLayoutProps) {
     '/vacantes': 'Vacantes',
     '/infraestructura': 'Infraest.',
     '/alertas': 'Alertas',
+  };
+
+  // Tirar para refrescar (solo APK): se activa únicamente si el contenido está arriba del todo.
+  const queryClient = useQueryClient();
+  const inicioToque = useRef<number | null>(null);
+  const [distanciaTirar, setDistanciaTirar] = useState(0);
+  const [actualizando, setActualizando] = useState(false);
+  const UMBRAL_TIRAR = 60;
+
+  const alTocar = (evento: React.TouchEvent<HTMLElement>) => {
+    inicioToque.current = evento.currentTarget.scrollTop <= 0 ? (evento.touches[0]?.clientY ?? null) : null;
+  };
+  const alArrastrar = (evento: React.TouchEvent<HTMLElement>) => {
+    const actual = evento.touches[0]?.clientY;
+    if (inicioToque.current === null || actual === undefined || actualizando) return;
+    const delta = actual - inicioToque.current;
+    setDistanciaTirar(delta > 0 ? Math.min(delta * 0.5, 90) : 0);
+  };
+  const alSoltar = async () => {
+    const alcanzoUmbral = distanciaTirar >= UMBRAL_TIRAR;
+    inicioToque.current = null;
+    setDistanciaTirar(0);
+    if (!alcanzoUmbral) return;
+    setActualizando(true);
+    try {
+      await queryClient.invalidateQueries();
+    } finally {
+      setActualizando(false);
+    }
   };
 
   return (
@@ -149,7 +180,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
       {/* Contenido principal */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <header className="h-14 shrink-0 border-b border-[#8c3d27] bg-[#9f462d] text-white flex items-center justify-between px-3 sm:h-16 sm:px-6">
+        <header className="h-14 shrink-0 border-b border-[#8c3d27] bg-gradient-to-r from-[#8c3d27] to-[#a8503a] text-white shadow-md flex items-center justify-between px-3 sm:h-16 sm:px-6">
           <div className="flex items-center gap-3">
             {!soloConsulta && (
               <button
@@ -194,7 +225,24 @@ export function MainLayout({ children }: MainLayoutProps) {
             )}
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <main
+          className="relative min-h-0 flex-1 overflow-y-auto p-4 sm:p-6"
+          onTouchStart={soloConsulta ? alTocar : undefined}
+          onTouchMove={soloConsulta ? alArrastrar : undefined}
+          onTouchEnd={soloConsulta ? alSoltar : undefined}
+        >
+          {soloConsulta && (distanciaTirar > 0 || actualizando) && (
+            <div
+              className="pointer-events-none absolute left-1/2 top-2 z-20 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full bg-white text-primary shadow-lg"
+              style={{ transform: `translate(-50%, ${Math.min(distanciaTirar, 70) / 2}px)`, opacity: Math.max(distanciaTirar / 60, actualizando ? 1 : 0) }}
+            >
+              <RefreshCw
+                className={`h-5 w-5 ${actualizando ? 'animate-spin' : ''}`}
+                style={actualizando ? undefined : { transform: `rotate(${distanciaTirar * 4}deg)` }}
+                aria-hidden="true"
+              />
+            </div>
+          )}
           {children}
         </main>
         {soloConsulta && (
@@ -210,19 +258,26 @@ export function MainLayout({ children }: MainLayoutProps) {
                   to={ruta}
                   aria-label={etiquetaMovil[ruta]}
                   className={({ isActive }) =>
-                    `flex min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-medium leading-tight transition ${
-                      isActive ? 'bg-white/15 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'
+                    `relative flex min-w-0 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-medium leading-tight transition ${
+                      isActive ? 'text-[#ffd9a0]' : 'text-white/75 hover:text-white'
                     }`
                   }
                 >
-                  {central ? (
-                    <span className="-mt-5 flex h-11 w-11 items-center justify-center rounded-full border-4 border-background bg-[#7a2f1c] shadow-md">
-                      <Home className="h-6 w-6 shrink-0" aria-hidden="true" />
-                    </span>
-                  ) : (
-                    <Icono className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <span className="absolute inset-x-4 top-0 h-1 rounded-b-full bg-[#ffd9a0]" aria-hidden="true" />
+                      )}
+                      {central ? (
+                        <span className="-mt-5 flex h-11 w-11 items-center justify-center rounded-full border-4 border-background bg-[#7a2f1c] shadow-md">
+                          <Home className="h-6 w-6 shrink-0" aria-hidden="true" />
+                        </span>
+                      ) : (
+                        <Icono className={`h-5 w-5 shrink-0 transition-transform ${isActive ? '-translate-y-0.5 scale-110' : ''}`} aria-hidden="true" />
+                      )}
+                      <span className="truncate">{etiquetaMovil[ruta]}</span>
+                    </>
                   )}
-                  <span className="truncate">{etiquetaMovil[ruta]}</span>
                 </NavLink>
               );
             })}

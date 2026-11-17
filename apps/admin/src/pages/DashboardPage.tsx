@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
-  ArrowUpRight,
   BadgeCheck,
+  BarChart3,
+  BellRing,
   BookOpenCheck,
   Building2,
   CheckCircle2,
@@ -13,6 +14,7 @@ import {
   FileText,
   Megaphone,
   PhoneCall,
+  School,
   Search,
   Users,
   Zap,
@@ -177,26 +179,44 @@ export function DashboardPage() {
 
   const tarjetas = [
     {
-      titulo: 'Vacantes alumnos',
-      valor: resumen.isLoading ? '...' : cuposDisponibles.toLocaleString('es-PE'),
+      titulo: 'Cupos disponibles',
+      valor: cuposDisponibles,
       detalle: 'Inicial, Primaria y Secundaria',
       icono: ClipboardList,
-      estado: 'En vivo',
-      color: 'text-tertiary',
+      destino: '/vacantes',
+      tono: 'from-[#9f462d] to-[#c4623f]',
     },
     {
       titulo: 'Plazas docentes',
-      valor: resumen.isLoading ? '...' : plazasDisponibles.toLocaleString('es-PE'),
+      valor: plazasDisponibles,
       detalle: 'Contrato y nombramiento',
       icono: BookOpenCheck,
-      estado: 'Proceso activo',
-      color: 'text-primary',
+      destino: '/plazas',
+      tono: 'from-[#7a5a12] to-[#b5882a]',
+    },
+    {
+      titulo: 'Instituciones',
+      valor: resumen.data?.totales.instituciones,
+      detalle: 'Registradas en la región',
+      icono: School,
+      destino: '/infraestructura',
+      tono: 'from-[#2f6b4f] to-[#4a9a73]',
+    },
+    {
+      titulo: 'Alertas abiertas',
+      valor: resumen.data?.totales.alertasAbiertas,
+      detalle: 'Requieren atención',
+      icono: BellRing,
+      destino: '/alertas',
+      tono: 'from-[#9b2c2c] to-[#d25a4a]',
     },
   ];
+  const maxCupo = Math.max(1, ...(resumen.data?.cuposPorNivel ?? []).map((n) => n._sum.cupoTotal ?? 0));
+  const maxPlazas = Math.max(1, ...(resumen.data?.plazasPorTipo ?? []).map((t) => t._sum.cantidad ?? 0));
 
   return (
     <div className="space-y-6">
-      {import.meta.env.VITE_APP_MOBILE === 'true' || window.location.pathname === '/app/consulta' ? (
+      {import.meta.env.VITE_APP_MOBILE === 'true' ? (
         <header className="flex flex-col items-center gap-2 text-center">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-on-surface">
             <BadgeCheck size={26} className="text-primary" aria-hidden="true" />
@@ -298,33 +318,84 @@ export function DashboardPage() {
         </div>
       )}
 
-      <section aria-label="Indicadores regionales" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {tarjetas.map(({ titulo, valor, detalle, icono: Icono, estado, color }) => (
-          <article
+      <section aria-label="Indicadores regionales" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {tarjetas.map(({ titulo, valor, detalle, icono: Icono, destino, tono }) => (
+          <Link
             key={titulo}
-            className="rounded-xl border border-outline-variant border-l-4 border-l-primary-container bg-white p-5"
+            to={destino}
+            className={`animar-aparicion group relative overflow-hidden rounded-xl bg-gradient-to-br ${tono} p-4 text-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:p-5`}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-on-surface-variant">{titulo}</p>
-                <p className="mt-1 text-3xl font-bold text-primary">{valor}</p>
-              </div>
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-high text-primary">
-                <Icono size={21} />
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/60 pt-3">
-              <span className={`flex items-center gap-1.5 text-sm ${color}`}>
-                <ArrowUpRight size={15} />
-                {detalle}
-              </span>
-              <span className="rounded-full bg-surface-container px-2.5 py-1 text-xs font-medium text-on-surface-variant">
-                {estado}
-              </span>
-            </div>
-          </article>
+            <Icono size={64} aria-hidden="true" className="absolute -bottom-3 -right-3 text-white/15 transition group-hover:scale-110" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/80">{titulo}</p>
+            <p className="mt-2 text-3xl font-bold sm:text-4xl">
+              {valor === undefined ? '…' : valor.toLocaleString('es-PE')}
+            </p>
+            <p className="mt-2 text-xs text-white/85">{detalle}</p>
+          </Link>
         ))}
       </section>
+
+      {resumen.data && (resumen.data.cuposPorNivel.length > 0 || resumen.data.plazasPorTipo.length > 0) && (
+        <section aria-label="Gráficos" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <article className="animar-aparicion rounded-xl border border-outline-variant bg-white p-5">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-on-surface">
+              <BarChart3 size={18} className="text-primary" aria-hidden="true" /> Cupos por nivel
+            </h2>
+            <p className="mt-1 text-xs text-on-surface-variant">Disponibles frente al total de cupos.</p>
+            <ul className="mt-4 space-y-4">
+              {resumen.data.cuposPorNivel.map((nivel) => {
+                const total = nivel._sum.cupoTotal ?? 0;
+                const libres = nivel._sum.cupoDisponibles ?? 0;
+                return (
+                  <li key={nivel.nivel}>
+                    <div className="flex items-baseline justify-between text-sm">
+                      <span className="font-medium">{etiqueta(nivel.nivel)}</span>
+                      <span className="text-on-surface-variant">
+                        <strong className="text-primary">{libres}</strong> / {total}
+                      </span>
+                    </div>
+                    <div
+                      className="mt-1.5 h-3 overflow-hidden rounded-full bg-primary-fixed"
+                      style={{ width: `${Math.max((total / maxCupo) * 100, 8)}%` }}
+                    >
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-primary to-primary-container transition-all duration-700"
+                        style={{ width: `${total ? (libres / total) * 100 : 0}%` }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </article>
+
+          <article className="animar-aparicion rounded-xl border border-outline-variant bg-white p-5">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-on-surface">
+              <BarChart3 size={18} className="text-primary" aria-hidden="true" /> Plazas por tipo
+            </h2>
+            <p className="mt-1 text-xs text-on-surface-variant">Cantidad de plazas docentes por modalidad.</p>
+            <ul className="mt-4 space-y-4">
+              {resumen.data.plazasPorTipo.map((plaza) => {
+                const cantidad = plaza._sum.cantidad ?? 0;
+                return (
+                  <li key={plaza.tipo}>
+                    <div className="flex items-baseline justify-between text-sm">
+                      <span className="font-medium">{etiqueta(plaza.tipo)}</span>
+                      <strong className="text-primary">{cantidad}</strong>
+                    </div>
+                    <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-primary-fixed">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#b5882a] to-[#d9a640] transition-all duration-700"
+                        style={{ width: `${Math.max((cantidad / maxPlazas) * 100, 6)}%` }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </article>
+        </section>
+      )}
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -346,8 +417,14 @@ export function DashboardPage() {
 
         <div className="space-y-3">
           {vacantes.isLoading && (
-            <div className="rounded-xl border border-outline-variant bg-white p-8 text-center text-sm text-on-surface-variant">
-              Cargando vacantes...
+            <div className="space-y-3" role="status" aria-label="Cargando vacantes">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="animate-pulse rounded-xl border border-outline-variant bg-white p-4">
+                  <div className="h-4 w-1/2 rounded bg-surface-container-low" />
+                  <div className="mt-3 h-3 w-1/3 rounded bg-surface-container-low" />
+                  <div className="mt-5 h-3 w-2/3 rounded bg-surface-container-low" />
+                </div>
+              ))}
             </div>
           )}
           {vacantes.isError && (
@@ -369,7 +446,7 @@ export function DashboardPage() {
           {vacantesFiltradas.map((vacante) => {
             const ocupados = Math.max(vacante.cupoTotal - vacante.cupoDisponibles, 0);
             return (
-              <article key={vacante.id} className="rounded-xl border border-outline-variant bg-white p-4">
+              <article key={vacante.id} className="animar-aparicion rounded-xl border border-outline-variant border-l-4 border-l-primary bg-white p-4 transition hover:shadow-md">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-outline-variant/60 pb-3">
                   <div>
                     <p className="text-sm font-semibold text-on-surface">
@@ -428,7 +505,7 @@ export function DashboardPage() {
           <Zap size={19} className="text-primary" />
           Módulos prioritarios
         </h2>
-        <article className="flex flex-col justify-between gap-4 rounded-xl border border-[#9f462d] bg-[#9f462d] p-5 text-white sm:flex-row sm:items-center">
+        <article className="flex flex-col justify-between gap-4 rounded-xl bg-gradient-to-r from-[#813019] to-[#b5593a] p-5 text-white shadow-md sm:flex-row sm:items-center">
           <div className="max-w-2xl">
             <span className="text-xs font-semibold uppercase tracking-wide text-white/80">
               Matrícula regional 2026 · Demostración
