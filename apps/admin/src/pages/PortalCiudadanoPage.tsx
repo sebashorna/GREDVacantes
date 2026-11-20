@@ -28,6 +28,7 @@ interface VacanteCiudadana {
   fechaLimite: string | null;
   ie: {
     nombre: string;
+    fotoUrl?: string | null;
     distrito: string;
     provincia: string;
     ugel: string;
@@ -59,6 +60,7 @@ interface PlazaCiudadana {
   cantidad: number;
   ie: {
     nombre: string;
+    fotoUrl?: string | null;
     distrito: string;
     provincia: string;
     ugel: string;
@@ -80,6 +82,7 @@ interface ComunicadoCiudadano {
   contenido: string | null;
   fecha: string;
   imagenUrl: string | null;
+  documentoUrl: string | null;
 }
 
 interface ResumenVacantes {
@@ -216,6 +219,7 @@ const DATOS_DEMO = {
       contenido: 'Este comunicado es ficticio y se incluye únicamente para la demostración.',
       fecha: '2026-10-25T12:00:00.000Z',
       imagenUrl: null,
+      documentoUrl: null,
     },
     {
       id: 'demo-2',
@@ -225,6 +229,7 @@ const DATOS_DEMO = {
       contenido: 'El contenido de esta publicación es de demostración; no es una comunicación oficial.',
       fecha: '2026-10-20T12:00:00.000Z',
       imagenUrl: null,
+      documentoUrl: null,
     },
   ] satisfies ComunicadoCiudadano[],
 };
@@ -283,34 +288,6 @@ const IMAGENES_COMUNICADOS = [
 ] as const;
 
 const LIMITE_VISTA_PREVIA = 4;
-
-const FOTOS_INSTITUCIONES = [
-  {
-    termino: 'san jose',
-    url: '/Imagenes/Sanjose.png',
-    alt: 'Fachada del Colegio Nacional San José de Chiclayo',
-  },
-  {
-    termino: 'pedro ruiz gallo',
-    url: '/Imagenes/Pedro-ruiz-gallo-eten.jpg',
-    alt: 'Fachada de la I.E. Pedro Ruiz Gallo de Ciudad Eten',
-  },
-  {
-    termino: 'andres avelino',
-    url: '/Imagenes/andres-avelino.jpg',
-    alt: 'Fachada de la I.E. Andrés Avelino Cáceres',
-  },
-  {
-    termino: 'santa rosa',
-    url: '/Imagenes/ieSantaRosa.jpeg',
-    alt: 'Fachada de la I.E. Santa Rosa',
-  },
-] as const;
-
-function fotoInstitucion(nombre: string) {
-  const nombreNormalizado = normalizarBusqueda(nombre);
-  return FOTOS_INSTITUCIONES.find((foto) => nombreNormalizado.includes(foto.termino)) ?? null;
-}
 
 // En la vista previa se muestran primero los registros con imagen o documento.
 function conPrioridad<T>(items: T[], tiene: (item: T) => boolean): T[] {
@@ -419,6 +396,7 @@ function ErrorConsulta({ reintentar }: { reintentar: () => void }) {
 
 export function PortalCiudadanoPage() {
   const esDemostracion = import.meta.env.VITE_APP_DEMO === 'true';
+  const demoConectada = import.meta.env.MODE === 'demo-conectada';
   const [busqueda, setBusqueda] = useState('');
   const [busquedaPlazas, setBusquedaPlazas] = useState('');
   const [nivelPlaza, setNivelPlaza] = useState('');
@@ -444,7 +422,7 @@ export function PortalCiudadanoPage() {
     },
     staleTime: esDemostracion ? Infinity : undefined,
   });
-  const vacantes = useQuery({
+  const vacantes = useQuery<VacanteCiudadana[]>({
     queryKey: ['publico', 'vacantes'],
     queryFn: async () => {
       if (esDemostracion) return DATOS_DEMO.vacantes;
@@ -462,7 +440,7 @@ export function PortalCiudadanoPage() {
     },
     staleTime: esDemostracion ? Infinity : undefined,
   });
-  const plazas = useQuery({
+  const plazas = useQuery<PlazaCiudadana[]>({
     queryKey: ['publico', 'plazas'],
     queryFn: async () => {
       if (esDemostracion) return DATOS_DEMO.plazas;
@@ -591,9 +569,11 @@ export function PortalCiudadanoPage() {
         )}
       </header>
 
-      {esDemostracion && (
+      {(esDemostracion || demoConectada) && (
         <div className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-xs font-medium text-amber-900 sm:text-sm">
-          Modo demostración: los registros son ficticios y no provienen de la API.
+          {demoConectada
+            ? 'Modo demostración: datos de prueba compartidos mediante la API local; no son información oficial.'
+            : 'Modo demostración: los registros son ficticios y no provienen de la API.'}
         </div>
       )}
 
@@ -704,11 +684,11 @@ export function PortalCiudadanoPage() {
               <EstadoVacio icono={Search} titulo="Sin resultados" texto="No se encontraron instituciones para esa búsqueda. Prueba con otro nombre o distrito." />
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {conPrioridad(vacantesFiltradas, (v) => fotoInstitucion(v.ie.nombre) !== null).slice(0, LIMITE_VISTA_PREVIA).map((vacante) => {
-                  const foto = fotoInstitucion(vacante.ie.nombre);
+                {conPrioridad(vacantesFiltradas, (v) => !!v.ie.fotoUrl).slice(0, LIMITE_VISTA_PREVIA).map((vacante) => {
+                  const foto = vacante.ie.fotoUrl;
                   return (
                     <article key={vacante.id} className="group animar-aparicion overflow-hidden rounded-xl border border-outline-variant border-l-4 border-l-primary bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg">
-                      {foto && <img src={foto.url} alt={foto.alt} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
+                      {foto && <img src={foto} alt={`Institución educativa ${vacante.ie.nombre}`} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(vacante.nivel)} · {etiqueta(vacante.turno)}</p>
                         <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${vacante.cupoDisponibles <= 5 ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}>
@@ -808,11 +788,11 @@ export function PortalCiudadanoPage() {
               <EstadoVacio icono={Search} titulo="Sin resultados" texto="No se encontraron plazas con esos criterios. Prueba con otra búsqueda o nivel." />
             ) : (
               <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {conPrioridad(plazasFiltradas, (p) => fotoInstitucion(p.ie.nombre) !== null).slice(0, LIMITE_VISTA_PREVIA).map((plaza) => {
-                  const foto = fotoInstitucion(plaza.ie.nombre);
+                {conPrioridad(plazasFiltradas, (p) => !!p.ie.fotoUrl).slice(0, LIMITE_VISTA_PREVIA).map((plaza) => {
+                  const foto = plaza.ie.fotoUrl;
                   return (
                     <article key={plaza.id} className="group animar-aparicion overflow-hidden rounded-xl border border-outline-variant border-l-4 border-l-primary bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg">
-                      {foto && <img src={foto.url} alt={foto.alt} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
+                      {foto && <img src={foto} alt={`Institución educativa ${plaza.ie.nombre}`} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                           {etiqueta(plaza.tipo)} · {etiqueta(plaza.nivel)}
@@ -983,6 +963,11 @@ export function PortalCiudadanoPage() {
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(comunicado.categoria)} · {fecha(comunicado.fecha)}</p>
                         <h3 className="mt-2 font-semibold">{comunicado.titulo}</h3>
                         <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{comunicado.resumen}</p>
+                        {comunicado.documentoUrl && (
+                          <VistaPreviaArchivo url={comunicado.documentoUrl} titulo={`Documento: ${comunicado.titulo}`} tipo="documento">
+                            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"><FileText size={16} /> Ver PDF</span>
+                          </VistaPreviaArchivo>
+                        )}
                       </div>
                     </article>
                   );

@@ -46,6 +46,7 @@ router.get('/comunicados', async (req, res, next) => {
         contenido: true,
         fecha: true,
         imagenUrl: true,
+        documentoUrl: true,
       },
     });
     res.json(data);
@@ -97,6 +98,7 @@ router.get('/vacantes/listado', async (req, res, next) => {
         ie: {
           select: {
             nombre: true,
+            fotoUrl: true,
             telefono: true,
             whatsapp: true,
             distrito: { select: { nombre: true } },
@@ -110,6 +112,7 @@ router.get('/vacantes/listado', async (req, res, next) => {
       ...vacante,
       ie: {
         nombre: ie.nombre,
+        fotoUrl: ie.fotoUrl,
         telefono: ie.telefono,
         whatsapp: ie.whatsapp,
         distrito: ie.distrito.nombre,
@@ -150,6 +153,7 @@ router.get('/plazas', async (req, res, next) => {
         ie: {
           select: {
             nombre: true,
+            fotoUrl: true,
             distrito: { select: { nombre: true } },
             provincia: { select: { nombre: true } },
             ugel: { select: { nombre: true } },
@@ -170,6 +174,7 @@ router.get('/plazas', async (req, res, next) => {
       ...plaza,
       ie: {
         nombre: ie.nombre,
+        fotoUrl: ie.fotoUrl,
         distrito: ie.distrito.nombre,
         provincia: ie.provincia.nombre,
         ugel: ie.ugel.nombre,

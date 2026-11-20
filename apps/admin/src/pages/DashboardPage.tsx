@@ -69,6 +69,7 @@ interface ComunicadoPortal {
   resumen: string;
   fecha: string;
   imagenUrl: string | null;
+  documentoUrl?: string | null;
 }
 
 const REGION_TODAS = 'Toda la Región';
@@ -93,6 +94,7 @@ function etiqueta(valor: string): string {
 }
 
 function esUrlSegura(valor: string): boolean {
+  if (/^data:image\/(?:avif|jpeg|png|webp);base64,/i.test(valor)) return true;
   if (valor.startsWith('/') && !valor.startsWith('//')) return true;
   try {
     const url = new URL(valor);
@@ -613,6 +615,11 @@ export function DashboardPage() {
                 </p>
                 <h3 className="mt-1 font-semibold text-white">{comunicado.titulo}</h3>
                 <p className="mt-1 text-sm text-white/90">{comunicado.resumen}</p>
+                {comunicado.documentoUrl && (
+                  <VistaPreviaArchivo url={comunicado.documentoUrl} titulo={`Documento: ${comunicado.titulo}`} tipo="documento">
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-white underline"><FileText size={15} /> Ver PDF</span>
+                  </VistaPreviaArchivo>
+                )}
               </div>
             </article>
           ))}

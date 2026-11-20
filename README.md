@@ -11,6 +11,7 @@ El objetivo de la integración es que el panel administre la información y que 
 - La demo guarda datos en el almacenamiento local del navegador o de la aplicación. Estos datos no se sincronizan entre dispositivos.
 - En modo demo, el landing usa datos de ejemplo propios, distintos de los del adaptador de demostración del panel.
 - El código móvil activa el adaptador de demostración incluso si se configura `VITE_API_URL`. Por tanto, configurar esa variable no conecta actualmente la APK a la API.
+- La demo conectada web permite usar la API y una base local de pruebas compartida entre panel y landing; no conecta la APK.
 
 La aplicación Android es una versión de consulta: abre directamente los módulos, sin iniciar sesión, con el rol `CONSULTOR` y sin acciones de administración. La navegación del teléfono tiene una barra inferior y un acceso a alertas en el encabezado.
 
@@ -24,7 +25,7 @@ La aplicación Android es una versión de consulta: abre directamente los módul
 | `apps/shared` | Esquemas y tipos compartidos entre frontend y API. |
 | `scripts` | Herramientas auxiliares de captura, PostgreSQL local y carga. |
 
-Rutas web principales: `/` y `/portal` para el landing, `/descargar` para la descarga y `/login` para el panel. Las antiguas rutas de simulación `/app` y `/app/consulta` redirigen al landing. El panel incluye dashboard, convocatorias, plazas, vacantes, infraestructura y alertas. El landing muestra vacantes, plazas, convocatorias y comunicados.
+Rutas web principales: `/` y `/portal` para el landing, `/descargar` para la descarga y `/login` para el panel. Las antiguas rutas de simulación `/app` y `/app/consulta` redirigen al landing. El panel incluye dashboard, instituciones, convocatorias, plazas, vacantes, infraestructura y alertas. El landing muestra vacantes, plazas, convocatorias y comunicados.
 
 ## Desarrollo local
 
@@ -35,7 +36,13 @@ npm ci
 npm run dev:admin
 ```
 
-Vite muestra la dirección local al iniciar. Por defecto, la web usa la API; sin ella, las consultas conectadas no funcionarán. Para usar datos ficticios en la web, configura `VITE_APP_DEMO=true` en `apps\admin\.env.local` antes de iniciar Vite. El inicio de sesión de esta demo acepta un correo válido y una contraseña no vacía, pero asigna el rol `CONSULTOR`; no equivale a una cuenta administrativa real.
+Vite muestra la dirección local al iniciar. Por defecto, la web usa la API; sin ella, las consultas conectadas no funcionarán. Para usar datos ficticios en la web, configura `VITE_APP_DEMO=true` en `apps\admin\.env.local` antes de iniciar Vite. El inicio de sesión de esta demo acepta un correo válido y una contraseña no vacía y permite elegir un rol de prueba; no equivale a una cuenta administrativa real.
+
+En «Alertas», la sección «Comunicados y avisos» permite consultar y gestionar comunicados según el rol: administrador y editor pueden crear; solo el administrador puede editar o eliminar. En la demo local sin conexión estos cambios permanecen en el almacenamiento del navegador y no se reflejan en el landing ni en otros dispositivos.
+
+En «Instituciones» se administran los datos de las instituciones y una foto opcional por URL o archivo. Administrador y editor pueden crear; solo el administrador puede editar o desactivar y reactivar. La desactivación conserva los registros asociados, que pueden seguir apareciendo. En la demo conectada las fotos se muestran en las tarjetas públicas de vacantes y plazas disponibles; en la demo sin conexión el landing conserva sus propios datos. Es necesario aplicar la migración `20261120130000_institucion_foto` a la base de desarrollo.
+
+Cada comunicado puede incluir una imagen y un PDF, mediante URL o carga de archivo. En demo se guardan en el almacenamiento local (máximo 2 MB por archivo); en modo conectado se usa el almacenamiento de la API (máximo 10 MB por archivo). Para usar el PDF en una base de desarrollo es necesario aplicar las migraciones, incluida la que agrega `documento_url`; no se ha aplicado automáticamente.
 
 Para la API, copia `.env.example` como `apps\api\.env` si todavía no existe y configura la conexión a una **base de datos de desarrollo** y las demás variables necesarias. Nunca compartas ni subas archivos `.env` con credenciales.
 
@@ -46,6 +53,27 @@ npm run dev:api
 ```
 
 `db:migrate` modifica la base de datos configurada y puede generar migraciones: úsalo solo en desarrollo. `npm run db:seed` carga datos y usuarios de ejemplo; no lo ejecutes contra una base de datos real o de producción. La API ofrece `/health` y documentación de rutas en `/docs`.
+
+### Demo web con base local
+
+Esta modalidad es solo para datos ficticios: no representa la estructura ni los accesos de la base oficial. Confirma que `DATABASE_URL` en `apps\api\.env` apunta a tu base local de pruebas y que sus migraciones están aplicadas. Conserva los datos existentes; no ejecutes el seed sobre una base que no quieras modificar.
+
+En una terminal inicia la API limitada a la computadora:
+
+```powershell
+$env:API_HOST = '127.0.0.1'
+npm run dev:api
+```
+
+En otra terminal inicia la web:
+
+```powershell
+npm run dev:demo-conectada --workspace @educa/admin
+```
+
+Abre `http://127.0.0.1:5173` para el landing y `/login` para el panel. El inicio de sesión usa las cuentas existentes de la base local, no el selector de roles de la demo sin conexión. El modo rechaza `VITE_APP_DEMO=true`, `VITE_APP_MOBILE=true` o una `VITE_API_URL` distinta de `/api`: revisa cualquier archivo de entorno local o variable de la terminal si no arranca.
+
+Los cambios publicados en el panel se consultan desde la misma base en el landing; los filtros públicos y la caché corta pueden afectar su aparición. Los datos guardados previamente en el navegador no se copian ni borran. La APK de demostración sigue usando datos locales separados.
 
 El archivo `docker-compose.yml` incluye PostgreSQL y la API, pero el servicio `admin` referencia `apps/admin/Dockerfile`, que actualmente no existe. Por ello, levantar el conjunto completo con Compose está pendiente de corrección. La configuración de Compose es para desarrollo y no debe usarse tal cual en producción.
 

@@ -22,6 +22,17 @@ const UGELES = [
   { id: 4, codigo: 'UGEL-LAM-04', nombre: 'UGEL Lambayeque Rural 1' },
 ];
 
+const PROVINCIAS = [
+  { id: 1, codigo: 'LAM-01', nombre: 'Lambayeque' },
+  { id: 2, codigo: 'LAM-02', nombre: 'Chiclayo' },
+  { id: 3, codigo: 'LAM-03', nombre: 'Ferreñafe' },
+];
+const DISTRITOS = [
+  { id: 1, codigo: 'DEM-01', nombre: 'José Leonardo Ortiz', provinciaId: 2 },
+  { id: 2, codigo: 'DEM-02', nombre: 'Chiclayo', provinciaId: 2 },
+  { id: 3, codigo: 'DEM-03', nombre: 'Ferreñafe', provinciaId: 3 },
+];
+
 function institucion(id: number, nombre: string, codigoModular: string, ugelId: number, distrito: string) {
   const ugel = UGELES.find((item) => item.id === ugelId);
   if (!ugel) throw new Error(`No existe la UGEL demostrativa ${ugelId}`);
@@ -37,8 +48,11 @@ function institucion(id: number, nombre: string, codigoModular: string, ugelId: 
     whatsapp: '51900000000',
     ugelId: ugel.id,
     ugel,
-    distrito: { id, nombre: distrito, provincia: { id: 1, nombre: id === 3 ? 'Ferreñafe' : 'Chiclayo' } },
-    provincia: { id: 1, nombre: id === 3 ? 'Ferreñafe' : 'Chiclayo' },
+    provinciaId: id === 3 ? 3 : 2,
+    distritoId: id,
+    activo: true,
+    distrito: { id, nombre: distrito },
+    provincia: PROVINCIAS.find((item) => item.id === (id === 3 ? 3 : 2)),
   };
 }
 
@@ -240,6 +254,18 @@ function filterRows(rows: DemoRow[], params: URLSearchParams, collection: string
 }
 
 function withRelationships(state: DemoState): void {
+  for (const ie of state.instituciones) {
+    const distritoAnterior = typeof ie.distrito === 'object' && ie.distrito !== null && 'nombre' in ie.distrito
+      ? String(ie.distrito.nombre) : '';
+    const distrito = DISTRITOS.find((item) => item.id === Number(ie.distritoId))
+      ?? DISTRITOS.find((item) => item.nombre === distritoAnterior);
+    const provincia = PROVINCIAS.find((item) => item.id === Number(ie.provinciaId ?? distrito?.provinciaId));
+    const ugel = UGELES.find((item) => item.id === Number(ie.ugelId));
+    if (distrito) { ie.distritoId = distrito.id; ie.distrito = distrito; }
+    if (provincia) { ie.provinciaId = provincia.id; ie.provincia = provincia; }
+    if (ugel) ie.ugel = ugel;
+    if (ie.activo === undefined) ie.activo = true;
+  }
   const instituciones = new Map(state.instituciones.map((ie) => [Number(ie.id), ie]));
   const convocatorias = new Map(state.convocatorias.map((item) => [Number(item.id), item]));
   const locales = new Map(state.locales.map((item) => [Number(item.id), item]));
@@ -291,7 +317,7 @@ function dashboardData(state: DemoState): DemoRow {
       plazas: state.plazas.length,
       locales: state.locales.length,
       alertasAbiertas: state.alertas.filter((item) => item.estado === 'ABIERTA').length,
-      comunicadosPublicados: state.comunicados.length,
+      comunicadosPublicados: state.comunicados.filter((item) => item.publicado === true).length,
     },
     cuposPorNivel: [...cuposPorNivel].map(([nivel, sum]) => ({
       nivel, _sum: { cupoTotal: sum.cupoTotal, cupoDisponibles: sum.cupoDisponibles },
@@ -340,9 +366,9 @@ export const demoApiAdapter: AxiosAdapter = async (config) => {
   } else if (method === 'GET' && path.endsWith('/catalogos/ugeles')) {
     data = UGELES;
   } else if (method === 'GET' && path.endsWith('/catalogos/provincias')) {
-    data = [{ id: 1, codigo: 'LAM-01', nombre: 'Lambayeque' }, { id: 2, codigo: 'LAM-02', nombre: 'Chiclayo' }, { id: 3, codigo: 'LAM-03', nombre: 'Ferreñafe' }];
+    data = PROVINCIAS;
   } else if (method === 'GET' && path.endsWith('/catalogos/distritos')) {
-    data = state.instituciones.map((ie) => ie.distrito).filter((value, index, list) => list.findIndex((item) => JSON.stringify(item) === JSON.stringify(value)) === index);
+    data = DISTRITOS.filter((distrito) => !params.has('provinciaId') || String(distrito.provinciaId) === params.get('provinciaId'));
   } else if (method === 'GET' && path.endsWith('/vacantes/resumen')) {
     data = {
       porNivel: ['INICIAL_JARDIN', 'PRIMARIA', 'SECUNDARIA', 'EBE'].map((nivel) => {
@@ -369,22 +395,24 @@ export const demoApiAdapter: AxiosAdapter = async (config) => {
   } else if (method === 'GET' && path.endsWith('/comunicados')) {
     data = paginate(filterRows(state.comunicados, params, 'comunicados'), params);
   } else {
-    const match = path.match(/\/(vacantes|plazas|convocatorias|alertas|locales)\/(\d+)(?:\/estado)?$/);
+    const match = path.match(/\/(instituciones|vacantes|plazas|convocatorias|alertas|locales|comunicados)\/([^/]+)(?:\/estado)?$/);
     if (method === 'POST' && match === null) {
       const collection = path.split('/').pop() as keyof DemoState;
       const rows = state[collection];
       if (!Array.isArray(rows)) throw new Error(`Endpoint de demostración POST no soportado: ${path}`);
-      const created = { ...requestPayload(config.data), id: Date.now(), createdAt: FECHA_DEMO, updatedAt: new Date().toISOString() };
+      const created = { ...requestPayload(config.data), id: collection === 'comunicados' ? `demo-${Date.now()}-${Math.random().toString(36).slice(2)}` : Date.now(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       rows.unshift(created);
       saveState(state);
       data = created;
     } else if (match) {
-      const collection = match[1] as 'vacantes' | 'plazas' | 'convocatorias' | 'alertas' | 'locales';
+      const collection = match[1] as 'instituciones' | 'vacantes' | 'plazas' | 'convocatorias' | 'alertas' | 'locales' | 'comunicados';
       const rows = state[collection];
-      const id = Number(match[2]);
-      const index = rows.findIndex((row) => Number(row.id) === id);
+      const id = match[2];
+      const index = rows.findIndex((row) => String(row.id) === id);
       if (method === 'DELETE') {
-        if (index >= 0) rows.splice(index, 1);
+        if (index < 0) throw new AxiosError(`Registro de demostración no encontrado: ${path}`, 'ERR_DEMO_NOT_FOUND', config);
+        if (collection === 'instituciones') rows[index] = { ...rows[index], activo: false };
+        else rows.splice(index, 1);
         saveState(state);
         data = { success: true };
       } else if (method === 'PUT' || method === 'PATCH') {

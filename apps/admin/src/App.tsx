@@ -9,6 +9,7 @@ import { PlazasPage } from '@/pages/PlazasPage';
 import { VacantesPage } from '@/pages/VacantesPage';
 import { AlertasPage } from '@/pages/AlertasPage';
 import { InfraestructuraPage } from '@/pages/InfraestructuraPage';
+import { InstitucionesPage } from '@/pages/InstitucionesPage';
 import { PortalCiudadanoPage } from '@/pages/PortalCiudadanoPage';
 import { DescargaAppPage } from '@/pages/DescargaAppPage';
 
@@ -85,6 +86,7 @@ export default function App() {
         <Route path="/vacantes" element={<VacantesPage />} />
         <Route path="/alertas" element={<AlertasPage />} />
         <Route path="/infraestructura" element={<InfraestructuraPage />} />
+        <Route path="/instituciones" element={<InstitucionesPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>
     </MainLayout>

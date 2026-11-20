@@ -15,6 +15,15 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
 
+  if (mode === 'demo-conectada') {
+    if (env.VITE_APP_DEMO === 'true' || env.VITE_APP_MOBILE === 'true') {
+      throw new Error('La demo conectada web requiere VITE_APP_DEMO y VITE_APP_MOBILE desactivados.');
+    }
+    if (env.VITE_API_URL && env.VITE_API_URL !== '/api') {
+      throw new Error('La demo conectada web debe usar el proxy local /api, no una API remota.');
+    }
+  }
+
   if (mode === 'mobile' && env.VITE_APP_DEMO !== 'true') {
     const configuredApiUrl = env.VITE_API_URL;
     if (!configuredApiUrl) {

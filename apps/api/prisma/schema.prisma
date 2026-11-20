@@ -192,6 +192,7 @@ model InstitucionEducativa {
   distrito      Distrito       @relation(fields: [distritoId], references: [id], onDelete: Restrict)
   telefono      String?        @db.VarChar(20)
   whatsapp      String?        @db.VarChar(20)
+  fotoUrl       String?        @map("foto_url") @db.VarChar(500)
   activo        Boolean        @default(true)
 
   vacantes VacanteMatricula[]
@@ -381,6 +382,7 @@ model Comunicado {
   contenido String?             @db.Text
   fecha     DateTime            @db.Date
   imagenUrl String?             @map("imagen_url") @db.VarChar(500)
+  documentoUrl String?          @map("documento_url") @db.VarChar(500)
   publicado Boolean             @default(false)
   createdAt DateTime            @default(now()) @map("created_at")
   updatedAt DateTime            @updatedAt @map("updated_at")

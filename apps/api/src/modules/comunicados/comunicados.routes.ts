@@ -19,6 +19,7 @@ const router = crudRouter<
   rolesCrear: ['ADMIN_GRED', 'EDITOR_UGEL'],
   rolesActualizar: ['ADMIN_GRED'],
   rolesEliminar: ['ADMIN_GRED'],
+  parsearId: (id) => id,
   filtrosListado: (req) => {
     const q = req.query as Record<string, string | undefined>;
     return {

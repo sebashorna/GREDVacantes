@@ -5,12 +5,15 @@ import { prisma } from './config/prisma.js';
 
 const app = crearApp();
 
-const servidor = app.listen(config.PORT, () => {
+const alEscuchar = () => {
   logger.info(`API Educa Lambayeque escuchando en http://localhost:${config.PORT}`, {
     entorno: config.NODE_ENV,
     docs: `http://localhost:${config.PORT}/docs`,
   });
-});
+};
+const servidor = config.API_HOST
+  ? app.listen(config.PORT, config.API_HOST, alEscuchar)
+  : app.listen(config.PORT, alEscuchar);
 
 /** Cierre ordenado: se deja de aceptar conexiones y se cierra el pool. */
 async function cerrar(senal: string): Promise<void> {

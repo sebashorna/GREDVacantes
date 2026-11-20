@@ -16,6 +16,8 @@ const MODO_DEMOSTRACION = import.meta.env.VITE_APP_DEMO === 'true';
 const MODO_MOVIL = import.meta.env.VITE_APP_MOBILE === 'true';
 const MODO_SOLO_CONSULTA = MODO_MOVIL;
 const CLAVE_SESION_DEMOSTRACION = 'educa.demoSession';
+const CLAVE_ROL_DEMOSTRACION = 'educa.demoRole';
+const ROLES_DEMOSTRACION: Rol[] = ['ADMIN_GRED', 'EDITOR_UGEL', 'CONSULTOR'];
 const USUARIO_CONSULTA: UsuarioAutenticado = {
   id: 0,
   nombre: 'Visitante ciudadano',
@@ -38,7 +40,7 @@ interface ContextoAuth {
   usuario: UsuarioAutenticado | null;
   cargando: boolean;
   estaAutenticado: boolean;
-  iniciarSesion(email: string, password: string): Promise<void>;
+  iniciarSesion(email: string, password: string, rolDemo?: Rol): Promise<void>;
   cerrarSesion(): Promise<void>;
   puede(...roles: Rol[]): boolean;
 }
@@ -65,7 +67,11 @@ export function ProveedorAuth({ children }: { children: ReactNode }) {
       return;
     }
     if (MODO_DEMOSTRACION) {
-      setUsuario(localStorage.getItem(CLAVE_SESION_DEMOSTRACION) === 'true' ? USUARIO_CONSULTA : null);
+      const rolGuardado = localStorage.getItem(CLAVE_ROL_DEMOSTRACION);
+      const rol = ROLES_DEMOSTRACION.find((opcion) => opcion === rolGuardado) ?? 'CONSULTOR';
+      setUsuario(localStorage.getItem(CLAVE_SESION_DEMOSTRACION) === 'true'
+        ? { ...USUARIO_CONSULTA, nombre: 'Usuario de demostración', rol }
+        : null);
       setCargando(false);
       return;
     }
@@ -89,16 +95,18 @@ export function ProveedorAuth({ children }: { children: ReactNode }) {
     void restaurar();
   }, [restaurar]);
 
-  const iniciarSesion = useCallback(async (email: string, password: string) => {
+  const iniciarSesion = useCallback(async (email: string, password: string, rolDemo: Rol = 'CONSULTOR') => {
       if (MODO_SOLO_CONSULTA) {
         throw new Error('El modo de consulta ciudadana no permite iniciar sesión.');
       }
       if (MODO_DEMOSTRACION) {
         localStorage.setItem(CLAVE_SESION_DEMOSTRACION, 'true');
+        localStorage.setItem(CLAVE_ROL_DEMOSTRACION, rolDemo);
         setUsuario({
           ...USUARIO_CONSULTA,
-          nombre: 'Consultor de demostración',
+          nombre: 'Usuario de demostración',
           email,
+          rol: rolDemo,
         });
         queryClient.clear();
         return;
@@ -121,6 +129,7 @@ export function ProveedorAuth({ children }: { children: ReactNode }) {
     const refresh = tokens.refresh;
     tokens.clear();
     localStorage.removeItem(CLAVE_SESION_DEMOSTRACION);
+    localStorage.removeItem(CLAVE_ROL_DEMOSTRACION);
     setUsuario(null);
     queryClient.clear();
     if (refresh && !MODO_DEMOSTRACION) {

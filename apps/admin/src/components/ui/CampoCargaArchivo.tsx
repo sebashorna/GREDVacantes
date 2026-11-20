@@ -59,7 +59,7 @@ export function CampoCargaArchivo({
     setError('');
     if (!seleccionados.length) return;
 
-    const archivosExistentes = tipo === 'pdf' ? [] : archivos;
+    const archivosExistentes = tipo === 'pdf' || maxArchivos === 1 ? [] : archivos;
     if (archivosExistentes.length + seleccionados.length > maxArchivos) {
       setError(`Puedes adjuntar hasta ${maxArchivos} ${tipo === 'imagen' ? 'imágenes' : 'archivo PDF'}.`);
       return;
@@ -135,11 +135,11 @@ export function CampoCargaArchivo({
       <p className="text-sm font-medium text-on-surface">{etiqueta}</p>
       <label className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-primary transition hover:bg-surface-container-low ${subiendo ? 'cursor-wait opacity-60' : 'cursor-pointer'}`}>
         <Upload size={17} />
-        {subiendo ? 'Subiendo archivo...' : tipo === 'imagen' ? 'Seleccionar imágenes' : 'Seleccionar PDF'}
+        {subiendo ? 'Subiendo archivo...' : tipo === 'imagen' ? (maxArchivos === 1 ? 'Seleccionar imagen' : 'Seleccionar imágenes') : 'Seleccionar PDF'}
         <input
           type="file"
           accept={tipo === 'imagen' ? 'image/avif,image/jpeg,image/png,image/webp' : 'application/pdf'}
-          multiple={tipo === 'imagen'}
+          multiple={tipo === 'imagen' && maxArchivos > 1}
           disabled={subiendo}
           onChange={(evento) => void seleccionarArchivos(evento)}
           className="sr-only"

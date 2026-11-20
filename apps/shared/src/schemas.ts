@@ -62,6 +62,16 @@ export const whatsappSchema = z
   .max(15, 'Numero de WhatsApp demasiado largo')
   .regex(/^\d+$/, 'El numero de WhatsApp solo admite digitos');
 
+const enlacePublicoSchema = z.string().trim().max(500).refine((valor) => {
+  if (valor.startsWith('/') && !valor.startsWith('//') && !valor.startsWith('/\\')) return true;
+  try {
+    const url = new URL(valor);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}, 'Ingresa una URL HTTP o HTTPS, o una ruta pública válida');
+
 /* ------------------------------------------------------------------ */
 /* Paginacion y respuestas                                            */
 /* ------------------------------------------------------------------ */
@@ -88,6 +98,7 @@ export const institucionCreateSchema = z.object({
   distritoId: z.coerce.number().int().positive('Seleccione un distrito'),
   telefono: telefonoSchema.optional().or(z.literal('')),
   whatsapp: whatsappSchema.optional().or(z.literal('')),
+  fotoUrl: enlacePublicoSchema.optional().nullable(),
   activo: z.boolean().default(true),
 });
 export type InstitucionCreateInput = z.infer<typeof institucionCreateSchema>;
@@ -324,7 +335,8 @@ export const comunicadoCreateSchema = z.object({
   resumen: z.string().trim().min(10, 'El resumen es obligatorio').max(500),
   contenido: z.string().trim().max(5000).optional().nullable(),
   fecha: z.coerce.date(),
-  imagenUrl: z.string().trim().url('URL invalida').optional().nullable(),
+  imagenUrl: enlacePublicoSchema.optional().nullable(),
+  documentoUrl: enlacePublicoSchema.optional().nullable(),
   publicado: z.boolean().default(false),
 });
 export type ComunicadoCreateInput = z.infer<typeof comunicadoCreateSchema>;

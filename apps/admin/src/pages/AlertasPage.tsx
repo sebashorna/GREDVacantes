@@ -37,6 +37,7 @@ import { useAuth, mensajeDeError } from '@/features/auth/auth-context';
 import { usePaginacion } from '@/hooks/usePaginacion';
 import { api } from '@/lib/api';
 import type { Alerta, Pagina } from '@/lib/tipos';
+import { ComunicadosPanel } from './ComunicadosPanel';
 
 interface LocalOpcion {
   id: number;
@@ -130,6 +131,20 @@ function esArchivoAdjunto(valor: string): boolean {
 }
 
 export function AlertasPage() {
+  const [seccion, setSeccion] = useState<'alertas' | 'comunicados'>('alertas');
+
+  return (
+    <div className="space-y-5">
+      <nav aria-label="Secciones de alertas y comunicados" className="flex flex-wrap gap-2">
+        <button type="button" aria-current={seccion === 'alertas' ? 'page' : undefined} onClick={() => setSeccion('alertas')} className={`rounded-lg px-4 py-2.5 text-sm font-semibold ${seccion === 'alertas' ? 'bg-primary text-white' : 'border border-outline-variant bg-white text-primary'}`}>Alertas e incidencias</button>
+        <button type="button" aria-current={seccion === 'comunicados' ? 'page' : undefined} onClick={() => setSeccion('comunicados')} className={`rounded-lg px-4 py-2.5 text-sm font-semibold ${seccion === 'comunicados' ? 'bg-primary text-white' : 'border border-outline-variant bg-white text-primary'}`}>Comunicados y avisos</button>
+      </nav>
+      {seccion === 'alertas' ? <AlertasContenido /> : <ComunicadosPanel />}
+    </div>
+  );
+}
+
+function AlertasContenido() {
   const { usuario, puede } = useAuth();
   const queryClient = useQueryClient();
   const { busqueda, setBusqueda, setPagina, params } = usePaginacion();

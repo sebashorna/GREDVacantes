@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useAuth, mensajeDeError } from '@/features/auth/auth-context';
 import { Mail, Lock, AlertCircle, ArrowLeft } from 'lucide-react';
+import type { Rol } from '@shared';
 
 interface LoginPageProps {
   modoAplicacion?: boolean;
@@ -20,6 +21,8 @@ export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
   const modoDemostracion = modoAplicacion && import.meta.env.VITE_APP_DEMO === 'true';
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [rolDemo, setRolDemo] = useState<Rol>('CONSULTOR');
+  const seleccionarRolDemo = import.meta.env.VITE_APP_DEMO === 'true' && !modoAplicacion;
 
   const form = useForm<z.infer<typeof schema>>({
     defaultValues: { email: modoDemostracion ? 'demo@educa.gob.pe' : 'admin@gredlambayeque.gob.pe', password: '' },
@@ -34,7 +37,7 @@ export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
     setCargando(true);
     setError('');
     try {
-      await iniciarSesion(datos.email, datos.password);
+      await iniciarSesion(datos.email, datos.password, rolDemo);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(mensajeDeError(err));
@@ -95,6 +98,20 @@ export function LoginPage({ modoAplicacion = false }: LoginPageProps) {
                 placeholder="••••••••"
               />
             </div>
+            {seleccionarRolDemo && (
+              <div className="space-y-2">
+                <label htmlFor="rol-demo" className="block text-sm font-medium text-slate-700">Rol de prueba</label>
+                <select id="rol-demo" value={rolDemo} onChange={(e) => {
+                  const rol = e.target.value;
+                  if (rol === 'ADMIN_GRED' || rol === 'EDITOR_UGEL' || rol === 'CONSULTOR') setRolDemo(rol);
+                }} className="w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5">
+                  <option value="CONSULTOR">Consultor (solo lectura)</option>
+                  <option value="EDITOR_UGEL">Editor UGEL</option>
+                  <option value="ADMIN_GRED">Administrador GRED</option>
+                </select>
+                <p className="text-xs text-slate-500">Solo para la demostración; no concede acceso a la API real.</p>
+              </div>
+            )}
             {form.formState.errors.password && (
               <p className="text-sm text-red-600">{form.formState.errors.password.message}</p>
             )}

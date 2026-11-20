@@ -25,6 +25,7 @@ const ENLACES = [
   { ruta: '/convocatorias', etiqueta: 'Convocatorias', icono: Megaphone },
   { ruta: '/plazas', etiqueta: 'Plazas', icono: Users },
   { ruta: '/vacantes', etiqueta: 'Vacantes', icono: School },
+  { ruta: '/instituciones', etiqueta: 'Instituciones', icono: School },
   { ruta: '/infraestructura', etiqueta: 'Infraestructura y aulas', icono: Building2 },
   { ruta: '/alertas', etiqueta: 'Alertas', icono: AlertTriangle },
 ];
@@ -93,7 +94,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <p className="text-xs text-white/75 mt-1">GRE Lambayeque - {nombreVista}</p>
         </div>
         <nav className="flex-1 px-4 py-4 space-y-1">
-          {ENLACES.map(({ ruta, etiqueta, icono: Icono }) => (
+          {ENLACES.filter(({ ruta }) => !soloConsulta || ruta !== '/instituciones').map(({ ruta, etiqueta, icono: Icono }) => (
             <NavLink key={ruta} to={ruta} className={({ isActive }) => claseEnlace(isActive)}>
               <Icono className="w-5 h-5" /> {etiqueta}
             </NavLink>
@@ -203,7 +204,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             <h2 className="text-lg font-semibold">{typeof children === 'string' ? children : ''}</h2>
           </div>
           <div className="flex items-center gap-4">
-            {import.meta.env.VITE_APP_DEMO === 'true' && (
+            {(import.meta.env.VITE_APP_DEMO === 'true' || import.meta.env.MODE === 'demo-conectada') && (
               <span className="rounded-full bg-amber-300/20 px-2.5 py-1 text-xs font-semibold text-amber-100">
                 DEMOSTRACIÓN · DATOS FICTICIOS
               </span>

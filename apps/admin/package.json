@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:demo-conectada": "vite --mode demo-conectada --host 127.0.0.1 --strictPort",
     "build": "tsc -b && vite build",
     "mobile:build": "tsc -b && vite build --mode mobile",
     "android:sync": "npm run mobile:build && cap sync android",
