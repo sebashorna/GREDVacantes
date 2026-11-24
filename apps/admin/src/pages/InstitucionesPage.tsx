@@ -17,6 +17,7 @@ import { Paginacion } from '@/components/ui/Paginacion';
 import { useAuth, mensajeDeError } from '@/features/auth/auth-context';
 import { useDistritos, useProvincias, useUgeles } from '@/hooks/useCatalogos';
 import { api } from '@/lib/api';
+import { urlArchivoParaMostrar } from '@/lib/url-archivo';
 import type { Pagina } from '@/lib/tipos';
 
 interface Institucion {
@@ -163,7 +164,7 @@ export function InstitucionesPage() {
             </div>
             <Badge tono={ie.activo ? 'exito' : 'neutro'}>{ie.activo ? 'Activa' : 'Inactiva'}</Badge>
           </div>
-          {ie.fotoUrl && <img src={ie.fotoUrl} alt={`Institución educativa ${ie.nombre}`} className="mt-3 h-32 w-48 rounded-lg object-cover" />}
+          {ie.fotoUrl && <img src={urlArchivoParaMostrar(ie.fotoUrl)} alt={`Institución educativa ${ie.nombre}`} className="mt-3 h-32 w-48 rounded-lg object-cover" />}
           {puedeEditar && <div className="mt-4 flex flex-wrap gap-2">
             <Boton variante="secundario" tamano="sm" onClick={() => abrir(ie)}><Pencil size={15} /> Editar</Boton>
             {ie.activo && <Boton variante="peligro" tamano="sm" onClick={() => setDesactivando(ie)}><Trash2 size={15} /> Desactivar</Boton>}

@@ -104,7 +104,7 @@ export function crearApp(): Express {
         },
       },
     },
-    apis: [path.join(__dirname, '**/*.routes.{ts,js}')],
+    apis: [path.join(__dirname, '**/*.routes.{ts,js}').replace(/\\/g, '/')],
   });
 
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(especificacion, {
@@ -114,8 +114,14 @@ export function crearApp(): Express {
   app.use('/uploads', express.static(path.resolve(config.DIRECTORIO_ARCHIVOS), {
     dotfiles: 'deny',
     index: false,
-    maxAge: '1d',
     fallthrough: false,
+    setHeaders: (res, archivo) => {
+      res.setHeader('Cache-Control', 'public, no-cache');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      if (path.extname(archivo).toLowerCase() === '.pdf') {
+        res.removeHeader('X-Frame-Options');
+      }
+    },
   }));
 
   /* ----------------------- Salud y estado ---------------------- */

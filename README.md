@@ -42,6 +42,8 @@ En «Alertas», la sección «Comunicados y avisos» permite consultar y gestion
 
 En «Instituciones» se administran los datos de las instituciones y una foto opcional por URL o archivo. Administrador y editor pueden crear; solo el administrador puede editar o desactivar y reactivar. La desactivación conserva los registros asociados, que pueden seguir apareciendo. En la demo conectada las fotos se muestran en las tarjetas públicas de vacantes y plazas disponibles; en la demo sin conexión el landing conserva sus propios datos. Es necesario aplicar la migración `20261120130000_institucion_foto` a la base de desarrollo.
 
+Las fotos de locales escolares se guardan en la base conectada desde la migración `20261124180000_local_fotos`. Las imágenes descartadas antes de aplicar esta migración no pueden recuperarse desde el registro y deben adjuntarse de nuevo.
+
 Cada comunicado puede incluir una imagen y un PDF, mediante URL o carga de archivo. En demo se guardan en el almacenamiento local (máximo 2 MB por archivo); en modo conectado se usa el almacenamiento de la API (máximo 10 MB por archivo). Para usar el PDF en una base de desarrollo es necesario aplicar las migraciones, incluida la que agrega `documento_url`; no se ha aplicado automáticamente.
 
 Para la API, copia `.env.example` como `apps\api\.env` si todavía no existe y configura la conexión a una **base de datos de desarrollo** y las demás variables necesarias. Nunca compartas ni subas archivos `.env` con credenciales.
@@ -53,6 +55,8 @@ npm run dev:api
 ```
 
 `db:migrate` modifica la base de datos configurada y puede generar migraciones: úsalo solo en desarrollo. `npm run db:seed` carga datos y usuarios de ejemplo; no lo ejecutes contra una base de datos real o de producción. La API ofrece `/health` y documentación de rutas en `/docs`.
+
+Para compilar la API usa `npm run build --workspace @educa/api` y para iniciar la versión compilada `npm run start --workspace @educa/api`. El inicio utiliza `tsx` porque el paquete compartido sigue distribuyéndose como código TypeScript.
 
 ### Demo web con base local
 
@@ -102,6 +106,10 @@ Para una distribución real habrá que completar la conexión móvil, comprobar 
 Las rutas públicas bajo `/api/public` ofrecen datos para el landing; las rutas administrativas requieren autenticación y sus permisos dependen del rol. Los endpoints públicos filtran qué registros muestran, por lo que un registro administrativo no siempre será visible: por ejemplo, las convocatorias deben estar activas y vigentes.
 
 En modo conectado, las cargas autenticadas se guardan en `DIRECTORIO_ARCHIVOS`, con un máximo de 10 MB por archivo. El directorio necesita almacenamiento persistente. Los enlaces `/uploads` son públicos: no se deben subir documentos confidenciales. En modo demo, los adjuntos se guardan localmente y están limitados a 2 MB en total por campo de carga.
+
+Las rutas predeterminadas de cargas locales están excluidas de Git y del contexto de Docker para conservar los archivos fuera del código. Si configuras otro directorio dentro del repositorio, exclúyelo también y mantén una copia de seguridad independiente.
+
+Los archivos públicos subidos usan `Cache-Control: public, no-cache`: el navegador puede conservarlos, pero debe revalidarlos antes de reutilizarlos. La web emplea una versión en la URL de los archivos generados por la API para evitar respuestas antiguas con cabeceras incorrectas; esto no modifica los enlaces guardados. La caché corta de los datos públicos es independiente.
 
 Para Railway se incluyen `railway.json` y `apps/api/Dockerfile`: configura PostgreSQL, `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `CORS_ORIGINS`, `NODE_ENV` y `DIRECTORIO_ARCHIVOS` en el servicio, y monta almacenamiento persistente para los archivos. Railway ejecuta las migraciones existentes antes del despliegue y comprueba `/health`; no carga el seed automáticamente. Revisa y valida la configuración antes de usarla con datos reales.
 

@@ -23,6 +23,7 @@ import { Link } from 'react-router-dom';
 
 import { ActualizadoEn, EncabezadoPagina } from '@/components/EncabezadoPagina';
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
+import { urlArchivoParaMostrar } from '@/lib/url-archivo';
 import { PanelFiltros } from '@/components/ui/PanelFiltros';
 import { useAuth } from '@/features/auth/auth-context';
 import { api } from '@/lib/api';
@@ -597,7 +598,7 @@ export function DashboardPage() {
                 >
                   <span className="block h-24 w-28 shrink-0 overflow-hidden rounded-lg bg-white/15 transition hover:ring-2 hover:ring-white">
                     <img
-                      src={comunicado.imagenUrl}
+                      src={urlArchivoParaMostrar(comunicado.imagenUrl)}
                       alt={`Imagen del comunicado: ${comunicado.titulo}`}
                       loading="lazy"
                       className="h-full w-full object-cover"

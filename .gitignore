@@ -12,7 +12,10 @@ out-tsc/
 # Prisma generado
 apps/api/src/generated/
 apps/api/node_modules/.prisma/
+
+# Archivos subidos localmente (según el directorio de inicio de la API)
 apps/api/uploads/
+apps/api/apps/api/uploads/
 
 # Entorno
 .env

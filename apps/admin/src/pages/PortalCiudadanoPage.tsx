@@ -19,6 +19,7 @@ import { Link } from 'react-router-dom';
 
 import { VistaPreviaArchivo } from '@/components/ui/VistaPreviaArchivo';
 import { api } from '@/lib/api';
+import { urlArchivoParaMostrar } from '@/lib/url-archivo';
 
 interface VacanteCiudadana {
   id: number;
@@ -688,7 +689,7 @@ export function PortalCiudadanoPage() {
                   const foto = vacante.ie.fotoUrl;
                   return (
                     <article key={vacante.id} className="group animar-aparicion overflow-hidden rounded-xl border border-outline-variant border-l-4 border-l-primary bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg">
-                      {foto && <img src={foto} alt={`Institución educativa ${vacante.ie.nombre}`} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
+                      {foto && <img src={urlArchivoParaMostrar(foto)} alt={`Institución educativa ${vacante.ie.nombre}`} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary">{etiqueta(vacante.nivel)} · {etiqueta(vacante.turno)}</p>
                         <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${vacante.cupoDisponibles <= 5 ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}>
@@ -792,7 +793,7 @@ export function PortalCiudadanoPage() {
                   const foto = plaza.ie.fotoUrl;
                   return (
                     <article key={plaza.id} className="group animar-aparicion overflow-hidden rounded-xl border border-outline-variant border-l-4 border-l-primary bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg">
-                      {foto && <img src={foto} alt={`Institución educativa ${plaza.ie.nombre}`} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
+                      {foto && <img src={urlArchivoParaMostrar(foto)} alt={`Institución educativa ${plaza.ie.nombre}`} loading="lazy" className="mb-4 h-40 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.03]" />}
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                           {etiqueta(plaza.tipo)} · {etiqueta(plaza.nivel)}
@@ -949,7 +950,7 @@ export function PortalCiudadanoPage() {
                   return (
                     <article key={comunicado.id} className="group animar-aparicion overflow-hidden rounded-xl border border-outline-variant bg-white transition hover:-translate-y-1 hover:shadow-lg">
                       <figure>
-                        <img src={imagen.url} alt={imagen.alt} loading="lazy" className="h-44 w-full object-cover" />
+                        <img src={urlArchivoParaMostrar(imagen.url)} alt={imagen.alt} loading="lazy" className="h-44 w-full object-cover" />
                         {imagen.fuente && (
                           <figcaption className="px-4 pt-2 text-right text-xs text-on-surface-variant">
                             Imagen ilustrativa ·{' '}

@@ -3,6 +3,7 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 import { ExternalLink, FileText } from 'lucide-react';
 
 import { Modal } from '@/components/ui/Modal';
+import { urlArchivoParaMostrar } from '@/lib/url-archivo';
 
 interface PdfRenderPlugin {
   renderizar(opciones: { url: string }): Promise<{ paginas: string[]; total: number }>;
@@ -90,6 +91,7 @@ export function VistaPreviaArchivo({
   const urlValida = esUrlWeb(url);
   const esVistaDeImagen = urlValida && (tipo === 'imagen' || (tipo === 'auto' && esImagen(url)));
   const esPdfMovil = esPdfNativo(url);
+  const urlMostrar = urlArchivoParaMostrar(url);
 
   return (
     <>
@@ -110,14 +112,14 @@ export function VistaPreviaArchivo({
       >
         {esVistaDeImagen ? (
           <div className="flex min-h-[50vh] items-center justify-center rounded-lg bg-on-surface p-2">
-            <img src={url} alt={titulo} className="max-h-[calc(94vh-12rem)] max-w-full object-contain" />
+            <img src={urlMostrar} alt={titulo} className="max-h-[calc(94vh-12rem)] max-w-full object-contain" />
           </div>
         ) : esPdfMovil ? (
           <PaginasPdfNativo url={url} titulo={titulo} />
         ) : (
           <div className="h-[calc(94vh-12rem)] min-h-[24rem] overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
             <iframe
-              src={url}
+              src={urlMostrar}
               title={titulo}
               className="h-full w-full"
               referrerPolicy="no-referrer"
@@ -127,7 +129,7 @@ export function VistaPreviaArchivo({
         {!esPdfMovil && (
           <div className="mt-3 flex justify-end">
             <a
-              href={url}
+              href={urlMostrar}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"

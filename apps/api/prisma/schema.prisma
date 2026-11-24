@@ -319,6 +319,7 @@ model LocalEscolar {
   avanceObras      Decimal?             @map("avance_obras") @db.Decimal(5, 2)
   presupuesto      Decimal?             @db.Decimal(12, 2)
   fichaEdanUrl     String?              @map("ficha_edan_url") @db.VarChar(500)
+  fotos            String[]             @default([])
   ultimaInspeccion DateTime?            @map("ultima_inspeccion") @db.Date
   alertas          AlertaCiudadana[]
 

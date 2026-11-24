@@ -81,9 +81,25 @@ export async function crear(datos: VacanteCreateInput) {
 
 export async function actualizar(id: number, datos: VacanteUpdateInput) {
   const data = vacanteUpdateSchema.parse(datos);
-  const existe = await prisma.vacanteMatricula.findUnique({ where: { id } });
-  if (!existe) throw AppError.noEncontrado('Vacante');
-  return prisma.vacanteMatricula.update({ where: { id }, data, include: INCLUYE });
+  if (data.cupoTotal !== undefined && data.cupoDisponibles !== undefined && data.cupoDisponibles > data.cupoTotal) {
+    throw AppError.badRequest('Los cupos disponibles no pueden superar el cupo total');
+  }
+  return prisma.$transaction(async (tx) => {
+    const resultado = await tx.vacanteMatricula.updateMany({
+      where: {
+        id,
+        ...(data.cupoTotal !== undefined && data.cupoDisponibles === undefined
+          ? { cupoDisponibles: { lte: data.cupoTotal } } : {}),
+        ...(data.cupoDisponibles !== undefined && data.cupoTotal === undefined
+          ? { cupoTotal: { gte: data.cupoDisponibles } } : {}),
+      },
+      data,
+    });
+    const vacante = await tx.vacanteMatricula.findUnique({ where: { id }, include: INCLUYE });
+    if (!vacante) throw AppError.noEncontrado('Vacante');
+    if (resultado.count === 0) throw AppError.badRequest('Los cupos disponibles no pueden superar el cupo total');
+    return vacante;
+  });
 }
 
 export async function eliminar(id: number) {

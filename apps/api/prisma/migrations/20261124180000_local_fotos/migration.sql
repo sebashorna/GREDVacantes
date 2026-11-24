@@ -1,0 +1,1 @@
+ALTER TABLE "local_escolar" ADD COLUMN "fotos" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
